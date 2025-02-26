@@ -39,6 +39,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+    // !!!В Н И М А Н И Е!!!
+    // идентификатор платы должен совпасть с программным
+#define ID_PLATE  0x2 //0x3 - Т7к  0x2 - Т5к
 
 /* USER CODE END PD */
 
@@ -52,7 +55,12 @@
 /* USER CODE BEGIN PV */
 uint16_t KeyP; // клавиши нажатые 
   char DigitSet = 1; //шаг изменеия устанавливаемого затухания
+  char LvlBatInd=0; //индикатор уровня батарейки
 
+  // контроль идентификатора платы
+ uint8_t CheckErrID_Plate=0; 
+
+  
 unsigned int CheckErrMEM; 
 BYTE CurrLang; // текущий язык
 
@@ -111,6 +119,50 @@ int main(void)
   PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
+    MX_GPIO_Init();
+  if(ID_PLATE != GETIDPLT)
+  {
+    CheckErrID_Plate=1;
+  }
+  if(CheckErrID_Plate)
+  {
+    MX_DMA_Init();
+    MX_UART7_Init();
+    // Start Uart7 - Nextion
+    uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+    HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
+    /* disable the UART Parity Error Interrupt */
+    __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
+    /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+    __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
+    
+    // перенастроим UART7  для NEXTION
+    huart7.Init.BaudRate = 9600;
+    if (HAL_UART_Init(&huart7) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    HAL_Delay(10);
+    sprintf((void*)Str,"bauds=115200яяя");
+    HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+    
+    //NEX_Transmit(Str);// 
+    HAL_Delay(10);
+    huart7.Init.BaudRate = 115200;
+    if (HAL_UART_Init(&huart7) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    //  myBeep(100);
+    HAL_Delay(10);
+    sprintf((void*)Str, "t0.txt=\"! ОШИБКА !\"яяя"); // auto
+    NEX_Transmit((void*)Str);    // 
+    sprintf((void*)Str, "t1.txt=\"!прибор не тот!\"яяя"); // auto
+    NEX_Transmit((void*)Str);    // 
+    
+    while(1);
+    
+  }
 
   /* USER CODE END SysInit */
 
@@ -126,11 +178,45 @@ int main(void)
   MX_DAC1_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+   // проверяем конфигурацию платы, чтобы не запустить программу по исправленю
+  // если вдруг зашили чужую программу, попытаемся написать в индикатор и зациклится
+  
+ 
+  // Start Uart7 - Nextion
+  uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+  HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
+  /* disable the UART Parity Error Interrupt */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
+  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
+
+  // перенастроим UART7  для NEXTION
+  huart7.Init.BaudRate = 9600;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HAL_Delay(10);
+  sprintf((void*)Str,"bauds=115200яяя");
+  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+
+  //NEX_Transmit(Str);// 
+   HAL_Delay(10);
+  huart7.Init.BaudRate = 115200;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+ //  myBeep(100);
+  HAL_Delay(10);
+
+  
+  
   // так как повторяем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
   CheckErrMEM =   BeginConfig();
 
     // Start Uart3 - внешний мир
-  uint16_t  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
+  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
   /* disable the UART Parity Error Interrupt */
   __HAL_UART_DISABLE_IT(&huart3, UART_IT_PE);
@@ -139,13 +225,6 @@ int main(void)
   // Тестовая посылка по UART
   sprintf((void*)TxBufAns,"TEst\n"); //  
   HAL_UART_Transmit(&huart3,(void*)TxBufAns, strlen((void*)TxBufAns),100);
-  // Start Uart7 - Nextion
-  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
-  HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
-  /* disable the UART Parity Error Interrupt */
-  __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
-  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-  __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
   // Start Uart5 - Optics
   Dummy = huart5.Instance->RDR ; // чистим буффер приема от OPTIC
   HAL_UART_Receive_IT(&huart5, RxBufExt,1); // ждем принятия первого байта из внешнего мира
@@ -169,25 +248,6 @@ int main(void)
       myBeep(100);
     Error_Handler();
   }
-  // перенастроим UART7  для NEXTION
-  huart7.Init.BaudRate = 9600;
-  if (HAL_UART_Init(&huart7) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  HAL_Delay(10);
-  sprintf((void*)Str,"bauds=115200яяя");
-  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
-
-  //NEX_Transmit(Str);// 
-   HAL_Delay(10);
-  huart7.Init.BaudRate = 115200;
-  if (HAL_UART_Init(&huart7) != HAL_OK)
-  {
-    Error_Handler();
-  }
- //  myBeep(100);
-  HAL_Delay(10);
   //UARTSendExt ((BYTE*)TxBufAns, strlen(TxBufAns));
 // инициализация клавиатуры 
   InitBtns(); 
@@ -197,8 +257,8 @@ int main(void)
 
   //CmdInitPage(0);// вызов окна заставки
   //HAL_Delay(10);
-  //SetMode (ModeWelcome);
-  //CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
+  SetMode (ModeWelcome);
+  CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
   //  MX_USB_DEVICE_Init();
 
 
@@ -209,7 +269,7 @@ int main(void)
   while (1)
   {
     // проверка кнопок 
-    if(GetSysTick(0)>30)// каждые 30 мС или больше...
+    if((GetSysTick(0)>30)&&(!ProgFW_LCD))// каждые 30 мС или больше...и не в программировании
     {
       KeyP = SetBtnStates( GetExpand (), 1 ); // опрос клавиатуры
       GetSysTick(1);// сброс системного ожидания
@@ -218,6 +278,14 @@ int main(void)
       // поконтролить батарейку
       // инекремент таймаре PA
       CountTimerPA++;
+      if(CountTimerPA>30)
+      {
+        sprintf((void*)Str,"p0.pic=%dяяя",LvlBatInd%10);
+        NEX_Transmit((void*)Str);//
+        
+        LvlBatInd++;
+        CountTimerPA = 0;
+      }
     }
     // проверка приема по UART EXT
     if (RSDecYes) // вызов программы обработки комманды принятой по UART
@@ -249,9 +317,10 @@ int main(void)
       NeedSaveParam = 0;
     }
     // основное отображение режима
-    //ModeFuncTmp();
+      if(!ProgFW_LCD)
+    ModeFuncTmp();
     /* USER CODE END WHILE */
-    
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

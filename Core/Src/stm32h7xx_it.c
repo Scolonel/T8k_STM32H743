@@ -205,6 +205,17 @@ void SysTick_Handler(void)
     beepTick = 0;
     HAL_GPIO_WritePin(Beep_GPIO_Port, Beep_Pin, GPIO_PIN_RESET);
   }
+  // контроль счетчика ожидания окончания приема
+  if(CountTimerUart2) // подождали посмотрим что приняли
+  {
+    CountTimerUart2--;
+    if(CountTimerUart2==0) // подождали посмотрим что приняли
+    {
+      Uart2DecYes = 1;// признак необходимости обработки принятой команды
+      RecievNEX=END_UART; // время истекло, приняли что то, пока не принимаем, ждем обработку
+      g_WtRdyNEX = 1; // ввзводим признак готовности данных, грубо окончание текущего приема
+    }
+  }
 
   /* USER CODE END SysTick_IRQn 1 */
 }
@@ -292,6 +303,16 @@ void USART3_IRQHandler(void)
 void EXTI15_10_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
+  // кнопка "S"
+  if (__HAL_GPIO_EXTI_GET_IT(BUT_START_Pin) != 0x00U)
+  {
+//EnaStartRun = 1;
+// из старой проги, признак нажатой кнопки "S"
+              rawPressKeyS = 1;
+
+//CountKeyS++; // число нажатых кнопок
+    
+  }
 
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
@@ -321,6 +342,20 @@ void UART5_IRQHandler(void)
 void UART7_IRQHandler(void)
 {
   /* USER CODE BEGIN UART7_IRQn 0 */
+  // это ответы из индикатора
+      if (__HAL_UART_GET_FLAG(&huart7, UART_FLAG_RXNE))
+  {
+  Dummy = (uint16_t)(huart7.Instance->RDR); // 
+//  TRD = (uint8_t)(Dummy); 
+//  if(ProgFW_LCD)
+//  {
+//     CDC_Transmit(0, (uint8_t*)(TRD), 1); // echo back on same channel
+//  }
+//  else // 
+//  {
+   RS_LCD((BYTE)Dummy); 
+//  }
+  }
 
   /* USER CODE END UART7_IRQn 0 */
   HAL_UART_IRQHandler(&huart7);

@@ -11,6 +11,8 @@
 
 volatile BYTE g_NeedScr=1; // перерисовки экрана ! јккуратно! надо проверить 
 volatile BYTE g_FirstScr=1; // первый вход в экран, нужна полна€ перерисовка (заполнение), далее измен€ем только нужные пол€, дл€ NEXTION
+volatile BYTE g_NeedChkAnsvNEX=0; // признак получени€ строки из редактора.и ее проверка
+ uint16_t Set_MAX_DB; // предельное значение индикатора дЅ в дес€тых дол€х (в SHAG дол€х) дл€ разных диапазонов
 
 
 
@@ -63,7 +65,7 @@ void CmdInitPage(int Num)
   //NEX_Transmit((void*)CmdNextion[Num]);
   g_FirstScr=1;
   //CreatDelay(20000);// 177 как в 173
-  HAL_Delay(30);
+  HAL_Delay(100);
 }
 
 
@@ -85,10 +87,13 @@ void SetMode( void(f)(void) )
 //}
 void ModeMain(void)// режим основной
 {
+  static volatile unsigned char FrFreeInd = 0; //указатель на основной курсор
+  
   char Str[32];
   char StrN[32];
-
-    //if (PRESS(BTN_OK))
+  Set_MAX_DB = (ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?(MAX_DB):(MAX_DB/2);
+  
+  //if (PRESS(BTN_OK))
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
   {
     myBeep(10);
@@ -108,7 +113,99 @@ void ModeMain(void)// режим основной
       break;
     }
     g_NeedScr = 1;
-
+    
+  }
+  // кнопка вверх
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
+  {
+    myBeep(25);
+    FrFreeInd=(int)(FrFreeInd+2)%3;
+    g_NeedScr = 1;
+    
+  }
+  // кнопка вниз
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(25);
+    FrFreeInd=(int)(FrFreeInd+1)%3;
+    g_NeedScr = 1;
+    
+  }
+  // кнопка влево , учитываем где стоит курсор
+  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+  {
+    myBeep(25);
+    if (FrFreeInd==0)
+    { 
+      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]>DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] -= DigitSet;
+      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
+    }    
+    if (FrFreeInd==1 || FrFreeInd==2)
+    {
+      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]>DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] -= DigitSet;
+      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = 0;
+    }   
+    //UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG 
+    g_NeedScr = 1;
+    
+  }
+  // кнопка враво , учитываем где стоит курсор
+  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+  {
+    myBeep(25);
+    if (FrFreeInd==0)
+    { 
+      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]<=Set_MAX_DB-DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] += DigitSet;
+      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = Set_MAX_DB;
+    }    
+    if (FrFreeInd==1 || FrFreeInd==2)
+    {
+      //UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]
+      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]<=Set_MAX_DB-DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] += DigitSet;
+      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = Set_MAX_DB;
+    }   
+    //UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG 
+    g_NeedScr = 1;
+    
+  }
+    // кнопка ћ≈Ќё , учитываем где стоит курсор
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+        if (FrFreeInd==1 || FrFreeInd==2)
+    {
+    myBeep(25);
+    UserSet.iLvlCurrLW[UserSet.iCurrLW] = UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1];
+    }
+    g_NeedScr = 1;
+  }
+  
+  // перебор длин волн по списку в одну сторону по кнопке 'S'
+  //длины волн
+  if (rawPressKeyS) // key S 
+  {  
+    myBeep(10);
+    
+    if(UserSet.iCurrLW<3) UserSet.iCurrLW++; // здесь переключаем длины волн (
+    else UserSet.iCurrLW = 0;
+    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+    {
+      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+      else UserSet.iCurrLW = 0;
+    }
+    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+    {
+      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+      else UserSet.iCurrLW = 0;
+    }
+    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+    {
+      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+      else UserSet.iCurrLW = 0;
+    }
+    // NeedSaveParam |=0x02;// Memory UserSet 
+    
+    rawPressKeyS = 0;  
+    g_NeedScr = 1;
   }
   
   if(g_FirstScr)
@@ -135,13 +232,26 @@ void ModeMain(void)// режим основной
   }
   if(g_NeedScr) // перерисовка индикатора при изменени€х и инициализации
   {
+    // раскрашивание пол€ выбора 
+    // закрасим бэкграунды  и установим требуемый
+    sprintf(Str, "t0.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);//
+    sprintf(Str, "t1.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str, "t2.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    // sprintf(Str, "t%d.bco=GREEN€€€", (FrFreeInd)?(FrFreeInd+3):(0)); // зеленый
+    sprintf(Str, "t%d.bco=GREEN€€€", (FrFreeInd)); // зеленый
+    NEX_Transmit((void*)Str);// 
+    // код подсветки требуемой строки если есть есть маркер строки
+    
     sprintf (Str,"t0.txt=\"%.2f dB\"€€€",UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG); //  уровень основной
     NEX_Transmit((void*)Str);//
     // значение пам€ти 1
     sprintf (Str,"t4.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][0]/SHAG); // 
     NEX_Transmit((void*)Str);//
     // значение пам€ти 2
-    sprintf (Str,"t5.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][0]/SHAG); // 
+    sprintf (Str,"t5.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][1]/SHAG); // 
     NEX_Transmit((void*)Str);//
     // длина волны рабоча€
     sprintf (Str,"t6.txt=\"%d nm\"€€€",ConfigDevice.PlaceLW[UserSet.iCurrLW]); // 
@@ -150,14 +260,17 @@ void ModeMain(void)// режим основной
     //if(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)
     sprintf (Str,"t7.txt=\"%s\"€€€",(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?("SM"):("MM")); // 
     NEX_Transmit((void*)Str);//
-  // рисуем значение Ўј√ј изменений
-  if(DigitSet<SHAG)
-  sprintf(Str,"t8.txt=\"%2.2f\"€€€",DigitSet/SHAG);
-  else
-  sprintf(Str,"t8.txt=\"%2.1f\"€€€",DigitSet/SHAG);
+    // рисуем значение Ўј√ј изменений
+    if(DigitSet<SHAG)
+      sprintf(Str,"t8.txt=\"%2.2f\"€€€",DigitSet/SHAG);
+    else
+      sprintf(Str,"t8.txt=\"%2.1f\"€€€",DigitSet/SHAG);
     NEX_Transmit((void*)Str);//
-
-
+    
+    CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
+    
+    NeedSaveParam |=0x02;// Memory UserSet 
+    
     g_NeedScr =  0;
   }
   
@@ -295,8 +408,12 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
     // вызовем новое окно!
     //CreatDelay(5000000);
     //SetModeDevice (MODEMENU); // принудительна€ установка режима прибора
-    CmdInitPage(1);
+    // начало работы..
+    CmdInitPage(0);
+    SetMode(ModeWelcome);
+    //CmdInitPage(0);
     HAL_Delay(500);// индикатор после сброса, врем€ не пон€тно!
+    TimeBegin = HAL_GetTick();
     myBeep(125);
   }
   

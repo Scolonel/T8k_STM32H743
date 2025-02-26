@@ -62,10 +62,11 @@
 //
 #define LENGTH_LINE_NUM 7 // число длин линий (диапазонов)
 
-#define NUM_VER                 50  // стартуем от 50 (22.01.2025) по этому номеру
+#define NUM_VER                 52  // стартуем от 50 (22.01.2025) по этому номеру
 #define MAX_DB 1600 // максимальное значение дБ умноженное на 20 для обеспечения шага 0.05
 #define SHAG 20.0  // делитель для индикации дБ
-
+// получение идентификатора платы
+#define GETIDPLT           (HAL_GPIO_ReadPin(IDC1_GPIO_Port, IDC1_Pin)<<1)+(HAL_GPIO_ReadPin(IDC0_GPIO_Port, IDC0_Pin))  // PD10 (79) // сигнал внешнего питания 0-внешнее питание
 
 //#define BELCORESIZE 224
 #define ENAOLDLCD 0 //разрешение прорисовки на старый LCD 1-разрешено, 0-запрещено
@@ -109,6 +110,7 @@
 extern const char* DeviceIDN[2];
 
 extern  char DigitSet; //шаг изменеия устанавливаемого затухания
+extern  char LvlBatInd; //индикатор уровня батарейки
 
       // тики опроса клавиатура взято из Т7К_АР
 uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс

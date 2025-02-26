@@ -262,13 +262,20 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+  int volatile Result;
+  
     // надо проверить если пишем индикатор то просто транслируем блок
   Buf[(*Len)]= 0;
+  //char StrBuf[]="rest€€€\0";
   if(ProgFW_LCD)
   {
     StartRecievNEX (5000);// врем€ ожидани€ начала ответов от индикатора
             //    // вдруг это команда сборса...
-          if (((*Len)>=7)&&(!memcmp ((void*)&Buf[(*Len)-7], "rest€€€",7)))
+          if (((*Len)>=7)&&(!(memcmp ((void*)&Buf[(*Len)-7], "rest€€€",7))))
+              //Result = strncmp ((void*)&Buf, "rest€€€",*Len);
+              //Result = strncmp ((char*)Buf, StrBuf,*Len);
+
+          //if (Result != 0)
           {
       ProgFW_LCD = 2;
           }
