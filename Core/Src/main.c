@@ -78,7 +78,7 @@ DWORD CountTimerPA = 0;
 char ScreenReDraw=0; // признак необходимости перерисовать экран
 char NeedSaveParam=0; // признак необходимости сохранить параметры
 
-uint16_t CurrLevelDAC; //текущий уровень для ЦАП (востанавливаем из тех что храним в UserSet)
+uint16_t CurrLevelDAC=0; //текущий уровень для ЦАП (востанавливаем из тех что храним в UserSet)
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -178,10 +178,13 @@ int main(void)
   MX_DAC1_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+  // сразу пробуем поставить ЦАП
+      HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,CurrLevelDAC);
+  
    // проверяем конфигурацию платы, чтобы не запустить программу по исправленю
   // если вдруг зашили чужую программу, попытаемся написать в индикатор и зациклится
   
- 
+
   // Start Uart7 - Nextion
   uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
   HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
@@ -274,9 +277,11 @@ int main(void)
       KeyP = SetBtnStates( GetExpand (), 1 ); // опрос клавиатуры
       GetSysTick(1);// сброс системного ожидания
       // управление красным лазером
-      // управление лазерами в режиме CW*
       // поконтролить батарейку
       // инекремент таймаре PA
+      // выведем текущий уровень ЦАП
+      HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,CurrLevelDAC);
+      
       CountTimerPA++;
       if(CountTimerPA>30)
       {
@@ -317,10 +322,10 @@ int main(void)
       NeedSaveParam = 0;
     }
     // основное отображение режима
-      if(!ProgFW_LCD)
-    ModeFuncTmp();
+    if(!ProgFW_LCD)
+      ModeFuncTmp();
     /* USER CODE END WHILE */
-
+    
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
