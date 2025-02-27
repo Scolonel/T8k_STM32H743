@@ -41,7 +41,7 @@
 //#define RAWSIZE    5500 //4384 //0x1200  //(4096+288)
 //#define FLTSIZE    5 // размерность фильтра
 // массивы из первичной проверки...перекликаются с размерами объявленными ранее
-#define SizeBuf_ADC_int 8
+#define SizeBuf_ADC_int 4
 //#define SizeBuf_ADC 6000//8192
 //#define SizeLogBuf 8000
 //#define SizeBuf_DAC 75
@@ -62,11 +62,13 @@
 //
 #define LENGTH_LINE_NUM 7 // число длин линий (диапазонов)
 
-#define NUM_VER                 53  // стартуем от 50 (22.01.2025) по этому номеру
+#define NUM_VER                 54  // стартуем от 50 (22.01.2025) по этому номеру
 #define MAX_DB 1600 // максимальное значение дБ умноженное на 20 для обеспечения шага 0.05
 #define SHAG 20.0  // делитель для индикации дБ
 // получение идентификатора платы
 #define GETIDPLT           (HAL_GPIO_ReadPin(IDC1_GPIO_Port, IDC1_Pin)<<1)+(HAL_GPIO_ReadPin(IDC0_GPIO_Port, IDC0_Pin))  // PD10 (79) // сигнал внешнего питания 0-внешнее питание
+
+#define GETEXTPWR           (HAL_GPIO_ReadPin(EXT_POWER_GPIO_Port, EXT_POWER_Pin)) // PE3 (2) // сигнал внешнего питания 0-внешнее питание
 
 //#define BELCORESIZE 224
 #define ENAOLDLCD 0 //разрешение прорисовки на старый LCD 1-разрешено, 0-запрещено

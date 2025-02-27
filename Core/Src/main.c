@@ -79,6 +79,8 @@ char ScreenReDraw=0; // признак необходимости перерисовать экран
 char NeedSaveParam=0; // признак необходимости сохранить параметры
 
 uint16_t CurrLevelDAC=0; //текущий уровень дл€ ÷јѕ (востанавливаем из тех что храним в UserSet)
+
+float Ubat=4.1; // начальное напр€жение батареи
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -179,6 +181,9 @@ int main(void)
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
   // сразу пробуем поставить ÷јѕ
+  
+    HAL_DAC_Start(&hdac1,DAC_CHANNEL_2);
+
       HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,CurrLevelDAC);
   
    // провер€ем конфигурацию платы, чтобы не запустить программу по исправленю
@@ -212,6 +217,8 @@ int main(void)
   }
  //  myBeep(100);
   HAL_Delay(10);
+  sprintf((void*)Str, "page 0€€€"); // < START>
+  NEX_Transmit((void*)Str);    //
 
   
   
@@ -242,10 +249,12 @@ int main(void)
 
     Error_Handler();
    }
-  
+        // конец обработки клавы и ј÷ѕ, запустим снова ј÷ѕ
+     // if(HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&BufADC,3) != HAL_OK) Error_Handler();//3
+
   if (HAL_ADC_Start_DMA(&hadc1,
-                        (uint32_t *)BufADC,
-                        SizeBuf_ADC_int
+                        (uint32_t *)&BufADC,
+                        3
                           ) != HAL_OK)
   {
       myBeep(100);
@@ -257,6 +266,8 @@ int main(void)
   
     // начало работы..
   TimeBegin = HAL_GetTick();
+  
+  
 
   //CmdInitPage(0);// вызов окна заставки
   //HAL_Delay(10);
@@ -285,12 +296,30 @@ int main(void)
       CountTimerPA++;
       if(CountTimerPA>30)
       {
-        sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd%10);
+        // каждую секунду, посчитаем батарейку
+        // (BufADC[0]*(2.5/4096))
+        // хорошо зар€женные 5.3-5.4 -
+        // без аккумул€тора от сети вижу 4.33 
+        // пока возьмем 4.1 мин - 5.0 макс
+        Ubat = 2.5*2*BufADC[0]/4096; 
+        LvlBatInd = (char)(Ubat*10. - 40.)+1;
+        if(Ubat<4.0) LvlBatInd = 0;
+        if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
+        if(GETEXTPWR == 0)  LvlBatInd = 9;
+        sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
         NEX_Transmit((void*)Str);//
         
-        LvlBatInd++;
+        //LvlBatInd++;
         CountTimerPA = 0;
+      // здесь можно запустить »змерение ј÷ѕ
+        if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,3) != HAL_OK)
+        {
+          myBeep(100);
+          Error_Handler();
+        }
       }
+      
+      
     }
     // проверка приема по UART EXT
     if (RSDecYes) // вызов программы обработки комманды прин€той по UART
@@ -325,7 +354,7 @@ int main(void)
     if(!ProgFW_LCD)
       ModeFuncTmp();
     /* USER CODE END WHILE */
-    
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
