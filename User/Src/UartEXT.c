@@ -338,13 +338,74 @@ void DecodeCommandRS (void)
         WORD Data;
         //NeedTransmit = 0;
         
+        // ;set:DAC  - работа с кодами ЦАП на прямую
+        if (!memcmp ((void*)RX_Buf, ";SET:DAC",8)) //
+        {
+          
+          if(RX_Buf[8] == ' ') // надо установить значение
+          {
+            Data = (WORD)atoi((char*)&RX_Buf[9]);
+            if(Data>4095) Data = 1000;
+            CurrLevelDAC = Data;  
+            NeedTransmit = 1;
+          }
+          if(RX_Buf[8] == 'D') // надо установить значение увеличение
+          {
+            if(CurrLevelDAC>1) CurrLevelDAC--;
+            else CurrLevelDAC = 4095;  
+            NeedTransmit = 1;
+          }
+          if(RX_Buf[8] == 'U') // надо установить значение увеличение
+          {
+            if(CurrLevelDAC<4095) CurrLevelDAC++;
+            else CurrLevelDAC = 1000;  
+            NeedTransmit = 1;
+          }
+          if(RX_Buf[8] == '?') // надо send время
+          {
+            NeedTransmit = 1;
+          }
+          //New
+          if(NeedTransmit)
+          {
+            if(ModeWork)// если в настройке надо обновить экран
+              g_NeedScr = 1;
+            sprintf(BufString,"%04d\r",CurrLevelDAC);//c
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            
+          }
+        }        
+        // ;set:MOD  - режим прибора
+        if (!memcmp ((void*)RX_Buf, ";SET:MOD",8)) //
+        {
+          
+          if(RX_Buf[8] == ' ') // надо установить режим
+          {
+            Data = (WORD)atoi((char*)&RX_Buf[9]);
+            if(Data) ModeWork = 1;
+            else
+            ModeWork = 0;  
+            g_NeedScr = 1;
+            NeedTransmit = 1;
+          }
+          if(RX_Buf[8] == '?') // надо send время
+          {
+            NeedTransmit = 1;
+          }
+          //New
+          if(NeedTransmit)
+          {
+            sprintf(BufString,"%d\r",ModeWork);//c
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          }
+        }        
         // ;set:num  - НОМЕР ПРИБОРА
         if (!memcmp ((void*)RX_Buf, ";SET:SN",7)) //
         {
           
           if(RX_Buf[7] == ' ') // надо установить номер
           {
-            Data = (WORD)atoi((char*)&RX_Buf[9]);
+            Data = (WORD)atoi((char*)&RX_Buf[8]);
             SetNumDevice(Data); // установка номера  прибора      
             NeedTransmit = 1;
             NeedSaveParam |=0x01;
@@ -439,8 +500,10 @@ void DecodeCommandRS (void)
                   UserSet.iLvlCurrLW[UserSet.iCurrLW] = IndxPtn;
                   CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]] = (uint16_t)Data;
                   CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
-                  NeedSaveParam |=0x06;
-                  ScreenReDraw = 1;
+                  // надо быстро сохранить 2 байта, пробуем
+                  EEPROM_write((void*)CurrLevelDAC, ADR_CoeffPM + 4096*IndxLW + 2*IndxPtn , 2);
+                  //NeedSaveParam |=0x06;
+                  g_NeedScr = 1;
                   NeedTransmit = 1;
                   
                   //New
@@ -469,7 +532,7 @@ void DecodeCommandRS (void)
               }
               // востанавливаем уровень ЦАП для данной длины волны
               CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
-              ScreenReDraw = 1;
+              g_NeedScr = 1;
               NeedTransmit = 1;
               NeedSaveParam |=0x02;
             }

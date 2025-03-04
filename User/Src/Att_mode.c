@@ -245,8 +245,6 @@ void ModeMain(void)// режим основной
     NEX_Transmit((void*)Str);// 
     // код подсветки требуемой строки если есть есть маркер строки
     
-    sprintf (Str,"t0.txt=\"%.2f dB\"€€€",UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG); //  уровень основной
-    NEX_Transmit((void*)Str);//
     // значение пам€ти 1
     sprintf (Str,"t4.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][0]/SHAG); // 
     NEX_Transmit((void*)Str);//
@@ -261,13 +259,26 @@ void ModeMain(void)// режим основной
     sprintf (Str,"t7.txt=\"%s\"€€€",(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?("SM"):("MM")); // 
     NEX_Transmit((void*)Str);//
     // рисуем значение Ўј√ј изменений
+    
+    if(ModeWork) // настройка
+    {
+      sprintf(Str,"t8.txt=\"!SET!\"€€€");
+    NEX_Transmit((void*)Str);//
+    sprintf (Str,"t0.txt=\"%04d\"€€€",CurrLevelDAC); //  уровень основной
+    NEX_Transmit((void*)Str);//
+    }
+    else
+    {
     if(DigitSet<SHAG)
       sprintf(Str,"t8.txt=\"%2.2f\"€€€",DigitSet/SHAG);
     else
       sprintf(Str,"t8.txt=\"%2.1f\"€€€",DigitSet/SHAG);
     NEX_Transmit((void*)Str);//
-    
+    sprintf (Str,"t0.txt=\"%.2f dB\"€€€",UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG); //  уровень основной
+    NEX_Transmit((void*)Str);//
     CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
+    }
+    NEX_Transmit((void*)Str);//
     
     NeedSaveParam |=0x02;// Memory UserSet 
     

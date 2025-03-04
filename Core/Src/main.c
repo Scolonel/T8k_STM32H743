@@ -60,7 +60,9 @@ uint16_t KeyP; // клавиши нажатые
   // контроль идентификатора платы
  uint8_t CheckErrID_Plate=0; 
 
-  
+// режим работы прибора для настройки (1 - настройка, 0- работа)
+ char ModeWork = 0;
+ 
 unsigned int CheckErrMEM; 
 BYTE CurrLang; // текущий язык
 
