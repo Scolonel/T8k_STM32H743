@@ -483,7 +483,7 @@ void DecodeCommandRS (void)
           if(IndxLW<4) // можно попробовать записать
           {
             IndxPtn=(uint16_t)atoi((char*)&RX_Buf[10]);  // индекс точки сохранени€ кода ÷јѕ
-            if(IndxPtn<1600)
+            if(IndxPtn<=1600) // !пишем 1601 €чейку
             {
               // ищем значение оно после ','
               int i=11;
