@@ -144,7 +144,7 @@ DWORD CheckUserGonfig (void)  // ѕроверка пользовательских настроек » исправлени
 DWORD FindErrCoeff (void)
 {
   DWORD Err = 0;
-  for (int i=0; i<1600; ++i) 
+  for (int i=0; i<=1600; ++i) 
   {
     if (CoeffLW.SetCoefLW[0][i]>4095) Err |= 0x4000 ; // плохое первое место
     if (CoeffLW.SetCoefLW[1][i]>4095) Err |= 0x8000 ; // плохое второе место

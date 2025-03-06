@@ -243,19 +243,19 @@ uint32_t BeginConfig (void) // начальная конфигурация
     }
     // контроль таблицы уровней
     //EEPROM_read(&CoeffLW, ADR_CoeffPM, sizeof(CoeffLW)); //проверка таблицы коэффициентов и исправление таблицы коэффициентов
-    EEPROM_read(&CoeffLW, ADR_CoeffPM, 12800); //проверка таблицы коэффициентов и исправление таблицы коэффициентов
+    EEPROM_read(&CoeffLW, ADR_CoeffPM, sizeof(CoeffLW)); //проверка таблицы коэффициентов и исправление таблицы коэффициентов
     ErrDev = FindErrCoeff ();
     SPCTR_err = SPCTR_err + ErrDev;
     if (ErrDev)
     {
       CodeError |= ERR_SPECTR; // плохая спектралка правим! (0x100)
       //EEPROM_write(&CoeffLW, ADR_CoeffPM, sizeof(CoeffLW));
-      EEPROM_write(&CoeffLW, ADR_CoeffPM,12800);
+      EEPROM_write(&CoeffLW, ADR_CoeffPM,sizeof(CoeffLW));
     }
     
   }
   //return (CodeError | (ErrDev<<3)); 
-  return (CodeError); 
+  return (SPCTR_err); 
 }
 
 
