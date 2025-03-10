@@ -501,8 +501,9 @@ void DecodeCommandRS (void)
                   CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]] = (uint16_t)Data;
                   CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
                   // надо быстро сохранить 2 байта, пробуем
-                  EEPROM_write((void*)CurrLevelDAC, ADR_CoeffPM + 4096*IndxLW + 2*IndxPtn , 2);
-                  //NeedSaveParam |=0x06;
+                  //EEPROM_write((void*)&CurrLevelDAC, ADR_CoeffPM + 4096*IndxLW + 2*IndxPtn , 2);
+                   EEPROM_write(&CurrLevelDAC, ADR_CoeffPM + 4096*IndxLW + 2*IndxPtn , 2);
+                 //NeedSaveParam |=0x06;
                   g_NeedScr = 1;
                   NeedTransmit = 1;
                   

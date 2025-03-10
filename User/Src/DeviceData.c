@@ -155,28 +155,28 @@ DWORD FindErrCoeff (void)
   {
     if(Err && 0x4000)
     {
-      for (int i=0; i<1600; ++i) 
+      for (int i=0; i<=1600; ++i) 
       {
         CoeffLW.SetCoefLW[0][i]=i; // плохое первое место
       }
     }
     if(Err && 0x8000)
     {
-      for (int i=0; i<1600; ++i) 
+      for (int i=0; i<=1600; ++i) 
       {
         CoeffLW.SetCoefLW[1][i]=i; // плохое второе  место
       }
     }
     if(Err && 0x10000)
     {
-      for (int i=0; i<1600; ++i) 
+      for (int i=0; i<=1600; ++i) 
       {
         CoeffLW.SetCoefLW[2][i]=i; // плохое третье место
       }
     }
     if(Err && 0x20000)
     {
-      for (int i=0; i<1600; ++i) 
+      for (int i=0; i<=1600; ++i) 
       {
         CoeffLW.SetCoefLW[3][i]=i; // плохое четвертое место
       }

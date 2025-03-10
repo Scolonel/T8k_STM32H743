@@ -359,13 +359,14 @@ void ModeWelcome(void)// режим заставки
     sprintf (Str,"t3.txt=\"%02d.%02d.%02d\"€€€",current_time.RTC_Mday,current_time.RTC_Mon,current_time.RTC_Year);//,MsgMass[14][CurrLang] убран год 25.12.2013
     NEX_Transmit((void*)Str);//
     // уровень и тип зар€да
-    if (!(EXT_POW))
+    if (GETEXTPWR == 0)
     {
       sprintf(Str,"t7.txt=\"%s\"€€€",MsgMass[11][CurrLang]);// внешнее питание
     }
     else
+      // от батареек LvlBatInd 
     {
-      sprintf(Str,"t7.txt=\"%d%%\"€€€", ProcBatInd);
+      sprintf(Str,"t7.txt=\"%d%%\"€€€", (int)(LvlBatInd*12.5));
     }
     NEX_Transmit((void*)Str);// 
   }

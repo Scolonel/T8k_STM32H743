@@ -202,21 +202,21 @@ uint32_t BeginConfig (void) // начальная конфигурация
   // проверка наличия микросхемы управления ключами 95555 на шине I2C(2)
   //конфигурация PCA9555 ( клавитатура ) адрес 0x20
   // устанавливаем как входы все! несмотря на то что после сброса уже должно быть как входд
-  StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(KEYBOARD<<1), 2, 1000); // если эта микросхема???
+  StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(KEYBOARD<<1), 2, 200); // если эта микросхема???
   if (StatusI2C2) CodeError |= NOT_PCA9554_KB; // микросхема не определяется (0x01)
   StatusI2C2 =  ConfigKBRD (); // конфигурируем PCA9554  
   if (StatusI2C2) CodeError |= CFG_ERR_PCA9554_KB; // микросхема не конфигурируется (0x02)
   //
   //конфигурация PCA9554 ( ExtKey ) адрес 0x39
   // 
-  StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(EXPWRCTRL<<1), 2, 1000); // если эта микросхема???
+  StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(EXPWRCTRL<<1), 2, 200); // если эта микросхема???
   if (StatusI2C2) CodeError |= NOT_PCA9555; // микросхема не определяется (0x04)
   StatusI2C2 =  ConfigPWRCtrl (); // конфигурируем PCA9555  
   if (StatusI2C2) CodeError |= CFG_ERR_PCA9555; // микросхема не конфигурируется (0x08)
   //
   
 //  // проверка наличия микросхемы  24lc512 на шине I2C(2) EEPROM
-  StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(EEPROM24LC128<<1), 2, 1000); // если эта микросхема???
+  StatusI2C2 =  TOP_I2C_IsDeviceReady(&hi2c2, (uint16_t)(EEPROM24LC128<<1), 2, 200); // если эта микросхема???
   if (StatusI2C2) CodeError |= NOT_EEPROM_24LC128; // микросхема не определяется (0x10)
   else // микросхема есть прочитаем конфигурацию таблиц и поправим если надо Взята конфигурация от 9400
   {
@@ -282,7 +282,7 @@ HAL_StatusTypeDef EEPROM_write(void *buff, uint16_t address, uint32_t byte)
     {
       BufTX[2+i] = *ptr++;
     }
-    StatusI2C2 = TOP_I2C_Master_Transmit(&hi2c2, (uint16_t)(EEPROM24LC128<<1), BufTX, size_pg+2, 10000); // собственно запись блока не более 64 байт
+    StatusI2C2 = TOP_I2C_Master_Transmit(&hi2c2, (uint16_t)(EEPROM24LC128<<1), BufTX, size_pg+2, 1000); // собственно запись блока не более 64 байт
      HAL_Delay(10);
   }
   
@@ -292,7 +292,7 @@ HAL_StatusTypeDef EEPROM_write(void *buff, uint16_t address, uint32_t byte)
   {
     BufTX[2+i] = *ptr++;
   }
-  StatusI2C2 = TOP_I2C_Master_Transmit(&hi2c2, (uint16_t)(EEPROM24LC128<<1), BufTX, last_byte+2, 10000); // собственно запись блока не более 64 байт
+  StatusI2C2 = TOP_I2C_Master_Transmit(&hi2c2, (uint16_t)(EEPROM24LC128<<1), BufTX, last_byte+2, 1000); // собственно запись блока не более 64 байт
   HAL_Delay(10);
 
   
@@ -313,7 +313,7 @@ HAL_StatusTypeDef EEPROM_read(void *buff, uint16_t address, uint32_t byte)
   BufTX[0] = (uint8_t)(address>>8 & 0xFF);
   BufTX[1] = (uint8_t)(address & 0xFF);
   StatusI2C2 = TOP_I2C_Master_Transmit(&hi2c2, (uint16_t)(EEPROM24LC128<<1), BufTX, 2, 1000);
-  TOP_I2C_Master_Receive(&hi2c2, (uint16_t)(EEPROM24LC128<<1), buff, byte, 10000);
+  TOP_I2C_Master_Receive(&hi2c2, (uint16_t)(EEPROM24LC128<<1), buff, byte, 5000);
 
   return StatusI2C2;
   }

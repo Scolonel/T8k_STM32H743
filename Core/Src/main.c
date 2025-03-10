@@ -55,7 +55,7 @@
 /* USER CODE BEGIN PV */
 uint16_t KeyP; // клавиши нажатые 
   char DigitSet = 1; //шаг изменеия устанавливаемого затухания
-  char LvlBatInd=0; //индикатор уровня батарейки
+  char LvlBatInd=8; //индикатор уровня батарейки
 
   // контроль идентификатора платы
  uint8_t CheckErrID_Plate=0; 
@@ -226,24 +226,6 @@ int main(void)
   
   // так как повторяем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
   CheckErrMEM =   BeginConfig();
-
-    // Start Uart3 - внешний мир
-  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
-  HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
-  /* disable the UART Parity Error Interrupt */
-  __HAL_UART_DISABLE_IT(&huart3, UART_IT_PE);
-  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-  __HAL_UART_DISABLE_IT(&huart3, UART_IT_ERR);
-  // Тестовая посылка по UART
-  sprintf((void*)TxBufAns,"TEst\n"); //  
-  HAL_UART_Transmit(&huart3,(void*)TxBufAns, strlen((void*)TxBufAns),100);
-  // Start Uart5 - Optics
-  Dummy = huart5.Instance->RDR ; // чистим буффер приема от OPTIC
-  HAL_UART_Receive_IT(&huart5, RxBufExt,1); // ждем принятия первого байта из внешнего мира
-  /* disable the UART Parity Error Interrupt */
-  __HAL_UART_DISABLE_IT(&huart5, UART_IT_PE);
-  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-  __HAL_UART_DISABLE_IT(&huart5, UART_IT_ERR);
 // подготовка внутреннего АЦП
     if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
   {
@@ -262,12 +244,36 @@ int main(void)
       myBeep(100);
     Error_Handler();
   }
+
+    // Start Uart3 - внешний мир
+  Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
+  HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
+  /* disable the UART Parity Error Interrupt */
+  __HAL_UART_DISABLE_IT(&huart3, UART_IT_PE);
+  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+  __HAL_UART_DISABLE_IT(&huart3, UART_IT_ERR);
+  // Тестовая посылка по UART
+  sprintf((void*)TxBufAns,"TEst\n"); //  
+  HAL_UART_Transmit(&huart3,(void*)TxBufAns, strlen((void*)TxBufAns),100);
+  // Start Uart5 - Optics
+  Dummy = huart5.Instance->RDR ; // чистим буффер приема от OPTIC
+  HAL_UART_Receive_IT(&huart5, RxBufExt,1); // ждем принятия первого байта из внешнего мира
+  /* disable the UART Parity Error Interrupt */
+  __HAL_UART_DISABLE_IT(&huart5, UART_IT_PE);
+  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+  __HAL_UART_DISABLE_IT(&huart5, UART_IT_ERR);
   //UARTSendExt ((BYTE*)TxBufAns, strlen(TxBufAns));
 // инициализация клавиатуры 
   InitBtns(); 
   
     // начало работы..
   TimeBegin = HAL_GetTick();
+// получим и посчитаем батарейку
+        Ubat = 2.5*3*BufADC[0]/4096; 
+        LvlBatInd = (char)(Ubat*10. - 40.)+1;
+        if(Ubat<4.0) LvlBatInd = 0;
+        if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
+        if(GETEXTPWR == 0)  LvlBatInd = 9;
   
   
 
@@ -303,7 +309,7 @@ int main(void)
         // хорошо заряженные 5.3-5.4 -
         // без аккумулятора от сети вижу 4.33 
         // пока возьмем 4.1 мин - 5.0 макс
-        Ubat = 2.5*2*BufADC[0]/4096; 
+        Ubat = 2.5*3*BufADC[0]/4096; 
         LvlBatInd = (char)(Ubat*10. - 40.)+1;
         if(Ubat<4.0) LvlBatInd = 0;
         if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
