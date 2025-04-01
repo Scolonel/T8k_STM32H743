@@ -239,6 +239,8 @@ void ModeMain(void)// режим основной
     {
       myBeep(25);
       UserSet.iLvlCurrLW[UserSet.iCurrLW] = UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1];
+      if(FrFreeInd==1) FrFreeInd=2;
+      else FrFreeInd=1;
     }
     g_NeedScr = 1;
   }

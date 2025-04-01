@@ -222,7 +222,7 @@ int main(void)
   sprintf((void*)Str, "page 0€€€"); // < START>
   NEX_Transmit((void*)Str);    //
 
-  
+ 
   
   // так как повтор€ем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
   CheckErrMEM =   BeginConfig();
