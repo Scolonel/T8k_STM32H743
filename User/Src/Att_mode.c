@@ -269,6 +269,8 @@ void ModeMain(void)// режим основной
     myBeep(35);
     
     UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
+    // требование А.К. от 30.04.2025
+    FrFreeInd=0;
     
     //    if(UserSet.iCurrLW<3) UserSet.iCurrLW++; // здесь переключаем длины волн (
     //    else UserSet.iCurrLW = 0;
