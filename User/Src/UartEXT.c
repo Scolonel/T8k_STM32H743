@@ -12,7 +12,7 @@
 
 #include "system.h"
 
-const char* DeviceIDN[2]= {"TOPAZ-5000","MOT-500M-60"};
+const char* DeviceIDN[2]= {"рноюг-5000","MOT-500M-60"};
 
 volatile DWORD UART0Status;
 volatile BYTE UART0TxEmpty = 1;

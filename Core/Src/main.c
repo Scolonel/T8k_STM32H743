@@ -42,6 +42,8 @@
     // !!!В Н И М А Н И Е!!!
     // идентификатор платы должен совпасть с программным
 #define ID_PLATE  0x2 //0x3 - Т7к  0x2 - Т5к
+//#define ID_PLATE  0x2 //0x3 - Т7к  0x2 - Т5к
+#define DEL_PWR (100./62. + 1) //  делитель для контроля напряжения батарейки
 
 /* USER CODE END PD */
 
@@ -272,7 +274,7 @@ int main(void)
     // начало работы..
   TimeBegin = HAL_GetTick();
 // получим и посчитаем батарейку
-        Ubat = 2.5*3*BufADC[0]/4096; 
+        Ubat = 2.5*DEL_PWR*BufADC[0]/4096; 
         LvlBatInd = (char)(Ubat*10. - 40.)+1;
         if(Ubat<4.0) LvlBatInd = 0;
         if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
@@ -312,7 +314,7 @@ int main(void)
         // хорошо заряженные 5.3-5.4 -
         // без аккумулятора от сети вижу 4.33 
         // пока возьмем 4.1 мин - 5.0 макс
-        Ubat = 2.5*3*BufADC[0]/4096; 
+        Ubat = 2.5*DEL_PWR*BufADC[0]/4096; 
         LvlBatInd = (char)(Ubat*10. - 40.)+1;
         if(Ubat<4.0) LvlBatInd = 0;
         if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
