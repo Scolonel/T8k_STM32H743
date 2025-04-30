@@ -141,6 +141,14 @@ void ModeMain(void)// режим основной
       else UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
       g_NeedScr = 1;
     }
+    if (FrFreeInd==1 || FrFreeInd==2)
+    {
+      myBeep(3);
+      DigitSet = 1;
+      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]>DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] -= DigitSet;
+      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = 0;
+      g_NeedScr = 1;
+    }   
   }
   // кнопка влево , учитываем где стоит курсор
   if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
@@ -191,6 +199,15 @@ void ModeMain(void)// режим основной
       g_NeedScr = 1;
       
     }    
+    if (FrFreeInd==1 || FrFreeInd==2)
+    {
+      myBeep(3);
+      DigitSet = 1;
+      //UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]
+      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]<=Set_MAX_DB-DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] += DigitSet;
+      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = Set_MAX_DB;
+      g_NeedScr = 1;
+    }   
     
   }
   // кнопка враво , учитываем где стоит курсор
