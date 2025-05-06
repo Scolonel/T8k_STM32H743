@@ -27,6 +27,11 @@ const unsigned TimeLight[TIME_LIGHT_NUM] = {0,15,30};
 const char *IdnsBC[2]= {"SvyazServis   \0","OPTOKON Co.Ltd\0"};
 const char *MfidBC[2][2]= {{"TOPAZ7\0","TOPAZ7\0"},{"MOT700\0","MOT950\0"}};
 
+// структура данных о батарейки, пишем по элементу каждую минуту от включения(0...1023)
+BAT_CNTR LvlBatSav;
+
+uint32_t CountBat; // счетчик записей по батареи
+
 // структура установочных коэфф (0...4095)
 TAB_SET CoeffLW;
 //// структура конфигурации прибора

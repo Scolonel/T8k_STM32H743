@@ -84,6 +84,9 @@ char NeedSaveParam=0; // признак необходимости сохранить параметры
 
 uint16_t CurrLevelDAC=0; //текущий уровень дл€ ÷јѕ (востанавливаем из тех что храним в UserSet)
 
+  uint32_t CcMinute=0; // счетчик минуты (посекундно)
+
+  
 float Ubat=4.1; // начальное напр€жение батареи
 /* USER CODE END PV */
 
@@ -279,7 +282,8 @@ int main(void)
         if(Ubat<4.0) LvlBatInd = 0;
         if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
         if(GETEXTPWR == 0)  LvlBatInd = 9;
-  
+    CountBat = 0;    
+  LvlBatSav.BatControl[CountBat++] = Ubat;
   
 
   //CmdInitPage(0);// вызов окна заставки
@@ -307,7 +311,7 @@ int main(void)
       HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,CurrLevelDAC);
       
       CountTimerPA++;
-      if(CountTimerPA>30)
+      if(CountTimerPA>33)
       {
         // каждую секунду, посчитаем батарейку
         // (BufADC[0]*(2.5/4096))
@@ -321,7 +325,15 @@ int main(void)
         if(GETEXTPWR == 0)  LvlBatInd = 9;
         sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
         NEX_Transmit((void*)Str);//
-        
+        // получим текущее врем€ и оработаем его
+          if(CcMinute++>60)
+          {
+            if(CountBat++>1024)
+            CountBat=0;
+            LvlBatSav.BatControl[CountBat] = Ubat;
+            CcMinute=0;
+          }
+
         //LvlBatInd++;
         CountTimerPA = 0;
       // здесь можно запустить »змерение ј÷ѕ

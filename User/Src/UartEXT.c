@@ -315,6 +315,21 @@ void DecodeCommandRS (void)
         }
         
       }
+      // ;syst:bat? -  запрос данных по батарейки (всех)
+      if (!memcmp ((void*)RX_Buf, ";SYST:BAT?",10)) //
+      {
+        
+                  sprintf(BufString,"%d\n",CountBat); // выдаем данные
+                  UARTSendExt ((BYTE*)BufString, strlen (BufString));
+                  HAL_Delay(1);
+        for(int i= 0;i<CountBat;i++)
+        {
+                  sprintf(BufString,"%.2f\n",LvlBatSav.BatControl[i]); // выдаем данные
+                  UARTSendExt ((BYTE*)BufString, strlen (BufString));
+                  HAL_Delay(1);
+        }
+        NeedTransmit = 1;
+      }
       // ;syst:key ss -  имитация нажатия кнопки
       if (!memcmp ((void*)RX_Buf, ";SYST:KEY ",10)) //
       {

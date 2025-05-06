@@ -72,7 +72,8 @@ void MX_RTC_Init(void)
     unsigned int CurTime = TotalSec (RTCGetTime()); 
    //  1731664800 - 15 nov 2024 10.00.00
    //  1743490800 - 01 april 2025 10.00.00
-  if(CurTime < 1743490800)
+   //  1746514800 - 06 may 2025 10.00.00
+  if(CurTime < 1746514800)
   {
   /* USER CODE END Check_RTC_BKUP */
 
@@ -88,8 +89,8 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_APRIL;
-  sDate.Date = 01;
+  sDate.Month = RTC_MONTH_MAY;
+  sDate.Date = 06;
   sDate.Year = 25;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
