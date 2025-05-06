@@ -282,9 +282,13 @@ int main(void)
         if(Ubat<4.0) LvlBatInd = 0;
         if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
         if(GETEXTPWR == 0)  LvlBatInd = 9;
-    CountBat = 0;    
-  LvlBatSav.BatControl[CountBat++] = Ubat;
-  
+   // CountBat = 0;    
+  LvlBatSav.BatControl[0] = CountBat++;
+  LvlBatSav.BatControl[CountBat] = Ubat;
+  // пропишем в пам€ть
+  EEPROM_write(&LvlBatSav.BatControl[0], ADR_BatSave  , 4);
+  EEPROM_write(&LvlBatSav.BatControl[CountBat], ADR_BatSave +  4*CountBat , 4);
+
 
   //CmdInitPage(0);// вызов окна заставки
   //HAL_Delay(10);
@@ -326,17 +330,23 @@ int main(void)
         sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
         NEX_Transmit((void*)Str);//
         // получим текущее врем€ и оработаем его
-          if(CcMinute++>60)
-          {
-            if(CountBat++>1024)
-            CountBat=0;
-            LvlBatSav.BatControl[CountBat] = Ubat;
-            CcMinute=0;
-          }
-
+        if(CcMinute++>60)
+        {
+          if(CountBat++>2048)
+            CountBat=1;
+          
+          LvlBatSav.BatControl[CountBat] = Ubat;
+          LvlBatSav.BatControl[0] = CountBat;
+          // пропишем в пам€ть
+          EEPROM_write(&LvlBatSav.BatControl[0], ADR_BatSave  , 4);
+          EEPROM_write(&LvlBatSav.BatControl[CountBat], ADR_BatSave +  4*CountBat , 4);
+          
+          CcMinute=0;
+        }
+        
         //LvlBatInd++;
         CountTimerPA = 0;
-      // здесь можно запустить »змерение ј÷ѕ
+        // здесь можно запустить »змерение ј÷ѕ
         if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,3) != HAL_OK)
         {
           myBeep(100);

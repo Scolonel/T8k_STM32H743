@@ -146,6 +146,22 @@ DWORD CheckUserGonfig (void)  // Проверка пользовательских настроек И исправлени
   return Err; 
 }
 
+DWORD FindFixErrBatS (void)
+{
+  DWORD Err = 0;
+  for (int i=0; i<ARRAY_SIZE(LvlBatSav.BatControl); ++i)
+    if (isnan(LvlBatSav.BatControl[i])||(LvlBatSav.BatControl[i]<=0.0)||(LvlBatSav.BatControl[i]>3000)) Err |=0x1;// 
+ if(Err)
+ {
+     for (int i=0; i<ARRAY_SIZE(LvlBatSav.BatControl); ++i)
+      LvlBatSav.BatControl[i]=i*0.001;
+     //
+           EEPROM_write(&LvlBatSav, ADR_BatSave,sizeof(LvlBatSav));
+
+ }
+ return Err;
+}
+
 DWORD FindErrCoeff (void)
 {
   DWORD Err = 0;

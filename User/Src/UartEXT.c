@@ -318,13 +318,13 @@ void DecodeCommandRS (void)
       // ;syst:bat? -  запрос данных по батарейки (всех)
       if (!memcmp ((void*)RX_Buf, ";SYST:BAT?",10)) //
       {
-        
+                  EEPROM_read(&LvlBatSav, ADR_BatSave, sizeof(LvlBatSav)); //проверка таблицы и исправление таблицы 
                   sprintf(BufString,"%d\n",CountBat); // выдаем данные
                   UARTSendExt ((BYTE*)BufString, strlen (BufString));
                   HAL_Delay(1);
-        for(int i= 0;i<CountBat;i++)
+        for(int i= 1;i<2048;i++)
         {
-                  sprintf(BufString,"%.2f\n",LvlBatSav.BatControl[i]); // выдаем данные
+                  sprintf(BufString,"%.3f\n",LvlBatSav.BatControl[i]); // выдаем данные
                   UARTSendExt ((BYTE*)BufString, strlen (BufString));
                   HAL_Delay(1);
         }

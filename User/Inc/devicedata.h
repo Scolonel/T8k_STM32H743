@@ -17,7 +17,7 @@
 // структура коэффициентов затухания в тиках перебора по 0.05 дБ
 typedef struct
 {
-float BatControl[1024];// контроль разряда батареи 
+float BatControl[2048];// контроль разряда батареи 
 } BAT_CNTR;
 
 
@@ -55,6 +55,7 @@ typedef struct  // основные конфигурационные настройки прибора режимы работы
 unsigned InvalidDevice(); //boolean actually
 void InitDevice(unsigned Err);
 DWORD CheckUserGonfig (void);  // Проверка пользовательских настроек 
+DWORD FindFixErrBatS (void);
 DWORD FindErrCoeff (void); // проверка таблицы коэффициентов
 void SetLang( BYTE lang );
 BYTE GetID_Dev(void); // получение идентификатора для кого прибор

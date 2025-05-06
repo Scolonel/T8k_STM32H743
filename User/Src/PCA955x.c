@@ -252,6 +252,11 @@ uint32_t BeginConfig (void) // начальная конфигурация
       //EEPROM_write(&CoeffLW, ADR_CoeffPM, sizeof(CoeffLW));
       EEPROM_write(&CoeffLW, ADR_CoeffPM,sizeof(CoeffLW));
     }
+    // контроль таблицы уровней батарейки
+    //EEPROM_read(&CoeffLW, ADR_CoeffPM, sizeof(CoeffLW)); //проверка таблицы коэффициентов и исправление таблицы коэффициентов
+    EEPROM_read(&LvlBatSav, ADR_BatSave, sizeof(LvlBatSav)); //проверка таблицы и исправление таблицы 
+    FindFixErrBatS ();
+    CountBat = (uint32_t)(LvlBatSav.BatControl[0]); // востановим счетчик
     
   }
   //return (CodeError | (ErrDev<<3)); 
