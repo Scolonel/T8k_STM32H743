@@ -77,6 +77,8 @@ uint16_t Dummy; // пустое чтение буфферов UART
 uint16_t BufADC[SizeBuf_ADC_int]; // буфер внутреннего ј÷ѕ (8), в него пишем при съеме DMA, размер до 8
 // строка дл€ индикатора
 uint8_t Str[64];
+char VerFW_LCD[25] = {"No version LCD          \0"}; //верси€ ѕќ индикатора NEXION
+
 // ¬—ѕќћќ√ј“≈Ћ№Ќџ≈ ѕ≈–≈ћ≈ЌЌџ≈
 DWORD CountTimerPA = 0;
 char ScreenReDraw=0; // признак необходимости перерисовать экран
@@ -84,10 +86,11 @@ char NeedSaveParam=0; // признак необходимости сохранить параметры
 
 uint16_t CurrLevelDAC=0; //текущий уровень дл€ ÷јѕ (востанавливаем из тех что храним в UserSet)
 
-  uint32_t CcMinute=0; // счетчик минуты (посекундно)
+uint32_t CcMinute=0; // счетчик минуты (посекундно)
+uint32_t BadLevelBat=0; //режим плохого уровн€ батарейки
 
   
-float Ubat=4.1; // начальное напр€жение батареи
+float Ubat=4.6; // начальное напр€жение батареи
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -129,12 +132,6 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
     MX_GPIO_Init();
-  if(ID_PLATE != GETIDPLT)
-  {
-    CheckErrID_Plate=1;
-  }
-  if(CheckErrID_Plate)
-  {
     MX_DMA_Init();
     MX_UART7_Init();
     // Start Uart7 - Nextion
@@ -164,6 +161,12 @@ int main(void)
     }
     //  myBeep(100);
     HAL_Delay(10);
+  if(ID_PLATE != GETIDPLT)
+  {
+    CheckErrID_Plate=1;
+  }
+  if(CheckErrID_Plate)
+  {
     sprintf((void*)Str, "t0.txt=\"! ќЎ»Ѕ ј !\"€€€"); // auto
     NEX_Transmit((void*)Str);    // 
     sprintf((void*)Str, "t1.txt=\"!прибор не тот!\"€€€"); // auto
@@ -172,6 +175,59 @@ int main(void)
     while(1);
     
   }
+  HAL_Delay(10);
+  sprintf((void*)Str, "page 0€€€"); // < START>
+  NEX_Transmit((void*)Str);    //
+//       StartRecievNEX (500);
+//    sprintf((void*)Str,"get t10.txt€€€");
+//    NEX_Transmit((void*)Str);//
+    //NEX_Transmit((void*)CmdBuf);//
+  HAL_Delay(10);
+  sprintf((void*)Str, "page 0€€€"); // < START>
+  NEX_Transmit((void*)Str);    //
+  HAL_Delay(10);
+//    sprintf((void*)Str, "t0.txt=\"начало\"€€€"); // auto
+//    NEX_Transmit((void*)Str);    // 
+//      HAL_Delay(10);
+
+       StartRecievNEX (600);
+    sprintf((void*)Str,"get t10.txt€€€");
+    NEX_Transmit((void*)Str);//
+  //HAL_Delay(200);
+    while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+       StartRecievNEX (600);
+    sprintf((void*)Str,"get t10.txt€€€");
+    NEX_Transmit((void*)Str);//
+  //HAL_Delay(200);
+    while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+    // здесь просто можем повиснуть не дождавшись ответов от индикатора
+    // это плохо при плохих индикаторах
+    // надо ждать получени€ ответа
+    if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
+    {
+      for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
+      VerFW_LCD[23]=0;
+      // здесь получим идентификатор индикатора (если его прочтем)
+      // он нужен дл€ вариантов отображени€ при просмотре рефлектограмм и в пам€ти
+//      switch(VerFW_LCD[3])
+//      {
+//      case '2':
+//        TypeLCD=0;
+//        KnowLCD = 1;
+//        break;
+//      case '5':
+//        TypeLCD=1;
+//        KnowLCD = 1;
+//        break;
+//      default:
+//        TypeLCD=0;
+//        KnowLCD = 0;
+//        break;
+//      }
+    }
+  // пошлем сообщение о включении ...
+    sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
+    NEX_Transmit((void*)Str);    // 
 
   /* USER CODE END SysInit */
 
@@ -198,37 +254,37 @@ int main(void)
   
 
   // Start Uart7 - Nextion
-  uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
   HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем прин€ти€ первого байта из внешнего мира
   /* disable the UART Parity Error Interrupt */
   __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
 
-  // перенастроим UART7  дл€ NEXTION
-  huart7.Init.BaudRate = 9600;
-  if (HAL_UART_Init(&huart7) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  HAL_Delay(10);
-  sprintf((void*)Str,"bauds=115200€€€");
-  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
-
-  //NEX_Transmit(Str);// 
-   HAL_Delay(10);
-  huart7.Init.BaudRate = 115200;
-  if (HAL_UART_Init(&huart7) != HAL_OK)
-  {
-    Error_Handler();
-  }
- //  myBeep(100);
-  HAL_Delay(10);
-  sprintf((void*)Str, "page 0€€€"); // < START>
-  NEX_Transmit((void*)Str);    //
-  // пошлем сообщение о включении ...
-    sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
-    NEX_Transmit((void*)Str);    // 
+//  // перенастроим UART7  дл€ NEXTION
+//  huart7.Init.BaudRate = 9600;
+//  if (HAL_UART_Init(&huart7) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  HAL_Delay(10);
+//  sprintf((void*)Str,"bauds=115200€€€");
+//  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+//
+//  //NEX_Transmit(Str);// 
+//   HAL_Delay(10);
+//  huart7.Init.BaudRate = 115200;
+//  if (HAL_UART_Init(&huart7) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+// //  myBeep(100);
+//  HAL_Delay(10);
+//  sprintf((void*)Str, "page 0€€€"); // < START>
+//  NEX_Transmit((void*)Str);    //
+//  // пошлем сообщение о включении ...
+//    sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
+//    NEX_Transmit((void*)Str);    // 
   
  
   
@@ -278,9 +334,16 @@ int main(void)
   TimeBegin = HAL_GetTick();
 // получим и посчитаем батарейку
         Ubat = 2.5*DEL_PWR*BufADC[0]/4096; 
-        LvlBatInd = (char)(Ubat*10. - 40.)+1;
-        if(Ubat<4.0) LvlBatInd = 0;
-        if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
+        // перебор уровн€ батаhейки, дл€ индикации
+        LvlBatInd = 0;
+        if(Ubat > 5.1) LvlBatInd = 8;
+        else if (Ubat > 5.02) LvlBatInd = 7;
+        else if (Ubat > 4.95) LvlBatInd = 6;
+        else if (Ubat > 4.88) LvlBatInd = 5;
+        else if (Ubat > 4.81) LvlBatInd = 4;
+        else if (Ubat > 4.74) LvlBatInd = 3;
+        else if (Ubat > 4.67) LvlBatInd = 2;
+        else if (Ubat > 4.6) LvlBatInd = 1;
         if(GETEXTPWR == 0)  LvlBatInd = 9;
    // CountBat = 0;    
   LvlBatSav.BatControl[0] = CountBat++;
@@ -323,10 +386,31 @@ int main(void)
         // без аккумул€тора от сети вижу 4.33 
         // пока возьмем 4.1 мин - 5.0 макс
         Ubat = 2.5*DEL_PWR*BufADC[0]/4096; 
-        LvlBatInd = (char)(Ubat*10. - 40.)+1;
-        if(Ubat<4.0) LvlBatInd = 0;
-        if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
+        // перебор уровн€ батаhейки, дл€ индикации
+        if(Ubat > 5.1) LvlBatInd = 8;
+        else if (Ubat > 5.01) LvlBatInd = 7;
+        else if (Ubat > 4.92) LvlBatInd = 6;
+        else if (Ubat > 4.83) LvlBatInd = 5;
+        else if (Ubat > 4.74) LvlBatInd = 4;
+        else if (Ubat > 4.65) LvlBatInd = 3;
+        else if (Ubat > 4.56) LvlBatInd = 2;
+        else if (Ubat >= 4.5) LvlBatInd = 1;
+        // внешнее питание
         if(GETEXTPWR == 0)  LvlBatInd = 9;
+        else if (Ubat < 4.5) 
+        {
+          LvlBatInd = 0;
+          if(!BadLevelBat)
+          { // переключаемс€ в режим индикации плохой батаейки
+            BadLevelBat = 1;
+            SetMode (BadBattery);
+            CmdInitPage(5);
+          }
+          
+        }
+        //LvlBatInd = (char)(Ubat*10. - 40.)+1;
+        //if(Ubat<4.0) LvlBatInd = 0;
+        //if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
         sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
         NEX_Transmit((void*)Str);//
         // получим текущее врем€ и оработаем его

@@ -45,6 +45,7 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
       extern uint16_t Dummy; // пустое чтение буфферов UART
+extern uint32_t BadLevelBat; //режим плохого уровня батарейки
 
 /* USER CODE END ET */
 

@@ -477,6 +477,57 @@ void ModeWelcome(void)// режим заставки
   
 }
 
+void BadBattery(void) // плоха€ баттарейка CHECK_OFF
+{ 
+  char Str[32];
+  if(g_FirstScr)
+  {
+    
+    // инициализаци€ не измен€емых величин
+    // наименование прибора
+    
+    sprintf (Str,"t0.txt=\"%s\"€€€",MsgMass[47][UserSet.CurrLang]); // 
+    NEX_Transmit((void*)(void*)Str);//
+    
+    sprintf (Str,"t1.txt=\"%s\"€€€",MsgMass[48][UserSet.CurrLang]); //
+    NEX_Transmit((void*)Str);//
+    // 
+    sprintf (Str,"t2.txt=\"%s\"€€€",MsgMass[51][UserSet.CurrLang]); // 
+    NEX_Transmit((void*)Str);//
+    // 
+    sprintf (Str,"t3.txt=\"%s\"€€€",MsgMass[52][UserSet.CurrLang]); //
+    NEX_Transmit((void*)Str);//
+    // 
+    g_FirstScr = 0;
+    //g_NeedScr = 1;
+  }
+  
+  
+  if(GETEXTPWR == 0) // подключили внешнее питание возвращаемс€ в нормальный режим
+  {
+    BadLevelBat = 0;
+    SetMode(ModeMain);
+    CmdInitPage(3);// посылка команды переключени€ окна на MainMenu и установка признака первого входа
+    myBeep(100);
+    
+  }
+  
+//  while((LevelBat < 60)&&(EXT_POW)) // если подключили внешнее питание то переключимс€  в норм режим
+//  {
+//    if (CntOff++%60 == 0) myBeep(3);
+//    // читаем состо€ние батареи
+//    LevelBat = CheckLevelBattery();
+//    // ProcBatInd
+//    //sprintf(F_name,"BAT = %d%%", LevelBat );
+//    sprintf (F_name,"t3.txt=\"BAT = %d%%(%1.2f)\"€€€",ProcBatInd,Ubat); // 
+//    NEX_Transmit((void*)F_name);//
+//    
+//  }
+//  CmdInitPage(1);// MainMenu
+//  myBeep(25);
+  
+}
+
 // переключимс€ в режим программировани€ индикатора (пока на паузу  и сигнал
 void UploadFW_Nextion(void) // обновление индикатора NEXTION
 { 
