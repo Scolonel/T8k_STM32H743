@@ -1,0 +1,13 @@
+Drivers/*.*
+Drivers/
+EWARM/
+Middlewares/
+Bat_1155.xls
+F035_167_25_05_12(v003).tft
+F035_167_25_06_02(v603).tft
+ResistoryATT.xls
+T5000_CMD_743.ptp
+User/Inc/lasti_BACKUP_697.h
+User/Inc/lasti_BASE_697.h
+User/Inc/lasti_LOCAL_697.h
+User/Inc/lasti_REMOTE_697.h

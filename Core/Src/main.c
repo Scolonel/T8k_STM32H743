@@ -88,7 +88,7 @@ uint16_t CurrLevelDAC=0; //текущий уровень для ЦАП (востанавливаем из тех что хр
 
 uint32_t CcMinute=0; // счетчик минуты (посекундно)
 uint32_t BadLevelBat=0; //режим плохого уровня батарейки
-
+uint32_t BadBatCnt = 0; // счетчик времени плохой батарейки
   
 float Ubat=4.6; // начальное напряжение батареи
 /* USER CODE END PV */
@@ -396,16 +396,34 @@ int main(void)
         else if (Ubat > 4.56) LvlBatInd = 2;
         else if (Ubat >= 4.5) LvlBatInd = 1;
         // внешнее питание
-        if(GETEXTPWR == 0)  LvlBatInd = 9;
+        if(GETEXTPWR == 0)
+        {
+          LvlBatInd = 9;
+          BadBatCnt = 0;
+        }
         else if (Ubat < 4.5) 
         {
           LvlBatInd = 0;
-          if(!BadLevelBat)
+          if(BadBatCnt<3)
+          {
+            BadBatCnt++; //ждем пару сек
+            //LED_START(1);//On  LED
+            //myBeep(10);
+            //HAL_Delay(50);
+            //LED_START(0);//Off  LED
+            
+          }
+          if(!BadLevelBat && (BadBatCnt==3))
           { // переключаемся в режим индикации плохой батаейки
             BadLevelBat = 1;
             SetMode (BadBattery);
             CmdInitPage(5);
           }
+          
+        }
+        else // уровень в норме
+        {
+          BadBatCnt = 0;
           
         }
         //LvlBatInd = (char)(Ubat*10. - 40.)+1;
