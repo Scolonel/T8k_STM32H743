@@ -84,10 +84,11 @@ char NeedSaveParam=0; // признак необходимости сохранить параметры
 
 uint16_t CurrLevelDAC=0; //текущий уровень дл€ ÷јѕ (востанавливаем из тех что храним в UserSet)
 
-  uint32_t CcMinute=0; // счетчик минуты (посекундно)
+uint32_t CcMinute=0; // счетчик минуты (посекундно)
+uint32_t BadLevelBat=0; //режим плохого уровн€ батарейки
 
   
-float Ubat=4.1; // начальное напр€жение батареи
+float Ubat=4.6; // начальное напр€жение батареи
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -278,9 +279,16 @@ int main(void)
   TimeBegin = HAL_GetTick();
 // получим и посчитаем батарейку
         Ubat = 2.5*DEL_PWR*BufADC[0]/4096; 
-        LvlBatInd = (char)(Ubat*10. - 40.)+1;
-        if(Ubat<4.0) LvlBatInd = 0;
-        if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
+        // перебор уровн€ батаhейки, дл€ индикации
+        LvlBatInd = 0;
+        if(Ubat > 5.1) LvlBatInd = 8;
+        else if (Ubat > 5.02) LvlBatInd = 7;
+        else if (Ubat > 4.95) LvlBatInd = 6;
+        else if (Ubat > 4.88) LvlBatInd = 5;
+        else if (Ubat > 4.81) LvlBatInd = 4;
+        else if (Ubat > 4.74) LvlBatInd = 3;
+        else if (Ubat > 4.67) LvlBatInd = 2;
+        else if (Ubat > 4.6) LvlBatInd = 1;
         if(GETEXTPWR == 0)  LvlBatInd = 9;
    // CountBat = 0;    
   LvlBatSav.BatControl[0] = CountBat++;
@@ -323,10 +331,31 @@ int main(void)
         // без аккумул€тора от сети вижу 4.33 
         // пока возьмем 4.1 мин - 5.0 макс
         Ubat = 2.5*DEL_PWR*BufADC[0]/4096; 
-        LvlBatInd = (char)(Ubat*10. - 40.)+1;
-        if(Ubat<4.0) LvlBatInd = 0;
-        if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
+        // перебор уровн€ батаhейки, дл€ индикации
+        if(Ubat > 5.1) LvlBatInd = 8;
+        else if (Ubat > 5.01) LvlBatInd = 7;
+        else if (Ubat > 4.92) LvlBatInd = 6;
+        else if (Ubat > 4.83) LvlBatInd = 5;
+        else if (Ubat > 4.74) LvlBatInd = 4;
+        else if (Ubat > 4.65) LvlBatInd = 3;
+        else if (Ubat > 4.56) LvlBatInd = 2;
+        else if (Ubat >= 4.5) LvlBatInd = 1;
+        // внешнее питание
         if(GETEXTPWR == 0)  LvlBatInd = 9;
+        else if (Ubat < 4.5) 
+        {
+          LvlBatInd = 0;
+          if(!BadLevelBat)
+          { // переключаемс€ в режим индикации плохой батаейки
+            BadLevelBat = 1;
+            SetMode (BadBattery);
+            CmdInitPage(5);
+          }
+          
+        }
+        //LvlBatInd = (char)(Ubat*10. - 40.)+1;
+        //if(Ubat<4.0) LvlBatInd = 0;
+        //if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
         sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
         NEX_Transmit((void*)Str);//
         // получим текущее врем€ и оработаем его
