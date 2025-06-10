@@ -132,13 +132,6 @@ void DecodeCommandRS (void)
           //if ((RX_Buf[1]=='I')&&(RX_Buf[2]=='D')&&(RX_Buf[3]=='N')&&(RX_Buf[4]=='?'))
         {
                 Mdl=0; // определяем модель по конфигурации длинн волн
-                for (int y=0;y<4;++y)
-          {
-            if((ConfigDevice.PlaceLW[y]>0)&&(ConfigDevice.PlaceLW[y]<1310))
-              Mdl|=1;
-            if(ConfigDevice.PlaceLW[y]>1300)
-              Mdl|=2;
-          }
     
             // версия ПО
             sprintf (Str, "v3.%02d%c", NUM_VER/26, (0x61+(NUM_VER%26))); // версия должна быть не ниже 2.01 (28.06.2022)
@@ -438,173 +431,16 @@ void DecodeCommandRS (void)
           }
         }        
         // ;set:LWi  - установка длин волн по местам
-        if (!memcmp ((void*)RX_Buf, ";SET:LW",7)) //
-        {
-          
-          if((RX_Buf[7] == '0')||(RX_Buf[7] == '1')||(RX_Buf[7] == '2')||(RX_Buf[7] == '3')) // надо установить номер длины волны
-          {
-            IndxLW = (uint32_t)atoi((char*)&RX_Buf[7]);
-            Data = (WORD)atoi((char*)&RX_Buf[9]);
-            ConfigDevice.PlaceLW[IndxLW] = Data;
-            sprintf(BufString,"%d\r",Data);//c
-            UARTSendExt ((BYTE*)BufString, strlen (BufString));
-            NeedTransmit = 1;
-            NeedSaveParam |=0x01;
-          }
-          if(RX_Buf[7] == '?') // надо send время
-          {
-            NeedTransmit = 1;
-          }
-          //New
-          if(NeedTransmit)
-          {
-            sprintf(BufString,"%d\n%d\n%d\n%d\r" // выдаем длины волн конфигурации
-                    ,ConfigDevice.PlaceLW[0]
-                      ,ConfigDevice.PlaceLW[1]
-                        ,ConfigDevice.PlaceLW[2]
-                          ,ConfigDevice.PlaceLW[3]);
-            UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          }
-        } 
+         
         // установка уровня в дБ, привязанных к длине волны
-        if (!memcmp ((void*)RX_Buf, ";SET:DB",7)) //
-        {
-          
-          if(RX_Buf[7] == ' ') // надо принять значение
-          {
-            TmpLvlDB = (float)atof((char*)&RX_Buf[7]);
-            if ((TmpLvlDB*SHAG>=0)&&(TmpLvlDB*SHAG<=((ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?(MAX_DB):(MAX_DB/2))))
-            {     
-              UserSet.iLvlCurrLW[UserSet.iCurrLW]=(uint16_t)(TmpLvlDB*SHAG);
-              CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
-              NeedTransmit = 1;
-              NeedSaveParam |=0x02;
-            }
-          }
-          if(RX_Buf[7] == '?') // надо send время
-          {
-            NeedTransmit = 1;
-          }
-          //New
-          if(NeedTransmit)
-          {
-            sprintf(BufString,"%04d=%.2f\r",UserSet.iLvlCurrLW[UserSet.iCurrLW],UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG);
-            UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          }
-        }        
+                
         // установка табличного коэфф. по месту в памяти и ее значение ;SET:SHF1 234,1599
-        if (!memcmp ((void*)RX_Buf, ";SET:SHF",8)) //
-        {
-            IndxLW = (WORD)atoi((char*)&RX_Buf[8]); // получаем индекс для длины волны
-          if(IndxLW<4) // можно попробовать записать
-          {
-            IndxPtn=(uint16_t)atoi((char*)&RX_Buf[10]);  // индекс точки сохранения кода ЦАП
-            if(IndxPtn<=1600) // !пишем 1601 ячейку
-            {
-              // ищем значение оно после ','
-              int i=11;
-              while((RX_Buf[i]!=',')&&(i<17)) 
-              {
-                i++;
-              }
-              if (i++<17)
-              { // можно прочитать значение и записать
-                Data=(uint16_t)atoi((char*)&RX_Buf[i]);  //значение точки сохранения кода ЦАП
-                if(Data < 4096)
-                {
-                  UserSet.iCurrLW = IndxLW;
-                  UserSet.iLvlCurrLW[UserSet.iCurrLW] = IndxPtn;
-                  CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]] = (uint16_t)Data;
-                  CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
-                  // надо быстро сохранить 2 байта, пробуем
-                  //EEPROM_write((void*)&CurrLevelDAC, ADR_CoeffPM + 4096*IndxLW + 2*IndxPtn , 2);
-                   EEPROM_write(&CurrLevelDAC, ADR_CoeffPM + 4096*IndxLW + 2*IndxPtn , 2);
-                 //NeedSaveParam |=0x06;
-                  g_NeedScr = 1;
-                  NeedTransmit = 1;
-                  
-                  //New
-                  if(NeedTransmit)
-                  {
-                    sprintf(BufString,"%dnm %d %d\r",ConfigDevice.PlaceLW[UserSet.iCurrLW],UserSet.iLvlCurrLW[UserSet.iCurrLW],CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]]);
-                    UARTSendExt ((BYTE*)BufString, strlen (BufString));
-                  }
-                }
-              }
-            }
-          }
-        }        
+                
         // ;set:LAMDA XXXX // установка требуемой длины волны
-        if (!memcmp ((void*)RX_Buf, ";SET:LAMDA",10)) //
-        {
-          if(RX_Buf[10] == ' ') // надо установить длины волны 
-          {
-            Data = (WORD)atoi((char*)&RX_Buf[11]);
-            if((Data==ConfigDevice.PlaceLW[0])||(Data==ConfigDevice.PlaceLW[1])||(Data==ConfigDevice.PlaceLW[2])||(Data==ConfigDevice.PlaceLW[3]))
-            {
-              while(Data!=ConfigDevice.PlaceLW[UserSet.iCurrLW]) //проверяем иустанавливаем требуемую длину волны 
-              {
-                if (UserSet.iCurrLW<3) UserSet.iCurrLW++;
-                else UserSet.iCurrLW=0;
-              }
-              // востанавливаем уровень ЦАП для данной длины волны
-              CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
-              g_NeedScr = 1;
-              NeedTransmit = 1;
-              NeedSaveParam |=0x02;
-            }
-          }
-          if(RX_Buf[10] == '?') // надо send время
-          {
-            NeedTransmit = 1;
-          }
-          //New
-          if(NeedTransmit)
-          {
-            sprintf(BufString,"%04d\r",ConfigDevice.PlaceLW[UserSet.iCurrLW]);//c
-            UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          }
-          
-        }
+        
       }
         // запрос всей конфигурации
-        if (!memcmp ((void*)RX_Buf, ";SET:ALL?",9)) //
-        {
-          Mdl=0; // определяем модель по конфигурации длинн волн
-          for (int y=0;y<4;++y)
-          {
-            if((ConfigDevice.PlaceLW[y]>0)&&(ConfigDevice.PlaceLW[y]<1310))
-              Mdl|=1;
-            if(ConfigDevice.PlaceLW[y]>1300)
-              Mdl|=2;
-          }
-          // прибор
-          sprintf(BufString,"%s-%d;\n",MsgMass[6][UserSet.CurrLang],Mdl);
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          // серийный номер
-          sprintf(BufString,"SN#%04d;\n",ConfigDevice.NumDevice);
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          // версия ПО
-          sprintf (Str, "v3.%02d%c", NUM_VER/26, (0x61+(NUM_VER%26))); // версия должна быть не ниже 2.01 (28.06.2022)
-          sprintf(BufString,"%s;\n",Str);
-          UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          // список длин волн
-          for (int k=0;k<4;++k)
-          {
-            sprintf(BufString,"%dnm - %2.2f, %2.2f, %2.2f\n",ConfigDevice.PlaceLW[k],UserSet.iLvlCurrLW[k]/SHAG,UserSet.iLvlFixLW[k][0]/SHAG,UserSet.iLvlFixLW[k][1]/SHAG );
-            UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          }
-          // таблица коэффициентов
-          for (int y=0;y<=1600;++y)
-          {
-            sprintf(BufString,"%.2f %04d %04d %04d %04d\n",y*0.05,CoeffLW.SetCoefLW[0][y],CoeffLW.SetCoefLW[1][y],CoeffLW.SetCoefLW[2][y],CoeffLW.SetCoefLW[3][y]);
-        UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          }
-          sprintf(BufString,"\r");
-        UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          NeedTransmit = 1;
-          
-        }        
+                
       
       // ;syst:set:manufactured  - установка производителя
       if (!memcmp ((void*)RX_Buf, ";SYST:SET:MANUFACTURED ",23)) //

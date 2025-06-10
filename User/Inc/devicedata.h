@@ -26,17 +26,17 @@ float BatControl[2048];// контроль разряда батареи
 // структура коэффициентов затухания в тиках перебора по 0.05 дБ
 typedef struct
 {
-uint16_t SetCoefLW[4][2048];// коэфф установки затухания по длинам волн
+    float SlopeChADC[2];   // наклон канала АЦП 8
+    float OffsetLW[18];   // смещение длины волны 72
 } TAB_SET;
 
 // структура конфигурации прибора
 typedef struct
 {
   uint16_t NumDevice;  // (9999) № прибора,
-  uint16_t PlaceLW[LSPLACENUM]; //  Конфигурация установленных аттенюаторов по длинам волн 
   uint8_t ID_Device; // прибор 0-ТОПАЗ или 1-MOT_700
   uint8_t Ena_DB;  // разрешение альтернативного имени( 0- разрешено, 1-запрещено)
-  unsigned char AltName[20]; //  альтернативное имя
+  char AltName[20]; //  альтернативное имя
 } CFG_DEV;
 
 
@@ -44,13 +44,28 @@ typedef struct
 typedef struct  // основные конфигурационные настройки прибора режимы работы
 {
   uint8_t CurrLang;  // текущий язык Rus, Eng, Cze
-  char iCurrLW ; // индекс текущей длины волны 
-  char iFixLvl[4] ; // индекс фиксированного уровня, указатель на рамку (для кждой длины волны)
-  uint16_t iLvlCurrLW[4]; // текущий коэфф. для каждой длины волны
-  uint16_t iLvlFixLW[4][2]; // сохраненые фиксированные коэфф. для каждой длины волны
-  
+  uint8_t ChnMod;  // режим отображения каналов 18,8R,8T 1
+  uint8_t EnaCntFiber;   // авто счет волокна 1
+  short int FiberID;    // номер волокна 2
+  short int FileNumber;  // номер файла (?) может уже не надо? 2
+  short int FileNumberView;   // номер файла (?) может уже не надо? 2
+  char FiberName[10];  // имя волокна 10
+  char CableID[10];    // идентификатор кабеля 10
+  char Comments[20];   // комментарий по умолчанию 20
 } CFG_USR;
 
+// структура данных из памяти
+#pragma pack(push,1)
+typedef struct
+{
+    short int FileNumber;                           // номер файла (?) может уже не надо? 2
+    char DateMem[12];                               // дата сохранения 10
+    char TimeMem[12];                               // время сохранения 10
+    char CableID[10];                               // идентификатор кабеля 10
+    char FiberName[20];                             // имя волокна 10
+    char Comments[20];                              // комментарий по умолчанию 20
+    float CWDMDataMem[18]; // данные сохранений
+} strFILESDATA;                                      // 
 
 unsigned InvalidDevice(); //boolean actually
 void InitDevice(unsigned Err);

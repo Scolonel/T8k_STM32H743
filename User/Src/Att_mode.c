@@ -87,293 +87,293 @@ void SetMode( void(f)(void) )
 //}
 void ModeMain(void)// режим основной
 {
-  static volatile unsigned char FrFreeInd = 0; //указатель на основной курсор
-  
-  char Str[32];
-  char StrN[32];
-  Set_MAX_DB = (ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?(MAX_DB):(MAX_DB/2);
-  
-  //if (PRESS(BTN_OK))
-  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
-  {
-    myBeep(10);
-    switch(DigitSet)
-    {
-    case 1:
-      DigitSet = 20;
-      break;
-    case 20:
-      DigitSet = 100;
-      break;
-    case 100:
-      DigitSet = 200;
-      break;
-    default:
-      DigitSet = 1;
-      break;
-    }
-    g_NeedScr = 1;
-    
-  }
-  // кнопка вверх
-  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
-  {
-    myBeep(25);
-    FrFreeInd=(int)(FrFreeInd+3)%4;
-    g_NeedScr = 1;
-    
-  }
-  // кнопка вниз
-  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
-  {
-    myBeep(25);
-    FrFreeInd=(int)(FrFreeInd+1)%4;
-    g_NeedScr = 1;
-    
-  }
-  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED)) // жмем долго
-  {
-    if (FrFreeInd==0)
-    {
-      myBeep(3);
-      DigitSet = 1;
-      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]>DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] -= DigitSet;
-      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
-      g_NeedScr = 1;
-    }
-    if (FrFreeInd==1 || FrFreeInd==2)
-    {
-      myBeep(3);
-      DigitSet = 1;
-      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]>DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] -= DigitSet;
-      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = 0;
-      g_NeedScr = 1;
-    }   
-  }
-  // кнопка влево , учитываем где стоит курсор
-  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
-  {
-    myBeep(25);
-    if (FrFreeInd==0)
-    { 
-      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]>DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] -= DigitSet;
-      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
-    }    
-    if (FrFreeInd==1 || FrFreeInd==2)
-    {
-      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]>DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] -= DigitSet;
-      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = 0;
-    }   
-    //UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG 
-    if (FrFreeInd==3) // переключение длины волны
-    { 
-      if(UserSet.iCurrLW>0) UserSet.iCurrLW--; // здесь переключаем длины волн (
-      else UserSet.iCurrLW = 3;
-      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-      {
-        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
-        else UserSet.iCurrLW = 3;
-      }
-      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-      {
-        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
-        else UserSet.iCurrLW = 3;
-      }
-      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-      {
-        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
-        else UserSet.iCurrLW = 3;
-      }
-    }
-    g_NeedScr = 1;
-    
-  }
-  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED)) // жмем долго
-  {
-    if (FrFreeInd==0)
-    { 
-      myBeep(3);
-      DigitSet = 1;
-      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]<=Set_MAX_DB-DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] += DigitSet;
-      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = Set_MAX_DB;
-      g_NeedScr = 1;
-      
-    }    
-    if (FrFreeInd==1 || FrFreeInd==2)
-    {
-      myBeep(3);
-      DigitSet = 1;
-      //UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]
-      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]<=Set_MAX_DB-DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] += DigitSet;
-      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = Set_MAX_DB;
-      g_NeedScr = 1;
-    }   
-    
-  }
-  // кнопка враво , учитываем где стоит курсор
-  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
-  {
-    myBeep(25);
-    if (FrFreeInd==0)
-    { 
-      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]<=Set_MAX_DB-DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] += DigitSet;
-      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = Set_MAX_DB;
-    }    
-    if (FrFreeInd==1 || FrFreeInd==2)
-    {
-      //UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]
-      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]<=Set_MAX_DB-DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] += DigitSet;
-      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = Set_MAX_DB;
-    }   
-    //UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG 
-    if (FrFreeInd==3) // переключение длины волны
-    { 
-      if(UserSet.iCurrLW<3) UserSet.iCurrLW++; // здесь переключаем длины волн (
-      else UserSet.iCurrLW = 0;
-      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-      {
-        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-        else UserSet.iCurrLW = 0;
-      }
-      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-      {
-        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-        else UserSet.iCurrLW = 0;
-      }
-      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-      {
-        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-        else UserSet.iCurrLW = 0;
-      }
-    }
-    g_NeedScr = 1;
-    
-  }
-  // кнопка ћ≈Ќё , учитываем где стоит курсор
-  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
-  {
-    if (FrFreeInd==1 || FrFreeInd==2)
-    {
-      myBeep(25);
-      UserSet.iLvlCurrLW[UserSet.iCurrLW] = UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1];
-      if(FrFreeInd==1) FrFreeInd=2;
-      else FrFreeInd=1;
-    }
-    g_NeedScr = 1;
-  }
-  
-  // перебор длин волн по списку в одну сторону по кнопке 'S'
-  //длины волн
-  if (rawPressKeyS) // key S 
-  {  
-    myBeep(35);
-    
-    UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
-    // требование ј. . от 30.04.2025
-    FrFreeInd=0;
-    
-    //    if(UserSet.iCurrLW<3) UserSet.iCurrLW++; // здесь переключаем длины волн (
-    //    else UserSet.iCurrLW = 0;
-    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-    //    {
-    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-    //      else UserSet.iCurrLW = 0;
-    //    }
-    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-    //    {
-    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-    //      else UserSet.iCurrLW = 0;
-    //    }
-    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-    //    {
-    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-    //      else UserSet.iCurrLW = 0;
-    //    }
-    // NeedSaveParam |=0x02;// Memory UserSet 
-    
-    rawPressKeyS = 0;  
-    g_NeedScr = 1;
-  }
-  
-  if(g_FirstScr)
-  {
-    
-    // инициализаци€ не измен€емых величин
-    // наименование прибора
-    
-    sprintf(StrN,"%.2f dB",UserSet.iCurrLW/SHAG);
-    sprintf (Str,"t0.txt=\"%s\"€€€",StrN); // 
-    NEX_Transmit((void*)(void*)Str);//
-    
-    sprintf (Str,"t1.txt=\"%s\"€€€",MsgMass[31][UserSet.CurrLang]); //Memory 1
-    NEX_Transmit((void*)Str);//
-    // 
-    sprintf (Str,"t2.txt=\"%s\"€€€",MsgMass[32][UserSet.CurrLang]); // Memory 2
-    NEX_Transmit((void*)Str);//
-    // 
-    sprintf (Str,"t3.txt=\"%s\"€€€",MsgMass[30][UserSet.CurrLang]); // длина волны
-    NEX_Transmit((void*)Str);//
-    // 
-    g_FirstScr = 0;
-    g_NeedScr = 1;
-  }
-  if(g_NeedScr) // перерисовка индикатора при изменени€х и инициализации
-  {
-    // раскрашивание пол€ выбора 
-    // закрасим бэкграунды  и установим требуемый
-    sprintf(Str, "t0.bco=WHITE€€€"); // белый
-    NEX_Transmit((void*)Str);//
-    sprintf(Str, "t1.bco=WHITE€€€"); // белый
-    NEX_Transmit((void*)Str);// 
-    sprintf(Str, "t2.bco=WHITE€€€"); // белый
-    NEX_Transmit((void*)Str);// 
-    sprintf(Str, "t3.bco=WHITE€€€"); // белый
-    NEX_Transmit((void*)Str);// 
-    // sprintf(Str, "t%d.bco=GREEN€€€", (FrFreeInd)?(FrFreeInd+3):(0)); // зеленый
-    sprintf(Str, "t%d.bco=GREEN€€€", (FrFreeInd)); // зеленый
-    NEX_Transmit((void*)Str);// 
-    // код подсветки требуемой строки если есть есть маркер строки
-    
-    // значение пам€ти 1
-    sprintf (Str,"t4.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][0]/SHAG); // 
-    NEX_Transmit((void*)Str);//
-    // значение пам€ти 2
-    sprintf (Str,"t5.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][1]/SHAG); // 
-    NEX_Transmit((void*)Str);//
-    // длина волны рабоча€
-    sprintf (Str,"t6.txt=\"%d nm\"€€€",ConfigDevice.PlaceLW[UserSet.iCurrLW]); // 
-    NEX_Transmit((void*)Str);//
-    // индикатор длины волны 
-    //if(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)
-    sprintf (Str,"t7.txt=\"%s\"€€€",(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?("SM"):("MM")); // 
-    NEX_Transmit((void*)Str);//
-    // рисуем значение Ўј√ј изменений
-    
-    if(ModeWork) // настройка
-    {
-      sprintf(Str,"t8.txt=\"!SET!\"€€€");
-      NEX_Transmit((void*)Str);//
-      sprintf (Str,"t0.txt=\"%04d\"€€€",CurrLevelDAC); //  уровень основной
-      NEX_Transmit((void*)Str);//
-    }
-    else
-    {
-      if(DigitSet<SHAG)
-        sprintf(Str,"t8.txt=\"%2.2f\"€€€",DigitSet/SHAG);
-      else
-        sprintf(Str,"t8.txt=\"%2.1f\"€€€",DigitSet/SHAG);
-      NEX_Transmit((void*)Str);//
-      sprintf (Str,"t0.txt=\"%.2f dB\"€€€",UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG); //  уровень основной
-      NEX_Transmit((void*)Str);//
-      CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
-    }
-    NEX_Transmit((void*)Str);//
-    
-    NeedSaveParam |=0x02;// Memory UserSet 
-    
-    g_NeedScr =  0;
-  }
-  
+//  static volatile unsigned char FrFreeInd = 0; //указатель на основной курсор
+//  
+//  char Str[32];
+//  char StrN[32];
+//  Set_MAX_DB = (ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?(MAX_DB):(MAX_DB/2);
+//  
+//  //if (PRESS(BTN_OK))
+//  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+//  {
+//    myBeep(10);
+//    switch(DigitSet)
+//    {
+//    case 1:
+//      DigitSet = 20;
+//      break;
+//    case 20:
+//      DigitSet = 100;
+//      break;
+//    case 100:
+//      DigitSet = 200;
+//      break;
+//    default:
+//      DigitSet = 1;
+//      break;
+//    }
+//    g_NeedScr = 1;
+//    
+//  }
+//  // кнопка вверх
+//  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
+//  {
+//    myBeep(25);
+//    FrFreeInd=(int)(FrFreeInd+3)%4;
+//    g_NeedScr = 1;
+//    
+//  }
+//  // кнопка вниз
+//  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+//  {
+//    myBeep(25);
+//    FrFreeInd=(int)(FrFreeInd+1)%4;
+//    g_NeedScr = 1;
+//    
+//  }
+//  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED)) // жмем долго
+//  {
+//    if (FrFreeInd==0)
+//    {
+//      myBeep(3);
+//      DigitSet = 1;
+//      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]>DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] -= DigitSet;
+//      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
+//      g_NeedScr = 1;
+//    }
+//    if (FrFreeInd==1 || FrFreeInd==2)
+//    {
+//      myBeep(3);
+//      DigitSet = 1;
+//      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]>DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] -= DigitSet;
+//      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = 0;
+//      g_NeedScr = 1;
+//    }   
+//  }
+//  // кнопка влево , учитываем где стоит курсор
+//  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+//  {
+//    myBeep(25);
+//    if (FrFreeInd==0)
+//    { 
+//      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]>DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] -= DigitSet;
+//      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
+//    }    
+//    if (FrFreeInd==1 || FrFreeInd==2)
+//    {
+//      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]>DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] -= DigitSet;
+//      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = 0;
+//    }   
+//    //UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG 
+//    if (FrFreeInd==3) // переключение длины волны
+//    { 
+//      if(UserSet.iCurrLW>0) UserSet.iCurrLW--; // здесь переключаем длины волн (
+//      else UserSet.iCurrLW = 3;
+//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//      {
+//        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
+//        else UserSet.iCurrLW = 3;
+//      }
+//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//      {
+//        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
+//        else UserSet.iCurrLW = 3;
+//      }
+//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//      {
+//        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
+//        else UserSet.iCurrLW = 3;
+//      }
+//    }
+//    g_NeedScr = 1;
+//    
+//  }
+//  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED)) // жмем долго
+//  {
+//    if (FrFreeInd==0)
+//    { 
+//      myBeep(3);
+//      DigitSet = 1;
+//      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]<=Set_MAX_DB-DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] += DigitSet;
+//      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = Set_MAX_DB;
+//      g_NeedScr = 1;
+//      
+//    }    
+//    if (FrFreeInd==1 || FrFreeInd==2)
+//    {
+//      myBeep(3);
+//      DigitSet = 1;
+//      //UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]
+//      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]<=Set_MAX_DB-DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] += DigitSet;
+//      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = Set_MAX_DB;
+//      g_NeedScr = 1;
+//    }   
+//    
+//  }
+//  // кнопка враво , учитываем где стоит курсор
+//  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+//  {
+//    myBeep(25);
+//    if (FrFreeInd==0)
+//    { 
+//      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]<=Set_MAX_DB-DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] += DigitSet;
+//      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = Set_MAX_DB;
+//    }    
+//    if (FrFreeInd==1 || FrFreeInd==2)
+//    {
+//      //UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]
+//      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]<=Set_MAX_DB-DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] += DigitSet;
+//      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = Set_MAX_DB;
+//    }   
+//    //UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG 
+//    if (FrFreeInd==3) // переключение длины волны
+//    { 
+//      if(UserSet.iCurrLW<3) UserSet.iCurrLW++; // здесь переключаем длины волн (
+//      else UserSet.iCurrLW = 0;
+//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//      {
+//        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+//        else UserSet.iCurrLW = 0;
+//      }
+//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//      {
+//        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+//        else UserSet.iCurrLW = 0;
+//      }
+//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//      {
+//        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+//        else UserSet.iCurrLW = 0;
+//      }
+//    }
+//    g_NeedScr = 1;
+//    
+//  }
+//  // кнопка ћ≈Ќё , учитываем где стоит курсор
+//  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+//  {
+//    if (FrFreeInd==1 || FrFreeInd==2)
+//    {
+//      myBeep(25);
+//      UserSet.iLvlCurrLW[UserSet.iCurrLW] = UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1];
+//      if(FrFreeInd==1) FrFreeInd=2;
+//      else FrFreeInd=1;
+//    }
+//    g_NeedScr = 1;
+//  }
+//  
+//  // перебор длин волн по списку в одну сторону по кнопке 'S'
+//  //длины волн
+//  if (rawPressKeyS) // key S 
+//  {  
+//    myBeep(35);
+//    
+//    UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
+//    // требование ј. . от 30.04.2025
+//    FrFreeInd=0;
+//    
+//    //    if(UserSet.iCurrLW<3) UserSet.iCurrLW++; // здесь переключаем длины волн (
+//    //    else UserSet.iCurrLW = 0;
+//    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//    //    {
+//    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+//    //      else UserSet.iCurrLW = 0;
+//    //    }
+//    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//    //    {
+//    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+//    //      else UserSet.iCurrLW = 0;
+//    //    }
+//    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
+//    //    {
+//    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
+//    //      else UserSet.iCurrLW = 0;
+//    //    }
+//    // NeedSaveParam |=0x02;// Memory UserSet 
+//    
+//    rawPressKeyS = 0;  
+//    g_NeedScr = 1;
+//  }
+//  
+//  if(g_FirstScr)
+//  {
+//    
+//    // инициализаци€ не измен€емых величин
+//    // наименование прибора
+//    
+//    sprintf(StrN,"%.2f dB",UserSet.iCurrLW/SHAG);
+//    sprintf (Str,"t0.txt=\"%s\"€€€",StrN); // 
+//    NEX_Transmit((void*)(void*)Str);//
+//    
+//    sprintf (Str,"t1.txt=\"%s\"€€€",MsgMass[31][UserSet.CurrLang]); //Memory 1
+//    NEX_Transmit((void*)Str);//
+//    // 
+//    sprintf (Str,"t2.txt=\"%s\"€€€",MsgMass[32][UserSet.CurrLang]); // Memory 2
+//    NEX_Transmit((void*)Str);//
+//    // 
+//    sprintf (Str,"t3.txt=\"%s\"€€€",MsgMass[30][UserSet.CurrLang]); // длина волны
+//    NEX_Transmit((void*)Str);//
+//    // 
+//    g_FirstScr = 0;
+//    g_NeedScr = 1;
+//  }
+//  if(g_NeedScr) // перерисовка индикатора при изменени€х и инициализации
+//  {
+//    // раскрашивание пол€ выбора 
+//    // закрасим бэкграунды  и установим требуемый
+//    sprintf(Str, "t0.bco=WHITE€€€"); // белый
+//    NEX_Transmit((void*)Str);//
+//    sprintf(Str, "t1.bco=WHITE€€€"); // белый
+//    NEX_Transmit((void*)Str);// 
+//    sprintf(Str, "t2.bco=WHITE€€€"); // белый
+//    NEX_Transmit((void*)Str);// 
+//    sprintf(Str, "t3.bco=WHITE€€€"); // белый
+//    NEX_Transmit((void*)Str);// 
+//    // sprintf(Str, "t%d.bco=GREEN€€€", (FrFreeInd)?(FrFreeInd+3):(0)); // зеленый
+//    sprintf(Str, "t%d.bco=GREEN€€€", (FrFreeInd)); // зеленый
+//    NEX_Transmit((void*)Str);// 
+//    // код подсветки требуемой строки если есть есть маркер строки
+//    
+//    // значение пам€ти 1
+//    sprintf (Str,"t4.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][0]/SHAG); // 
+//    NEX_Transmit((void*)Str);//
+//    // значение пам€ти 2
+//    sprintf (Str,"t5.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][1]/SHAG); // 
+//    NEX_Transmit((void*)Str);//
+//    // длина волны рабоча€
+//    sprintf (Str,"t6.txt=\"%d nm\"€€€",ConfigDevice.PlaceLW[UserSet.iCurrLW]); // 
+//    NEX_Transmit((void*)Str);//
+//    // индикатор длины волны 
+//    //if(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)
+//    sprintf (Str,"t7.txt=\"%s\"€€€",(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?("SM"):("MM")); // 
+//    NEX_Transmit((void*)Str);//
+//    // рисуем значение Ўј√ј изменений
+//    
+//    if(ModeWork) // настройка
+//    {
+//      sprintf(Str,"t8.txt=\"!SET!\"€€€");
+//      NEX_Transmit((void*)Str);//
+//      sprintf (Str,"t0.txt=\"%04d\"€€€",CurrLevelDAC); //  уровень основной
+//      NEX_Transmit((void*)Str);//
+//    }
+//    else
+//    {
+//      if(DigitSet<SHAG)
+//        sprintf(Str,"t8.txt=\"%2.2f\"€€€",DigitSet/SHAG);
+//      else
+//        sprintf(Str,"t8.txt=\"%2.1f\"€€€",DigitSet/SHAG);
+//      NEX_Transmit((void*)Str);//
+//      sprintf (Str,"t0.txt=\"%.2f dB\"€€€",UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG); //  уровень основной
+//      NEX_Transmit((void*)Str);//
+//      CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
+//    }
+//    NEX_Transmit((void*)Str);//
+//    
+//    NeedSaveParam |=0x02;// Memory UserSet 
+//    
+//    g_NeedScr =  0;
+//  }
+//  
 }
 
 void ModeWelcome(void)// режим заставки
@@ -396,13 +396,13 @@ void ModeWelcome(void)// режим заставки
     // инициализаци€ не измен€емых величин
     // наименование прибора
     int  Mdl=0; // определ€ем модель по конфигурации длинн волн
-    for (int y=0;y<4;++y)
-    {
-      if((ConfigDevice.PlaceLW[y]>0)&&(ConfigDevice.PlaceLW[y]<1310))
-        Mdl|=1;
-      if(ConfigDevice.PlaceLW[y]>1300)
-        Mdl|=2;
-    }
+//    for (int y=0;y<4;++y)
+//    {
+//      if((ConfigDevice.PlaceLW[y]>0)&&(ConfigDevice.PlaceLW[y]<1310))
+//        Mdl|=1;
+//      if(ConfigDevice.PlaceLW[y]>1300)
+//        Mdl|=2;
+//    }
     
     sprintf(StrN,"%s-%d",DeviceIDN[ConfigDevice.ID_Device],Mdl);
     sprintf (Str,"t0.txt=\"%s\"€€€",StrN); // 

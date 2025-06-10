@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workspace>
-  <project>
-    <path>$WS_DIR$\T8K_Work_STM743.ewp</path>
-  </project><project>
-    <path>$WS_DIR$\T5K_BASE_STM743.ewp</path>
-  </project>
-  <batchBuild />
+    <project>
+        <path>$WS_DIR$\T8K_Work_STM743.ewp</path>
+    </project>
+    <batchBuild />
 </workspace>

@@ -59,11 +59,6 @@ unsigned InvalidDevice() //boolean actually
   BYTE N_LS=0;
      unsigned err_str = 0;
   unsigned res = ConfigDevice.NumDevice > 9999; // 0x80
-  for( unsigned i = 0; i < LSPLACENUM/*PLACE_LS_NUM*/;++i ) // какие длины волн поддерживает
-  {
-    if (ConfigDevice.PlaceLW[i]!=0) N_LS++;
-  res = (res<<1) | (ConfigDevice.PlaceLW[i] > 1650); //0x40,0x20,0x10,0x08 (1310, 1550, 850, 1300)
- }
   res = (res<<1) | (ConfigDevice.ID_Device >1); // чей прибор (топаз или MOT) 0x04
   res = (res<<1) | (ConfigDevice.Ena_DB > 1); // разрешение альтернативного имени 0x02
     for( unsigned i = 0; i < (sizeof(ConfigDevice.AltName)-1);++i )
@@ -93,55 +88,103 @@ void InitDevice(unsigned Err)
   }
   if (Err && 0x02)  ConfigDevice.Ena_DB = 0; // альтернативного имени нет
   if (Err && 0x04) ConfigDevice.ID_Device = 0; // топаз
-  if (Err && 0x08) ConfigDevice.PlaceLW[3] = 0; // 1300
-  if (Err && 0x10) ConfigDevice.PlaceLW[2] = 0; // 850
-  if (Err && 0x20) ConfigDevice.PlaceLW[1] = 1550; // 1550
-  if (Err && 0x40) ConfigDevice.PlaceLW[0] = 1310; // 1310
-  if (Err && 0x80) ConfigDevice.NumDevice = 0;
+  if (Err && 0x08) ConfigDevice.NumDevice = 0;
 }
 
 DWORD CheckUserGonfig (void)  // Проверка пользовательских настроек И исправление
 {
   DWORD Err =0;
+  uint8_t Bad_Err = 0;
   if ((UserSet.CurrLang > MAX_LANG )||((ConfigDevice.ID_Device > 0)&&(UserSet.CurrLang == Rus))) //LANG_NUM-1
   {
-    Err |=0x100;
+    Err |=0x10;
     if ((ConfigDevice.ID_Device > 0)&&(UserSet.CurrLang == Rus)) UserSet.CurrLang = Eng;// для Чехов чисто английский
     else UserSet.CurrLang = Rus;
     
   }
-  if (UserSet.iCurrLW>3) // текущий рабочий индекс длины волны по ней определяем откуда берем уровень
+  if (UserSet.ChnMod>1) // текущий рабочий индекс типа экрана Graph or Table
+  {
+    Err |=0x20;
+    UserSet.ChnMod=0; //Graph
+  }
+  if (UserSet.EnaCntFiber>1) // авто счет волокна 
+  {
+    Err |=0x40;
+    UserSet.EnaCntFiber=0; //
+  }
+  if (UserSet.FiberID>999) //  // номер волокна 
+  {
+    Err |=0x80;
+    UserSet.FiberID=0;
+  }
+  if (UserSet.FileNumber>400) //  номер файла (счетчик записаных файлов)
+  {
+    Err |=0x100;
+    UserSet.FileNumber=0;
+  }
+  if (UserSet.FileNumberView>400) //  номер файла (счетчик записаных файлов)
   {
     Err |=0x200;
-    UserSet.iCurrLW=0;
+    UserSet.FileNumberView=0;
   }
-  for( int i=0; i<4; i++) // проверка групп по длинам волн 
+  // проверка имени волокна
+  for( unsigned i = 0; i < (sizeof(UserSet.FiberName)-1);++i )
   {
-    
-    if (UserSet.iFixLvl[i]>1)
+    if(UserSet.FiberName[i]<0x20) 
     {
+      Bad_Err = 1; // в комментариях есть управляющие символы
       Err |=0x400;
-      UserSet.iFixLvl[i]=0;
-    }
-    // проверка текущих уровней (в сохранении для востановления)
-    if (UserSet.iLvlCurrLW[i]>1600)
-    {
-      Err |=0x800;
-      UserSet.iLvlCurrLW[i]=0;
-    }
-    // проверка фиксированных уровней 1 закладки(в сохранении для востановления)
-    if (UserSet.iLvlFixLW[i][0]>1600)
-    {
-      Err |=0x1000;
-      UserSet.iLvlFixLW[i][0]=0;
-    }
-    // проверка фиксированных уровней 1 закладки(в сохранении для востановления)
-    if (UserSet.iLvlFixLW[i][1]>1600)
-    {
-      Err |=0x2000;
-      UserSet.iLvlFixLW[i][1]=0;
+      break;
     }
   }
+  if(Bad_Err)
+  {
+    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.FiberName)-2);++i )
+    {
+      UserSet.FiberName[i]=' '; 
+    }
+    UserSet.FiberName[(ARRAY_SIZE(UserSet.FiberName)-1)]=0;
+    Bad_Err = 0;
+  }
+  // проверка имени кабеля
+  for( unsigned i = 0; i < (sizeof(UserSet.CableID)-1);++i )
+  {
+    if(UserSet.CableID[i]<0x20) 
+    {
+      Bad_Err = 1; // в комментариях есть управляющие символы
+      Err |=0x800;
+      break;
+    }
+  }
+  if(Bad_Err)
+  {
+    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.CableID)-2);++i )
+    {
+      UserSet.CableID[i]=' '; 
+    }
+    UserSet.CableID[(ARRAY_SIZE(UserSet.CableID)-1)]=0;
+    Bad_Err = 0;
+  }
+  // проверка Comments
+  for( unsigned i = 0; i < (sizeof(UserSet.Comments)-1);++i )
+  {
+    if(UserSet.Comments[i]<0x20) 
+    {
+      Bad_Err = 1; // в комментариях есть управляющие символы
+      Err |=0x1000;
+      break;
+    }
+  }
+  if(Bad_Err)
+  {
+    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.Comments)-2);++i )
+    {
+      UserSet.Comments[i]=' '; 
+    }
+    UserSet.Comments[(ARRAY_SIZE(UserSet.Comments)-1)]=0;
+    Bad_Err = 0;
+  }
+  
   
   return Err; 
 }
@@ -165,42 +208,22 @@ DWORD FindFixErrBatS (void)
 DWORD FindErrCoeff (void)
 {
   DWORD Err = 0;
-  for (int i=0; i<=1600; ++i) 
+  // коэфф смещения на длине волны
+  for (int i=0;i<2;++i)
   {
-    if (CoeffLW.SetCoefLW[0][i]>4095) Err |= 0x4000 ; // плохое первое место
-    if (CoeffLW.SetCoefLW[1][i]>4095) Err |= 0x8000 ; // плохое второе место
-    if (CoeffLW.SetCoefLW[2][i]>4095) Err |= 0x10000 ; // плохое третье место
-    if (CoeffLW.SetCoefLW[3][i]>4095) Err |= 0x20000 ; // плохое четвертое место
+    if ((CoeffLW.SlopeChADC[i]>0.045)||(CoeffLW.SlopeChADC[i]<0.010))
+    {
+      CoeffLW.SlopeChADC[i]=0.0257;
+              Err |=0x2000;
+    }
   }
-  if(Err) // надо исправлять
+  // коэфф наклона АЦП
+  for (int i=0;i<18;++i)
   {
-    if(Err && 0x4000)
+    if ((CoeffLW.OffsetLW[i]>-40.0)||(CoeffLW.OffsetLW[i]<-80.0))
     {
-      for (int i=0; i<=1600; ++i) 
-      {
-        CoeffLW.SetCoefLW[0][i]=i; // плохое первое место
-      }
-    }
-    if(Err && 0x8000)
-    {
-      for (int i=0; i<=1600; ++i) 
-      {
-        CoeffLW.SetCoefLW[1][i]=i; // плохое второе  место
-      }
-    }
-    if(Err && 0x10000)
-    {
-      for (int i=0; i<=1600; ++i) 
-      {
-        CoeffLW.SetCoefLW[2][i]=i; // плохое третье место
-      }
-    }
-    if(Err && 0x20000)
-    {
-      for (int i=0; i<=1600; ++i) 
-      {
-        CoeffLW.SetCoefLW[3][i]=i; // плохое четвертое место
-      }
+      CoeffLW.OffsetLW[i]=-63.5+i*0.1;
+              Err |=0x4000;
     }
   }
   return Err;
