@@ -139,13 +139,13 @@ DWORD CheckUserGonfig (void)  // Проверка пользовательских настроек И исправлени
   }
   if(Bad_Err)
   {
-    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.FiberName)-2);++i )
+    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.FiberName)-1);++i )
     {
       UserSet.FiberName[i]=' '; 
     }
+  }
     UserSet.FiberName[(ARRAY_SIZE(UserSet.FiberName)-1)]=0;
     Bad_Err = 0;
-  }
   // проверка имени кабеля
   for( unsigned i = 0; i < (sizeof(UserSet.CableID)-1);++i )
   {
@@ -158,13 +158,13 @@ DWORD CheckUserGonfig (void)  // Проверка пользовательских настроек И исправлени
   }
   if(Bad_Err)
   {
-    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.CableID)-2);++i )
+    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.CableID)-1);++i )
     {
       UserSet.CableID[i]=' '; 
     }
+  }
     UserSet.CableID[(ARRAY_SIZE(UserSet.CableID)-1)]=0;
     Bad_Err = 0;
-  }
   // проверка Comments
   for( unsigned i = 0; i < (sizeof(UserSet.Comments)-1);++i )
   {
@@ -177,13 +177,13 @@ DWORD CheckUserGonfig (void)  // Проверка пользовательских настроек И исправлени
   }
   if(Bad_Err)
   {
-    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.Comments)-2);++i )
+    for( unsigned i = 0; i < (ARRAY_SIZE(UserSet.Comments)-1);++i )
     {
       UserSet.Comments[i]=' '; 
     }
+  }
     UserSet.Comments[(ARRAY_SIZE(UserSet.Comments)-1)]=0;
     Bad_Err = 0;
-  }
   
   
   return Err; 
