@@ -46,6 +46,9 @@ extern "C" {
 /* USER CODE BEGIN ET */
       extern uint16_t Dummy; // пустое чтение буфферов UART
 extern uint32_t BadLevelBat; //режим плохого уровня батарейки
+extern float CWDMData[18]; // данные 
+extern BYTE g_IndexMeas ; // счетчик индекс циклов
+extern BYTE g_IndexLW; // индекс указатель на длину волны индикации
 
 /* USER CODE END ET */
 

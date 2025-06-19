@@ -78,6 +78,7 @@ BYTE SetID_Dev(BYTE Data); // установка идентификатора для кого прибор
 BYTE GetLang(int Dir); // получение текущего языка/ или переключение
 WORD GetNumDevice(void); // получение номера  прибора
 WORD SetNumDevice(WORD Num); // установка номера  прибора
+void GetNumVer (char* Str); // получение номера версии
 
 // структура данных о батарейки, пишем по элементу каждую минуту от включения(0...1023)
 extern BAT_CNTR LvlBatSav;

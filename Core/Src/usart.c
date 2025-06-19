@@ -21,7 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-#include "usbd_cdc_if.h"
+//#include "usbd_cdc_if.h"
 #define ENAUSBCOM 1  // признак работы внешнего uART 0 - uart3 1 - USB-COM
 uint8_t RxBufExt[64]; // буффер что приняли извне
 
@@ -408,7 +408,7 @@ void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
 {
  if (ENAUSBCOM)
   {
-     CDC_Transmit_FS((void*)BufferPtr, Length); // выдаем блок
+     CDC_Transmit((void*)BufferPtr, Length); // выдаем блок
      HAL_Delay((Length>>9)+1);
   }
   else

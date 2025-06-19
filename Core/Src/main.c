@@ -21,15 +21,19 @@
 #include "adc.h"
 #include "dac.h"
 #include "dma.h"
+#include "fatfs.h"
 #include "i2c.h"
 #include "rtc.h"
+#include "sdmmc.h"
 #include "usart.h"
-#include "usb_device.h"
+#include "usb_otg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "usbd_cdc_if.h"
+//#include "usbd_cdc_if.h"
+#include "usb_device.h"
+#include "usbd_cdc_acm_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,8 +66,18 @@ uint16_t KeyP; // клавиши нажатые
   // контроль идентификатора платы
  uint8_t CheckErrID_Plate=0; 
 
+     float CWDMData[18]; // данные 
+     BYTE g_IndexMeas = 0; // счетчик индекс циклов
+     BYTE g_IndexLW = 0; // индекс указатель на длину волны индикации
+
 // режим работы прибора для настройки (1 - настройка, 0- работа)
  char ModeWork = 0;
+//variable USB
+//uint32_t RecievUSB=0 ; // признак принятия данных по USB, число данных в буфере
+uint8_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
+// при приеме передаче взводим на 10 мС , и перезаводим при следующей передаче/приеме
+uint16_t PresentUSB = 0; // признак подключенного USB
+uint8_t ModeUSB = 0; // признак работы USB для индикации
  
 unsigned int CheckErrMEM; 
 BYTE CurrLang; // текущий язык
@@ -241,7 +255,9 @@ int main(void)
   MX_UART7_Init();
   MX_UART5_Init();
   MX_DAC1_Init();
-  MX_USB_DEVICE_Init();
+  MX_SDMMC2_SD_Init();
+  MX_USB_OTG_FS_PCD_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
   // сразу пробуем поставить ЦАП
   
@@ -290,6 +306,9 @@ int main(void)
   
   // так как повторяем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
   CheckErrMEM =   BeginConfig();
+  
+  CheckErrMEM |= StartInitSDcard();
+
 // подготовка внутреннего АЦП
     if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
   {
@@ -353,11 +372,11 @@ int main(void)
   EEPROM_write(&LvlBatSav.BatControl[CountBat], ADR_BatSave +  4*CountBat , 4);
 
 
-  //CmdInitPage(0);// вызов окна заставки
-  //HAL_Delay(10);
+  CmdInitPage(0);// вызов окна заставки
+  HAL_Delay(10);
   SetMode (ModeWelcome);
   CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
-  //  MX_USB_DEVICE_Init();
+    MX_USB_DEVICE_Init();
 
 
   /* USER CODE END 2 */
@@ -454,8 +473,9 @@ int main(void)
           myBeep(100);
           Error_Handler();
         }
+      g_IndexMeas++;
+      g_NeedScr=1;
       }
-      
       
     }
     // проверка приема по UART EXT
@@ -469,7 +489,7 @@ int main(void)
     {
       if(ProgFW_LCD)
       {
-        CDC_Transmit_FS((uint8_t*)RX_BufNEX, CntRXNEX ); // echo back on same channel
+        CDC_Transmit(0,(uint8_t*)RX_BufNEX, CntRXNEX ); // echo back on same channel
       }
       else
       {
@@ -538,7 +558,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 120;
   RCC_OscInitStruct.PLL.PLLP = 2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
-  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLR = 8;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
   RCC_OscInitStruct.PLL.PLLFRACN = 0;
@@ -577,17 +597,26 @@ void PeriphCommonClock_Config(void)
   /** Initializes the peripherals clock
   */
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_ADC
-                              |RCC_PERIPHCLK_UART5|RCC_PERIPHCLK_UART7
-                              |RCC_PERIPHCLK_USART3;
+                              |RCC_PERIPHCLK_SDMMC|RCC_PERIPHCLK_UART5
+                              |RCC_PERIPHCLK_UART7|RCC_PERIPHCLK_USART3;
+  PeriphClkInitStruct.PLL2.PLL2M = 16;
+  PeriphClkInitStruct.PLL2.PLL2N = 144;
+  PeriphClkInitStruct.PLL2.PLL2P = 3;
+  PeriphClkInitStruct.PLL2.PLL2Q = 8;
+  PeriphClkInitStruct.PLL2.PLL2R = 6;
+  PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+  PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+  PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
   PeriphClkInitStruct.PLL3.PLL3M = 16;
   PeriphClkInitStruct.PLL3.PLL3N = 96;
   PeriphClkInitStruct.PLL3.PLL3P = 2;
   PeriphClkInitStruct.PLL3.PLL3Q = 4;
-  PeriphClkInitStruct.PLL3.PLL3R = 4;
+  PeriphClkInitStruct.PLL3.PLL3R = 12;
   PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_1;
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
   PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
-  PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_PLL3;
+  PeriphClkInitStruct.SdmmcClockSelection = RCC_SDMMCCLKSOURCE_PLL2;
+  PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_PLL2;
   PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
   PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL3;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)

@@ -21,7 +21,7 @@
 //число сообщений и языков
 #define LANG_NUM 4  // число столбцов в таблице языков
 
-#define MSG_NUM 59
+#define MSG_NUM 60
 #define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //время цикла красного глаза по 500 мС
@@ -87,7 +87,7 @@
 #include "buttons.h" 
 #include "Att_mode.h"// //from T7kAR
 
-//#include "sdmmc.h"
+#include "sdmmc.h"
 //#include "ff.h"
 // из FATFS библиотеки
 //#include "fatfs.h"
@@ -107,7 +107,7 @@
 #include "UartNEX.h"  //from T7kAR
 #include "UartEXT.h"  //from T7kAR
 //#include "drawfunctions.h" //from T7kAR
-//#include "memflash.h"// //from T7kAR
+#include "memflash.h"// //from T7kAR
 
 //#define NUM_VER                 58  // стартуем от 50 (22.01.2025) по этому номеру
 // 55 03.03.2025 -  добавлены команды дистанционного управленя, режим и установка - запрос ЦАП

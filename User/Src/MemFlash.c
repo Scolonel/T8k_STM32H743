@@ -3,7 +3,7 @@
 // взаимодействует с SSP
 
 #include "system.h"
-#include "ff.h"
+#include "fatfs.h"
 
 char NameDir[100][6];
 char NameFiles[1000][17];
@@ -17,7 +17,7 @@ uint32_t PageDir;
 uint32_t PageFiles; // страница файлов
 
   float TmpACI;
-St_File_Sor F_SOR; // содержимое основных параметров файла SOR
+//St_File_Sor F_SOR; // содержимое основных параметров файла SOR
 
 // для работы с FatFS и SDCard
   FATFS FatFs;
@@ -29,9 +29,11 @@ St_File_Sor F_SOR; // содержимое основных параметров файла SOR
   FILINFO fno;
   DIR dir;
   UINT    br, bw;         // File R/W count
+  FIL Fil;
+  FRESULT FR_Status, res;
 
   char*   fn;
-  const  char PathMainDir[9]={"0:/_OTDR\0"}; // 
+  const  char PathMainDir[9]={"0:/_T8KM\0"}; // 
   char PathF[64];
   //char   path=;
   uint32_t TotalSize, FreeSpace;
@@ -442,8 +444,8 @@ void SDMMC_SDCard_DIR(void) // прочитаем дирректроии
 
 // структура конфигурации прибора
 
-BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм ячейки памяти меняется в памяти до MaxMemOTDR
-BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной ячейки памяти меняется в памяти до MaxMemOTDRExt
+//BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм ячейки памяти меняется в памяти до MaxMemOTDR
+//BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной ячейки памяти меняется в памяти до MaxMemOTDRExt
 static unsigned short NumTrace = 0; // номер трассы (число записей) в памяти рефлектограм
 
 BYTE CheckMemID (void) // прочитаем какая флэшка стоит
@@ -1273,267 +1275,267 @@ unsigned short SaveTrace(void) // сохранение рефлектограммы
 
 void SaveFileSD(int Mod)
 {
-  //        //        unsigned long NowEND;
-  //        //        unsigned long NowBEG;
-  unsigned short NumEventNow = GetNumEvents();
-  //        unsigned short NumTr = (unsigned short)(atoi((char*)&RX_Buf[17]));
-  //        if (NumTr > GetNumTraceSaved(0)) NumTr = 0; // заданная рефлектограмма не существует
-  //        SetNumTrace (NumTr); // установка номера трассы
-  //SetModeDevice (MODEMEMR); // принудительная установка режима прибора 
-  //        // надо прочитать указанную рефлектограмму
-  //        // первое заполнение надо прочитать файл
-  //        if (GetNumTrace()) // если не нулевая то читаем по таблице
-  //          TraceREAD(GetNumTraceSaved(GetNumTrace()));//  читаем файл который надо передать// 27/01/2011 неадекватно считывала рефлектограмму
-  //        else  TraceREAD(0);
-  //        // ищем события в линии (25.05.2011 пока конец линии)
-  InitEventsTable (); // инициализация структур событий
-  //        // признак разрешения событий при передаче
-  if (GetSetEnaEvents (0)) // проверяем признак разрешения событий
-  {
-    // ищем события и заполняем файл
-    NumEventNow =  (CalkEventsKeys (LogData, PointsInImpulse(0), 1)); 
-    //          // расчет погонного затухания если есть точка
-    //          /**/
-    if (NumEventNow)          //имеем события - 
-    {
-      if (EndEvenBlk.ELMP[0]!=EndEvenBlk.ELMP[1]) // есть линия! занесем параметры
-      {
-        TmpACI = GetPosLine(EvenTrace[0].EPT);
-        //TmpACI = ;
-        TmpACI = (LogData[EvenTrace[0].EPT]-LogData[0])/TmpACI;//GetPosLine(EvenTrace[0].EPT);
-        EvenTrace[0].ACI = (short int)TmpACI;
-        EndEvenBlk.ELMP[1] = CalkEPT (EndEvenBlk.ELMP[1]); // расчет значений ELMP для конца линии от положения курсора
-        
-      }
-      // цикл заполнения событий 
-      if (NumEventNow>1)
-      {
-        for (int i=1;i<NumEventNow;++i)
-        {
-          TmpACI = GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
-          TmpACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/TmpACI;
-          EvenTrace[i].ACI = (short int)TmpACI;
-          //EvenTrace[i].ACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
-          
-          //EvenTrace[i-1].EPT = CalkEPT (EvenTrace[i-1].EPT); // расчет значений EPT для событий от положения курсора
-        }
-      }
-      // Заполнение события и конец линии
-      
-      for (int i=0;i<NumEventNow;++i)
-      {
-        EvenTrace[i].EPT = CalkEPT (EvenTrace[i].EPT); // расчет значений EPT для событий от положения курсора
-      }
-    }
-    
-  }
-  // тест загрузка формирование событий
-  //NumEventNow = 9;
-  //TestLoadEvents (NumEventNow);
-  //< < < < <  !!! В Н И М А Н И Е !!! > > > > >
-  // попробуем записать файл
-  // откроем SD Card, сохраняем всегда в файл 0.sor 
-  // для простоты пока
-  do
-  {
-    //------------------[ Mount The SD Card ]--------------------
-    FR_Status = f_mount(&FatFs, SDPath, 1);
-    if (FR_Status != FR_OK)
-    {
-      break;
-    }
-    // создаем или проверяем наличие дирректории _OTDR
-    res = f_mkdir(PathMainDir);//"0:/_OTDR"
-    if(res == FR_EXIST)
-    {
-      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
-      res = FR_OK;
-    }
-    // откроем файл для записи
-    if(Mod) // сохраняем в дирректроию недели и с именем файла по времени
-    {
-      // подготовим путь
-      // папка для сохранения делаем папку  
-      GetFolder(FileSDir);
-
-    sprintf(PathF,"%s/%s",PathMainDir,FileSDir);
-    res = f_mkdir(PathF);
-    //res = f_unlink(PathF);
-    if(res == FR_EXIST)
-    {
-      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
-      res = FR_OK;
-    }
-        HAL_Delay(2);
-    // почитаем директории...только что созданные 
-    res = f_opendir(&dir, PathF);
-        HAL_Delay(2);
-    f_closedir(&dir);
-    // папка создана
-      // имя файла
-      sprintf(FileNameS,"%02d%02d%02d_%02d%02d%01d.sor",TimeSaveOTDR.RTC_Year%100,
-          TimeSaveOTDR.RTC_Mon,
-          TimeSaveOTDR.RTC_Mday,
-          TimeSaveOTDR.RTC_Hour,
-          TimeSaveOTDR.RTC_Min,
-          TimeSaveOTDR.RTC_Sec/10 );
-       // имя файла есть
-      //создадим полны путь к файлу чтобы его открыть
-    sprintf(PathFileS,"%s/%s",PathF,FileNameS);
-      
-    }
-    
-    //Open the file
-    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
-    else
-    sprintf(PathFileS,"0.sor");
-    FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
-    //    if(FR_Status != FR_OK)
-    //    {
-    //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
-    //      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
-    //      break;
-    //    }
-    
-    //unsigned short NumEventNow = 0; // пока без событий
-    // начинаем передачу трассы (Заголовок)
-    uint32_t HowSizeFile = 8419 + ((NumEventNow)?(NumEventNow*32+40):(0));
-    
-    //sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
-    //UARTSendExt ((BYTE*)StartStr, 6);
-    // Мар страница белкора с учетом Таблицы событий (блок 0)
-    // если есть таблица событий....
-    GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
-    //UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
-    FR_Status = f_write(&Fil, (BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)),&WWC);
-    
-    // подготовка для расчета контрольной суммы
-    unsigned short old_crc = 0xffff; 
-    unsigned short new_crc = 0xffff;
-    c = (unsigned char*)&BufString;
-    for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
-    {
-      /* первый вариант подсчета контрольной суммы - табличный                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    // записали 56 или +16 байт в файл = 56 (72)
-    // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
-    GetHeaderBelcore (BufString, 1, NumEventNow); 
-    //UARTSendExt ((BYTE*)BufString, 62);
-    FR_Status = f_write(&Fil, (BYTE*)BufString, 62,&WWC);
-    c = (unsigned char*)&BufString;
-    for (int i=0;i<62;i++)
-    {
-      /* Считаем контрольную сумму переданного блока                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    // записали 56+62 или +16 байт в файл = 118 (134)
-    // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
-    GetHeaderBelcore (BufString, 2, NumEventNow); 
-    //UARTSendExt ((BYTE*)BufString, 95);
-    FR_Status = f_write(&Fil, (BYTE*)BufString, 95,&WWC);
-    c = (unsigned char*)&BufString;
-    for (int i=0;i<95;i++)
-    {
-      /* Считаем контрольную сумму переданного блока                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    // записали 118+95 или +16 байт в файл = 213 (229)
-
-    // Проверяем и передаем блок событий если он есть (блок событий)
-    if (NumEventNow) // если есть события 2 байта +
-      // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока, итого 24+N*32
-    {
-      // передаем  число событий  2 байта
-      //UARTSendExt ((BYTE*)&NumEventNow, 2);
-      FR_Status = f_write(&Fil, (BYTE*)&NumEventNow, 2,&WWC);
-      c = (unsigned char*)&NumEventNow;
-      for (int i=0;i<2;i++)
-      {
-        /* Считаем контрольную сумму переданного блока                                             */		
-        value = *c;
-        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-        old_crc = new_crc;
-        c++;
-      }
-      // передаем информационные блоки событий  N*32
-      for (int s=0; s<NumEventNow; s++)
-      {
-        //UARTSendExt ((BYTE*)&EvenTrace[s], 32);
-        FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 32,&WWC);
-        c = (unsigned char*)&EvenTrace[s];
-        for (int i=0;i<32;i++)
-        {
-          /* Считаем контрольную сумму переданного блока                                             */		
-          value = *c;
-          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-          old_crc = new_crc;
-          c++;
-        }
-        
-      }
-      // передаем конечный блок событий 22 байта
-      //UARTSendExt ((BYTE*)&EndEvenBlk, 22);
-      FR_Status = f_write(&Fil, (BYTE*)&EndEvenBlk, 22,&WWC);
-      c = (unsigned char*)&EndEvenBlk;
-      for (int i=0;i<22;i++)
-      {
-        /* Считаем контрольную сумму переданного блока                                             */		
-        value = *c;
-        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-        old_crc = new_crc;
-        c++;
-      }
-    }
-    
-    // заполняем шапку белкора 12 байт Block=3 (DataPts)
-    GetHeaderBelcore (BufString, 3, NumEventNow); 
-    //UARTSendExt ((BYTE*)BufString, 12);
-    FR_Status = f_write(&Fil, (BYTE*)BufString, 12,&WWC);
-    c = (unsigned char*)&BufString;
-    for (int i=0;i<12;i++)
-    {
-      /* Считаем контрольную сумму переданного блока                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    
-    // блок данных 
-    //UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
-    FR_Status = f_write(&Fil, (BYTE*)LogData, OUTSIZE*2,&WWC);
-    c = (unsigned char*)&LogData;
-    for (int i=0;i<OUTSIZE*2;i++)
-    {
-      /* первый вариант подсчета контрольной суммы - табличный                                             */		
-      value = *c;
-      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-      old_crc = new_crc;
-      c++;
-    }
-    
-    //UARTSendExt ((BYTE*)&new_crc, 2);
-    FR_Status = f_write(&Fil, (BYTE*)&new_crc, 2,&WWC);
-        HAL_Delay(2);
-
-    f_close(&Fil);
-    
-  } while(0);
-      HAL_Delay(2);
-
-  //------------------[ Test Complete! Unmount The SD Card ]--------------------
-  FR_Status = f_mount(NULL, "", 0);
-  
+//  //        //        unsigned long NowEND;
+//  //        //        unsigned long NowBEG;
+//  unsigned short NumEventNow = GetNumEvents();
+//  //        unsigned short NumTr = (unsigned short)(atoi((char*)&RX_Buf[17]));
+//  //        if (NumTr > GetNumTraceSaved(0)) NumTr = 0; // заданная рефлектограмма не существует
+//  //        SetNumTrace (NumTr); // установка номера трассы
+//  //SetModeDevice (MODEMEMR); // принудительная установка режима прибора 
+//  //        // надо прочитать указанную рефлектограмму
+//  //        // первое заполнение надо прочитать файл
+//  //        if (GetNumTrace()) // если не нулевая то читаем по таблице
+//  //          TraceREAD(GetNumTraceSaved(GetNumTrace()));//  читаем файл который надо передать// 27/01/2011 неадекватно считывала рефлектограмму
+//  //        else  TraceREAD(0);
+//  //        // ищем события в линии (25.05.2011 пока конец линии)
+//  InitEventsTable (); // инициализация структур событий
+//  //        // признак разрешения событий при передаче
+//  if (GetSetEnaEvents (0)) // проверяем признак разрешения событий
+//  {
+//    // ищем события и заполняем файл
+//    NumEventNow =  (CalkEventsKeys (LogData, PointsInImpulse(0), 1)); 
+//    //          // расчет погонного затухания если есть точка
+//    //          /**/
+//    if (NumEventNow)          //имеем события - 
+//    {
+//      if (EndEvenBlk.ELMP[0]!=EndEvenBlk.ELMP[1]) // есть линия! занесем параметры
+//      {
+//        TmpACI = GetPosLine(EvenTrace[0].EPT);
+//        //TmpACI = ;
+//        TmpACI = (LogData[EvenTrace[0].EPT]-LogData[0])/TmpACI;//GetPosLine(EvenTrace[0].EPT);
+//        EvenTrace[0].ACI = (short int)TmpACI;
+//        EndEvenBlk.ELMP[1] = CalkEPT (EndEvenBlk.ELMP[1]); // расчет значений ELMP для конца линии от положения курсора
+//        
+//      }
+//      // цикл заполнения событий 
+//      if (NumEventNow>1)
+//      {
+//        for (int i=1;i<NumEventNow;++i)
+//        {
+//          TmpACI = GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
+//          TmpACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/TmpACI;
+//          EvenTrace[i].ACI = (short int)TmpACI;
+//          //EvenTrace[i].ACI = (LogData[EvenTrace[i].EPT]-(LogData[EvenTrace[i-1].EPT]+EvenTrace[i-1].EL))/GetPosLine(EvenTrace[i].EPT-EvenTrace[i-1].EPT);
+//          
+//          //EvenTrace[i-1].EPT = CalkEPT (EvenTrace[i-1].EPT); // расчет значений EPT для событий от положения курсора
+//        }
+//      }
+//      // Заполнение события и конец линии
+//      
+//      for (int i=0;i<NumEventNow;++i)
+//      {
+//        EvenTrace[i].EPT = CalkEPT (EvenTrace[i].EPT); // расчет значений EPT для событий от положения курсора
+//      }
+//    }
+//    
+//  }
+//  // тест загрузка формирование событий
+//  //NumEventNow = 9;
+//  //TestLoadEvents (NumEventNow);
+//  //< < < < <  !!! В Н И М А Н И Е !!! > > > > >
+//  // попробуем записать файл
+//  // откроем SD Card, сохраняем всегда в файл 0.sor 
+//  // для простоты пока
+//  do
+//  {
+//    //------------------[ Mount The SD Card ]--------------------
+//    FR_Status = f_mount(&FatFs, SDPath, 1);
+//    if (FR_Status != FR_OK)
+//    {
+//      break;
+//    }
+//    // создаем или проверяем наличие дирректории _OTDR
+//    res = f_mkdir(PathMainDir);//"0:/_OTDR"
+//    if(res == FR_EXIST)
+//    {
+//      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+//      res = FR_OK;
+//    }
+//    // откроем файл для записи
+//    if(Mod) // сохраняем в дирректроию недели и с именем файла по времени
+//    {
+//      // подготовим путь
+//      // папка для сохранения делаем папку  
+//      GetFolder(FileSDir);
+//
+//    sprintf(PathF,"%s/%s",PathMainDir,FileSDir);
+//    res = f_mkdir(PathF);
+//    //res = f_unlink(PathF);
+//    if(res == FR_EXIST)
+//    {
+//      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+//      res = FR_OK;
+//    }
+//        HAL_Delay(2);
+//    // почитаем директории...только что созданные 
+//    res = f_opendir(&dir, PathF);
+//        HAL_Delay(2);
+//    f_closedir(&dir);
+//    // папка создана
+//      // имя файла
+//      sprintf(FileNameS,"%02d%02d%02d_%02d%02d%01d.sor",TimeSaveOTDR.RTC_Year%100,
+//          TimeSaveOTDR.RTC_Mon,
+//          TimeSaveOTDR.RTC_Mday,
+//          TimeSaveOTDR.RTC_Hour,
+//          TimeSaveOTDR.RTC_Min,
+//          TimeSaveOTDR.RTC_Sec/10 );
+//       // имя файла есть
+//      //создадим полны путь к файлу чтобы его открыть
+//    sprintf(PathFileS,"%s/%s",PathF,FileNameS);
+//      
+//    }
+//    
+//    //Open the file
+//    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
+//    else
+//    sprintf(PathFileS,"0.sor");
+//    FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
+//    //    if(FR_Status != FR_OK)
+//    //    {
+//    //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
+//    //      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
+//    //      break;
+//    //    }
+//    
+//    //unsigned short NumEventNow = 0; // пока без событий
+//    // начинаем передачу трассы (Заголовок)
+//    //uint32_t HowSizeFile = 8419 + ((NumEventNow)?(NumEventNow*32+40):(0));
+//    
+//    //sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
+//    //UARTSendExt ((BYTE*)StartStr, 6);
+//    // Мар страница белкора с учетом Таблицы событий (блок 0)
+//    // если есть таблица событий....
+//    GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
+//    //UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
+//    FR_Status = f_write(&Fil, (BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)),&WWC);
+//    
+//    // подготовка для расчета контрольной суммы
+//    unsigned short old_crc = 0xffff; 
+//    unsigned short new_crc = 0xffff;
+//    c = (unsigned char*)&BufString;
+//    for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
+//    {
+//      /* первый вариант подсчета контрольной суммы - табличный                                             */		
+//      value = *c;
+//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+//      old_crc = new_crc;
+//      c++;
+//    }
+//    // записали 56 или +16 байт в файл = 56 (72)
+//    // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
+//    GetHeaderBelcore (BufString, 1, NumEventNow); 
+//    //UARTSendExt ((BYTE*)BufString, 62);
+//    FR_Status = f_write(&Fil, (BYTE*)BufString, 62,&WWC);
+//    c = (unsigned char*)&BufString;
+//    for (int i=0;i<62;i++)
+//    {
+//      /* Считаем контрольную сумму переданного блока                                             */		
+//      value = *c;
+//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+//      old_crc = new_crc;
+//      c++;
+//    }
+//    // записали 56+62 или +16 байт в файл = 118 (134)
+//    // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
+//    GetHeaderBelcore (BufString, 2, NumEventNow); 
+//    //UARTSendExt ((BYTE*)BufString, 95);
+//    FR_Status = f_write(&Fil, (BYTE*)BufString, 95,&WWC);
+//    c = (unsigned char*)&BufString;
+//    for (int i=0;i<95;i++)
+//    {
+//      /* Считаем контрольную сумму переданного блока                                             */		
+//      value = *c;
+//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+//      old_crc = new_crc;
+//      c++;
+//    }
+//    // записали 118+95 или +16 байт в файл = 213 (229)
+//
+//    // Проверяем и передаем блок событий если он есть (блок событий)
+//    if (NumEventNow) // если есть события 2 байта +
+//      // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока, итого 24+N*32
+//    {
+//      // передаем  число событий  2 байта
+//      //UARTSendExt ((BYTE*)&NumEventNow, 2);
+//      FR_Status = f_write(&Fil, (BYTE*)&NumEventNow, 2,&WWC);
+//      c = (unsigned char*)&NumEventNow;
+//      for (int i=0;i<2;i++)
+//      {
+//        /* Считаем контрольную сумму переданного блока                                             */		
+//        value = *c;
+//        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+//        old_crc = new_crc;
+//        c++;
+//      }
+//      // передаем информационные блоки событий  N*32
+//      for (int s=0; s<NumEventNow; s++)
+//      {
+//        //UARTSendExt ((BYTE*)&EvenTrace[s], 32);
+//        FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 32,&WWC);
+//        c = (unsigned char*)&EvenTrace[s];
+//        for (int i=0;i<32;i++)
+//        {
+//          /* Считаем контрольную сумму переданного блока                                             */		
+//          value = *c;
+//          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+//          old_crc = new_crc;
+//          c++;
+//        }
+//        
+//      }
+//      // передаем конечный блок событий 22 байта
+//      //UARTSendExt ((BYTE*)&EndEvenBlk, 22);
+//      FR_Status = f_write(&Fil, (BYTE*)&EndEvenBlk, 22,&WWC);
+//      c = (unsigned char*)&EndEvenBlk;
+//      for (int i=0;i<22;i++)
+//      {
+//        /* Считаем контрольную сумму переданного блока                                             */		
+//        value = *c;
+//        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+//        old_crc = new_crc;
+//        c++;
+//      }
+//    }
+//    
+//    // заполняем шапку белкора 12 байт Block=3 (DataPts)
+//    GetHeaderBelcore (BufString, 3, NumEventNow); 
+//    //UARTSendExt ((BYTE*)BufString, 12);
+//    FR_Status = f_write(&Fil, (BYTE*)BufString, 12,&WWC);
+//    c = (unsigned char*)&BufString;
+//    for (int i=0;i<12;i++)
+//    {
+//      /* Считаем контрольную сумму переданного блока                                             */		
+//      value = *c;
+//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+//      old_crc = new_crc;
+//      c++;
+//    }
+//    
+//    // блок данных 
+//    //UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
+//    FR_Status = f_write(&Fil, (BYTE*)LogData, OUTSIZE*2,&WWC);
+//    c = (unsigned char*)&LogData;
+//    for (int i=0;i<OUTSIZE*2;i++)
+//    {
+//      /* первый вариант подсчета контрольной суммы - табличный                                             */		
+//      value = *c;
+//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
+//      old_crc = new_crc;
+//      c++;
+//    }
+//    
+//    //UARTSendExt ((BYTE*)&new_crc, 2);
+//    FR_Status = f_write(&Fil, (BYTE*)&new_crc, 2,&WWC);
+//        HAL_Delay(2);
+//
+//    f_close(&Fil);
+//    
+//  } while(0);
+//      HAL_Delay(2);
+//
+//  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+//  FR_Status = f_mount(NULL, "", 0);
+//  
 }
 
 void CopyFileSave (void) // копирование файла "0" в файл который сохраняем

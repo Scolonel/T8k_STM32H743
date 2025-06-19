@@ -13,7 +13,7 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"Сохранить?","Save ?","Uloz ?","Save ?"},       //5
 
 // Главное меню
-{"ТОПАЗ-5000","TOPAZ-5000","MOT-500M-60B","MOT-500M-60B"},              //6
+{"ТОПАЗ-8021N ","TOPAZ-8021N ","MOT-800M-18B","MOT-800M-18B"},              //6
 {"АНАЛИЗАТОР","ANALYSER","ANALYZATOR","ANALYSER"},       //7
 {"ТЕСТЕР","TESTER","TESTER","TESTER"},                         //8
 {"ПАМЯТЬ","MEMORY","PAMET","MEMORY"},                  //9
@@ -44,12 +44,9 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 
 {"Прибор","Device","Pristroj","Device"},              //28
 {"Файл","File","Soubor","File"},              //29
-//{"Имя волокна","Name fiber","Nazev vlakna","Name fiber"},              //30
-{"Длина волны","Wavelength","Wavelength","Wavelength"},              //30
-//{"Имя кабеля","Name cable","Nazev kabelu","Name cable"},              //31
-{"Память 1","Preset 1","Preset 1","Preset 1"},              //31
-//{"№ волокна","№ fiber","№ vlakna","№ fiber"},              //32
-{"Память 2","Preset 2","Preset 2","Preset 2"},              //32
+{"Имя волокна","Name fiber","Nazev vlakna","Name fiber"},              //30
+{"Имя кабеля","Name cable","Nazev kabelu","Name cable"},              //31
+{"№ волокна","№ fiber","№ vlakna","№ fiber"},              //32
 {"Счет волокон","Count fiber","Soucet vlaken","Count fiber"},              //33
 {"OK","OK","OK","OK"},              //34
 {"кабель","cable","kabel","cable"},              //35
@@ -75,7 +72,8 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"высокий","high","high","high"}, //55
 {"ВКЛЮЧЕНИЕ","SWITCH ON","SWITCH ON","SWITCH ON"}, //56
 {"Прибор готов к","Device is ready","Device is ready","Device is ready"},//57
-{"Обновлению ПО LCD","Upgrade FW LCD","Upgrade FW LCD","Upgrade FW LCD"}//58
+{"Обновлению ПО LCD","Upgrade FW LCD","Upgrade FW LCD","Upgrade FW LCD"},//58
+{"Дата/Время изменены","Up-to-date","Zmena data a casu","Up-to-date"}//59 Aktuell
 
 
 };

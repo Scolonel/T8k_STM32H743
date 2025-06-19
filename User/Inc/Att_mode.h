@@ -18,6 +18,13 @@ void SetMode( void(f)(void) );
 
 void ModeWelcome(void); // стартовая заставка
 void ModeMain(void); // прорисовка и управление основного меню
+void ModeSetting(void);// режим установок прибора CHECK_IN
+void ModeDateTimeSET(void); // режим установок времени CHECK_IN
+void ModeSetupFILE(void); // режим установок FILES
+void ModeKBCableID(void); // режим отображения клавиатуры редактора CableID
+
+// окно индикации анализатора, тут будем измерять
+void ModeDrawMeasure(void); // режим отображения рефлектограммы
 // переключимся в режим программирования индикатора (пока на паузу  и сигнал
 void UploadFW_Nextion(void); // обновление индикатора NEXTION
 void BadBattery(void); // плохая батарейка
@@ -49,7 +56,7 @@ void BadBattery(void); // плохая батарейка
 //void FrdB(unsigned char SW ,  int X, int Size); //рамка для подсветки верхнего рабочего значения затухания
 //void FrVal(unsigned char SW ,  int X, int Size);
 //void FrFreePx(int X, int Y ,  char* PrntStr);
-//unsigned char ChangeFrSet (unsigned char FrSet, unsigned char MaxSet, unsigned char MinSet, unsigned char DirSet);// установка курсора в рамках заданных параметров
+unsigned char ChangeFrSet (unsigned char FrSet, unsigned char MaxSet, unsigned char MinSet, unsigned char DirSet);// установка курсора в рамках заданных параметров
 
 #endif  /* __ATT_MODE_H__ */
 

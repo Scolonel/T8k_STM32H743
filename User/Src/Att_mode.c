@@ -6,6 +6,10 @@
 //#define Pic_Tx 67 // X - смещение картинки при выводе установки времени
 //#define Pic_Ty 5 // Y - смещение картинки при выводе установки времени
 
+#define INCR 1
+#define DECR -1
+
+
 
 #include "main.h"
 
@@ -31,6 +35,8 @@ static volatile  unsigned char FrCurrMem = 0; // курсор в режиме просмотра в гра
 unsigned char SetErrMsg = 0; // указатель какое сообщение об ошибке печатаем
 unsigned CntWelcome = 0; // счетчик ожидани€ заставки
 
+static BYTE PosCurr = 6; // положение курсора устанавливаемых величин в настройках часов
+
 //static unsigned char Ptr; // указатель с какой строкой работаем (чтобы перекопировать)
 static void (*ModeFunc)(void);
 static void (*ModeFuncPrev)(void) = 0;
@@ -39,6 +45,12 @@ static unsigned char FrdBSet=1; //признак включени€ рамки у рабочего значени€ за
 static unsigned char FrFreeSet=0; //признак включени€ рамки основного курсора левый столбец
 //static unsigned char FrValSet = 1; //признак включени€ рамки основного курсора правый столбец
 unsigned char ScrRedraw = 1; //признак перерисовки экрана
+
+volatile BYTE NeedKeyB = 0; // необходимость переключени€ в клавиатуру
+char IndxKBCableID = 0; // »ндексы указатели дл€ строк редактировани€ - »м€ кабел€
+char IndxKBFiberName = 0; // »ндексы указатели дл€ строк редактировани€ - »м€ волокна
+char IndxKBComments = 0; // »ндексы указатели дл€ строк редактировани€ -  омментарий
+volatile int NeedReturn = 0; // необходимость вернутьс€ в окно сохранени€
 
 //static char* globalStringToCopy = 0;
 
@@ -50,6 +62,23 @@ unsigned char ScrRedraw = 1; //признак перерисовки экрана
 //void FrBatNew(int Y ,  int X, int Size); //???
 float BatProc; //перем. дл€ уровн€ зар€да в %
 
+unsigned short CalkCheckSum (void)// подсчет контрольной суммы конфигурации прибора
+{
+  unsigned short Sum =0;
+  
+  Sum = 0x2A56;
+  return Sum;
+}
+
+
+   // получение данных от измерител€
+   void GetAllDataMeas(int Indx)
+   {
+     for(int i=0;i<18;i++)
+     {
+       CWDMData[i] = -0.2*((Indx-16)*(i-18)+i*Indx)+17.6;
+     }
+   }
 
 //char GetModeDev (void) // возвращает текущий режим
 //{
@@ -85,302 +114,12 @@ void SetMode( void(f)(void) )
 //{
 //  ModeFunc = f;
 //}
-void ModeMain(void)// режим основной
-{
-//  static volatile unsigned char FrFreeInd = 0; //указатель на основной курсор
-//  
-//  char Str[32];
-//  char StrN[32];
-//  Set_MAX_DB = (ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?(MAX_DB):(MAX_DB/2);
-//  
-//  //if (PRESS(BTN_OK))
-//  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
-//  {
-//    myBeep(10);
-//    switch(DigitSet)
-//    {
-//    case 1:
-//      DigitSet = 20;
-//      break;
-//    case 20:
-//      DigitSet = 100;
-//      break;
-//    case 100:
-//      DigitSet = 200;
-//      break;
-//    default:
-//      DigitSet = 1;
-//      break;
-//    }
-//    g_NeedScr = 1;
-//    
-//  }
-//  // кнопка вверх
-//  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
-//  {
-//    myBeep(25);
-//    FrFreeInd=(int)(FrFreeInd+3)%4;
-//    g_NeedScr = 1;
-//    
-//  }
-//  // кнопка вниз
-//  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
-//  {
-//    myBeep(25);
-//    FrFreeInd=(int)(FrFreeInd+1)%4;
-//    g_NeedScr = 1;
-//    
-//  }
-//  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED)) // жмем долго
-//  {
-//    if (FrFreeInd==0)
-//    {
-//      myBeep(3);
-//      DigitSet = 1;
-//      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]>DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] -= DigitSet;
-//      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
-//      g_NeedScr = 1;
-//    }
-//    if (FrFreeInd==1 || FrFreeInd==2)
-//    {
-//      myBeep(3);
-//      DigitSet = 1;
-//      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]>DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] -= DigitSet;
-//      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = 0;
-//      g_NeedScr = 1;
-//    }   
-//  }
-//  // кнопка влево , учитываем где стоит курсор
-//  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
-//  {
-//    myBeep(25);
-//    if (FrFreeInd==0)
-//    { 
-//      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]>DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] -= DigitSet;
-//      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
-//    }    
-//    if (FrFreeInd==1 || FrFreeInd==2)
-//    {
-//      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]>DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] -= DigitSet;
-//      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = 0;
-//    }   
-//    //UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG 
-//    if (FrFreeInd==3) // переключение длины волны
-//    { 
-//      if(UserSet.iCurrLW>0) UserSet.iCurrLW--; // здесь переключаем длины волн (
-//      else UserSet.iCurrLW = 3;
-//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//      {
-//        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
-//        else UserSet.iCurrLW = 3;
-//      }
-//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//      {
-//        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
-//        else UserSet.iCurrLW = 3;
-//      }
-//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//      {
-//        if(UserSet.iCurrLW>0) UserSet.iCurrLW--;   // здесь переключаем длины волн
-//        else UserSet.iCurrLW = 3;
-//      }
-//    }
-//    g_NeedScr = 1;
-//    
-//  }
-//  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED)) // жмем долго
-//  {
-//    if (FrFreeInd==0)
-//    { 
-//      myBeep(3);
-//      DigitSet = 1;
-//      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]<=Set_MAX_DB-DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] += DigitSet;
-//      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = Set_MAX_DB;
-//      g_NeedScr = 1;
-//      
-//    }    
-//    if (FrFreeInd==1 || FrFreeInd==2)
-//    {
-//      myBeep(3);
-//      DigitSet = 1;
-//      //UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]
-//      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]<=Set_MAX_DB-DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] += DigitSet;
-//      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = Set_MAX_DB;
-//      g_NeedScr = 1;
-//    }   
-//    
-//  }
-//  // кнопка враво , учитываем где стоит курсор
-//  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
-//  {
-//    myBeep(25);
-//    if (FrFreeInd==0)
-//    { 
-//      if(UserSet.iLvlCurrLW[UserSet.iCurrLW]<=Set_MAX_DB-DigitSet) UserSet.iLvlCurrLW[UserSet.iCurrLW] += DigitSet;
-//      else UserSet.iLvlCurrLW[UserSet.iCurrLW] = Set_MAX_DB;
-//    }    
-//    if (FrFreeInd==1 || FrFreeInd==2)
-//    {
-//      //UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]
-//      if(UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1]<=Set_MAX_DB-DigitSet) UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] += DigitSet;
-//      else UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1] = Set_MAX_DB;
-//    }   
-//    //UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG 
-//    if (FrFreeInd==3) // переключение длины волны
-//    { 
-//      if(UserSet.iCurrLW<3) UserSet.iCurrLW++; // здесь переключаем длины волн (
-//      else UserSet.iCurrLW = 0;
-//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//      {
-//        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-//        else UserSet.iCurrLW = 0;
-//      }
-//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//      {
-//        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-//        else UserSet.iCurrLW = 0;
-//      }
-//      if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//      {
-//        if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-//        else UserSet.iCurrLW = 0;
-//      }
-//    }
-//    g_NeedScr = 1;
-//    
-//  }
-//  // кнопка ћ≈Ќё , учитываем где стоит курсор
-//  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
-//  {
-//    if (FrFreeInd==1 || FrFreeInd==2)
-//    {
-//      myBeep(25);
-//      UserSet.iLvlCurrLW[UserSet.iCurrLW] = UserSet.iLvlFixLW[UserSet.iCurrLW][FrFreeInd-1];
-//      if(FrFreeInd==1) FrFreeInd=2;
-//      else FrFreeInd=1;
-//    }
-//    g_NeedScr = 1;
-//  }
-//  
-//  // перебор длин волн по списку в одну сторону по кнопке 'S'
-//  //длины волн
-//  if (rawPressKeyS) // key S 
-//  {  
-//    myBeep(35);
-//    
-//    UserSet.iLvlCurrLW[UserSet.iCurrLW] = 0;
-//    // требование ј. . от 30.04.2025
-//    FrFreeInd=0;
-//    
-//    //    if(UserSet.iCurrLW<3) UserSet.iCurrLW++; // здесь переключаем длины волн (
-//    //    else UserSet.iCurrLW = 0;
-//    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//    //    {
-//    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-//    //      else UserSet.iCurrLW = 0;
-//    //    }
-//    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//    //    {
-//    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-//    //      else UserSet.iCurrLW = 0;
-//    //    }
-//    //    if(ConfigDevice.PlaceLW[UserSet.iCurrLW]==0)
-//    //    {
-//    //      if(UserSet.iCurrLW<3) UserSet.iCurrLW++;   // здесь переключаем длины волн
-//    //      else UserSet.iCurrLW = 0;
-//    //    }
-//    // NeedSaveParam |=0x02;// Memory UserSet 
-//    
-//    rawPressKeyS = 0;  
-//    g_NeedScr = 1;
-//  }
-//  
-//  if(g_FirstScr)
-//  {
-//    
-//    // инициализаци€ не измен€емых величин
-//    // наименование прибора
-//    
-//    sprintf(StrN,"%.2f dB",UserSet.iCurrLW/SHAG);
-//    sprintf (Str,"t0.txt=\"%s\"€€€",StrN); // 
-//    NEX_Transmit((void*)(void*)Str);//
-//    
-//    sprintf (Str,"t1.txt=\"%s\"€€€",MsgMass[31][UserSet.CurrLang]); //Memory 1
-//    NEX_Transmit((void*)Str);//
-//    // 
-//    sprintf (Str,"t2.txt=\"%s\"€€€",MsgMass[32][UserSet.CurrLang]); // Memory 2
-//    NEX_Transmit((void*)Str);//
-//    // 
-//    sprintf (Str,"t3.txt=\"%s\"€€€",MsgMass[30][UserSet.CurrLang]); // длина волны
-//    NEX_Transmit((void*)Str);//
-//    // 
-//    g_FirstScr = 0;
-//    g_NeedScr = 1;
-//  }
-//  if(g_NeedScr) // перерисовка индикатора при изменени€х и инициализации
-//  {
-//    // раскрашивание пол€ выбора 
-//    // закрасим бэкграунды  и установим требуемый
-//    sprintf(Str, "t0.bco=WHITE€€€"); // белый
-//    NEX_Transmit((void*)Str);//
-//    sprintf(Str, "t1.bco=WHITE€€€"); // белый
-//    NEX_Transmit((void*)Str);// 
-//    sprintf(Str, "t2.bco=WHITE€€€"); // белый
-//    NEX_Transmit((void*)Str);// 
-//    sprintf(Str, "t3.bco=WHITE€€€"); // белый
-//    NEX_Transmit((void*)Str);// 
-//    // sprintf(Str, "t%d.bco=GREEN€€€", (FrFreeInd)?(FrFreeInd+3):(0)); // зеленый
-//    sprintf(Str, "t%d.bco=GREEN€€€", (FrFreeInd)); // зеленый
-//    NEX_Transmit((void*)Str);// 
-//    // код подсветки требуемой строки если есть есть маркер строки
-//    
-//    // значение пам€ти 1
-//    sprintf (Str,"t4.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][0]/SHAG); // 
-//    NEX_Transmit((void*)Str);//
-//    // значение пам€ти 2
-//    sprintf (Str,"t5.txt=\"%.2f dB\"€€€",UserSet.iLvlFixLW[UserSet.iCurrLW][1]/SHAG); // 
-//    NEX_Transmit((void*)Str);//
-//    // длина волны рабоча€
-//    sprintf (Str,"t6.txt=\"%d nm\"€€€",ConfigDevice.PlaceLW[UserSet.iCurrLW]); // 
-//    NEX_Transmit((void*)Str);//
-//    // индикатор длины волны 
-//    //if(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)
-//    sprintf (Str,"t7.txt=\"%s\"€€€",(ConfigDevice.PlaceLW[UserSet.iCurrLW]>1300)?("SM"):("MM")); // 
-//    NEX_Transmit((void*)Str);//
-//    // рисуем значение Ўј√ј изменений
-//    
-//    if(ModeWork) // настройка
-//    {
-//      sprintf(Str,"t8.txt=\"!SET!\"€€€");
-//      NEX_Transmit((void*)Str);//
-//      sprintf (Str,"t0.txt=\"%04d\"€€€",CurrLevelDAC); //  уровень основной
-//      NEX_Transmit((void*)Str);//
-//    }
-//    else
-//    {
-//      if(DigitSet<SHAG)
-//        sprintf(Str,"t8.txt=\"%2.2f\"€€€",DigitSet/SHAG);
-//      else
-//        sprintf(Str,"t8.txt=\"%2.1f\"€€€",DigitSet/SHAG);
-//      NEX_Transmit((void*)Str);//
-//      sprintf (Str,"t0.txt=\"%.2f dB\"€€€",UserSet.iLvlCurrLW[UserSet.iCurrLW]/SHAG); //  уровень основной
-//      NEX_Transmit((void*)Str);//
-//      CurrLevelDAC = CoeffLW.SetCoefLW[UserSet.iCurrLW][UserSet.iLvlCurrLW[UserSet.iCurrLW]];
-//    }
-//    NEX_Transmit((void*)Str);//
-//    
-//    NeedSaveParam |=0x02;// Memory UserSet 
-//    
-//    g_NeedScr =  0;
-//  }
-//  
-}
-
+//-------------------------------------------------------------------------------------------------------------
 void ModeWelcome(void)// режим заставки
 {
   char Str[32];
   char StrN[32];
-
+  
   char St[5];
   CntWelcome++;
   static DWORD SecOld=100;
@@ -396,13 +135,13 @@ void ModeWelcome(void)// режим заставки
     // инициализаци€ не измен€емых величин
     // наименование прибора
     int  Mdl=0; // определ€ем модель по конфигурации длинн волн
-//    for (int y=0;y<4;++y)
-//    {
-//      if((ConfigDevice.PlaceLW[y]>0)&&(ConfigDevice.PlaceLW[y]<1310))
-//        Mdl|=1;
-//      if(ConfigDevice.PlaceLW[y]>1300)
-//        Mdl|=2;
-//    }
+    //    for (int y=0;y<4;++y)
+    //    {
+    //      if((ConfigDevice.PlaceLW[y]>0)&&(ConfigDevice.PlaceLW[y]<1310))
+    //        Mdl|=1;
+    //      if(ConfigDevice.PlaceLW[y]>1300)
+    //        Mdl|=2;
+    //    }
     
     sprintf(StrN,"%s-%d",DeviceIDN[ConfigDevice.ID_Device],Mdl);
     sprintf (Str,"t0.txt=\"%s\"€€€",StrN); // 
@@ -465,18 +204,297 @@ void ModeWelcome(void)// режим заставки
     //if (CntWelcome > WAITWELCOME)
   {
     SetMode(ModeMain);
-    CmdInitPage(3);// посылка команды переключени€ окна на MainMenu и установка признака первого входа
-    
+    CmdInitPage(1);// посылка команды переключени€ окна на MainMenu и установка признака первого входа
     myBeep(10);
     //ModeDevice = MODEMENU;
     //SetHeadFileRaw (0); // пишем заголовок файла выдачи необработаных данных
-    
     //ADCData++;
     //ClearScreen();
   }   
-  
 }
+//-------------------------------------------------------------------------------------------------------
+void ModeMain(void)// режим основной
+{
+  static volatile BYTE FrSetMainMenu = 1; // указатель на курсор
+  static WORD CntInd = 0;
+  //static WORD ProcBatNow = 55;
+  static BYTE OnlyBat = 1;
+  
+  char Str[32];
+  char StrN[32];
+  current_time = RTCGetTime();
+  
+  //  static long tutu=0;
+  //  Rect rct_pic={tutu,0,tutu+128,64};
+  //  сначала кнопочки опросим  
+  //  if (BUTTON_DOWN(BTN_UP)/*(KeyP & (1<<b_UP)*/)&&(getStateButtons(b_UP)==SHORT_PRESSED))
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1;
+    FrSetMainMenu = ChangeFrSet (FrSetMainMenu, 3, 1, MINUS);// установка курсора в рамках заданных параметров
+    //ClrKey (BTN_UP);
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1;
+    FrSetMainMenu = ChangeFrSet (FrSetMainMenu, 3, 1, PLUS);// установка курсора в рамках заданных параметров
+    //ClrKey (BTN_DOWN);
+  }
+  if ((CntInd++%10)==0)
+  {
+    //ProcBatNow=ProcBatInd;
+    OnlyBat = 1;
+  }
+  
+  // ¬ыделим блок дл€ выключени€ если LCD не пользуем
+  // ѕрорисовка нового индикатора
+  if(g_FirstScr) // заполнение незмен€емых полей
+  {
+    // наименование прибора
+    sprintf (StrN,"t5.txt=\"%s\"€€€",MsgMass[6][CurrLang]); // 
+    NEX_Transmit((void*)StrN);//
+    // јнализатор
+    sprintf(Str,"t1.txt=\"%s\"€€€",MsgMass[7][CurrLang]);
+    NEX_Transmit((void*)Str);//
+    // пам€ть
+    sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[9][CurrLang]);
+    NEX_Transmit((void*)Str);//
+    // установки
+    sprintf(Str,"t3.txt=\"%s\"€€€",MsgMass[10][CurrLang]);
+    NEX_Transmit((void*)Str);//
+    
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+    OnlyBat=1;
+  }
+  if(g_NeedScr) // перерисовки экрана ! јккуратно! надо проверить 
+  {
+    // раскрашивание пол€ выбора 
+    // закрасим бэкграунды  и установим требуемый
+    sprintf(Str,"t1.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"t2.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"t3.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"t%d.bco=GREEN€€€",FrSetMainMenu); // зеленый
+    NEX_Transmit((void*)Str);// 
+    //    if(TypeLCD)
+    //    sprintf(Str,"qr0.pco=BLACK€€€"); // QR черный
+    //    else
+    //    sprintf(Str,"qr0.pco=BLUE€€€"); // QR синий
+    //      
+    //    NEX_Transmit((void*)Str);// 
+    
+    g_NeedScr=0;
+  }
+  if (OnlyBat)
+  {
+    //отображение времени
+    //SecOld = current_time.RTC_Sec ; 
+    sprintf(Str,"t4.txt=\"%02d:%02d:%02d\"€€€",current_time.RTC_Hour,current_time.RTC_Min,current_time.RTC_Sec);
+    NEX_Transmit((void*)Str);//
+    // отображение даты
+    sprintf (Str,"t7.txt=\"%02d.%02d.%02d\"€€€",current_time.RTC_Mday,current_time.RTC_Mon,current_time.RTC_Year);//,MsgMass[14][CurrLang] убран год 25.12.2013
+    NEX_Transmit((void*)Str);//
+    // уровень и тип зар€да
+    if (GETEXTPWR == 0)
+    {
+      sprintf(Str,"t0.txt=\"%s\"€€€",MsgMass[11][CurrLang]);// внешнее питание
+    }
+    else
+      // от батареек LvlBatInd 
+    {
+      sprintf(Str,"t0.txt=\"%d%%\"€€€", (int)(LvlBatInd*12.5));
+    }
+    NEX_Transmit((void*)Str);// 
+    OnlyBat=0;
+  }
+  
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    switch (FrSetMainMenu)
+    {
+    case 1: // јнализатор
+      // переход в режим установки параметров рефлектометра из меню или при включении если “јЅЋ≈“ ј
+      SetMode(ModeDrawMeasure);
+      // инициализаци€ списка комбинаций установок лазеров
+      if(UserSet.ChnMod)
+        CmdInitPage(2);// посылка команды переключени€ окна на јнализатор
+      else
+        CmdInitPage(3);// посылка команды переключени€ окна на јнализатор
+      //     SetIndexLN(GetIndexLN());//устанавливаем текущие установки по длинам и импульсам
+      //     SetMode(ModeSetupOTDR);
+      //     SetIndexWAV(GetWAV_SC(GetPlaceLS(CURRENT))); // устанавливаем коэфф. преломлени€ выбранной длины волны
+      //
+      //     GetSetModeLW(-1); // сбрасываем счетчик длин волн источников
+      //     CntLS = 1;
+      //     PosCursorMain (-4100); // сброс курсора в начало
+      //     IndexVerSize  = 0;// установка вертикального размера отображени€ рефлектограммы ( самый крупный)
+      //     GetSetHorizontScale (5); // сброс масштаба уст самый крупный
+      //     if (IndexSmall==0)GetSetHorizontScale (-2);
+      //     // устанавливаем дл€ 2 км 
+      //     ModeDevice = MODESETREFL;
+      //     SSPInit_Any(SPI_ALT); // »нициализаци€ SSP дл€ управлени€ ALTERA (порт 1 та что на плате отладочной)
+      //     
+      //     PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
+      break;
+    case 2: // ѕјћя“№
+      //123      PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
+      //SetMode(ModeSelectMEM);
+      //ModeDevice = MODEOTHER;
+      //123      SSPInit_Any(MEM_FL1); // »нициализаци€ SSP дл€ управлени€ FLASH (порт 1 та что на плате отладочной)
+      CmdInitPage(4);// посылка команды переключени€ окна на MemoryMenu
+      
+      break;
+    case 3: // ”—“јЌќ¬ »
+      SetMode(ModeSetting);
+      //123      PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
+      //ModeDevice = MODESETUP;
+      //123      SSPInit_Any(MEM_FL1); // »нициализаци€ SSP дл€ управлени€ FLASH (порт 1 та что на плате отладочной)
+      CmdInitPage(4);// посылка команды переключени€ окна на Setting
+      break;
+    }
+    ClrKey (BTN_OK);
+    //KeyP &=~BTN_OK;
 
+  }  // кнопка "ќ " дл€ данного меню означает переход в другое окно, поэтому ее можно перенести сюда!
+  //  
+}
+//-------------------------------------------------------------------------------------------------------
+// окно индикации анализатора, тут будем измер€ть
+void ModeDrawMeasure(void) // режим отображени€ рефлектограммы
+{
+  char Str[32];
+
+  static volatile BYTE FrSetIndex = 0; // указатель на курсор
+  int Res;
+  // получение данных от измерител€
+  GetAllDataMeas((g_IndexMeas)&0xF);
+  // ѕрорисовка нового индикатора
+  if(g_FirstScr) // заполнение незмен€емых полей
+  {
+    //    // наименование прибора
+    //    sprintf (StrN,"t5.txt=\"%s\"€€€",MsgMass[6][CurrLang]); // 
+    //    NEX_Transmit((void*)StrN);//
+    //    // јнализатор
+    //    sprintf(Str,"t1.txt=\"%s\"€€€",MsgMass[7][CurrLang]);
+    //    NEX_Transmit((void*)Str);//
+    //    // пам€ть
+    //    sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[9][CurrLang]);
+    //    NEX_Transmit((void*)Str);//
+    //    // установки
+    
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  // обработка клавиатуры кнопки ¬лево ¬право
+    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))//
+    {
+      myBeep(10);
+      if(g_IndexLW>0)g_IndexLW--;
+      else g_IndexLW = 17;
+      g_NeedScr = 1; // Need reDraw Screen
+    }  
+    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))//
+    {
+      myBeep(10);
+      if(g_IndexLW<17)g_IndexLW++;
+      else g_IndexLW = 0;
+      g_NeedScr = 1; // Need reDraw Screen
+    }  
+  if(g_NeedScr)
+  {
+    // рисуем
+//    line 0,300,340,300,YELLOW
+//draw 0,270,340,270,GREEN
+//draw 0,240,340,240,YELLOW
+//draw 0,210,340,210,GREEN
+//draw 0,180,340,180,YELLOW
+//draw 0,150,340,150,GREEN
+//draw 0,120,340,120,YELLOW
+//draw 0,90,340,90,GREEN
+//draw 0,60,340,60,WHITE
+//draw 0,30,340,30,GREEN
+//draw 0,0,340,0,YELLOW
+//xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
+//xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
+//xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
+//xstr 345,110,35,20,3,BLUE,WHITE,0,1,1,"-10"
+//xstr 345,50,35,20,3,BLUE,WHITE,0,1,1,"0"
+//xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
+ //   xstr 380,90,100,55,2,BLACK,WHITE,0,1,1,"-40.2
+    if(UserSet.ChnMod) // Graph
+    {
+      for(int i=0;i<18;i++)
+      {
+        Res=0;
+        if(CWDMData[i]>-40.0)
+        {
+          Res=(int)((CWDMData[i]+40.0)*2);
+          if(Res>100) Res=100;
+        }
+        sprintf(Str,"j%d.val=%d€€€",i,Res);
+        NEX_Transmit((void*)Str);//
+      }
+//      sprintf(Str,"tm0.en=1€€€");
+//      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t0.txt=\"%d%s\"€€€",1270+g_IndexLW*20,MsgMass[38][CurrLang]);// LW_nm
+      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t1.txt=\"%.1f\"€€€",CWDMData[g_IndexLW]);// значение
+      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[18][CurrLang]);// дЅм
+      NEX_Transmit((void*)Str);//
+      //sprintf(Str,"h0.val=%d€€€",g_IndexLW);
+      //NEX_Transmit((void*)Str);//
+      sprintf(Str,"p1.pic=%d€€€",g_IndexLW+17);
+      NEX_Transmit((void*)Str);//
+//      sprintf(Str,"tm0.en=0€€€");
+//      NEX_Transmit((void*)Str);//
+    }
+    else // Table
+    {
+      for(int i=0;i<18;i++)
+      {
+        sprintf(Str,"t%d.txt=\"%.2fdBm\"€€€",i+40,CWDMData[i]); // зеленый
+        NEX_Transmit((void*)Str);// 
+      }
+    }
+    g_NeedScr = 0;
+  }
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // возврат в режим просмотра
+  {
+    myBeep(10);
+    if(UserSet.ChnMod) // Graph
+    {
+      UserSet.ChnMod = 0;
+        CmdInitPage(3);// посылка команды переключени€ окна на јнализатор
+    }
+    else
+    {
+      UserSet.ChnMod = 1;
+        CmdInitPage(2);// посылка команды переключени€ окна на јнализатор
+    }
+    g_FirstScr = 1;
+    //g_NeedScr = 1; // Need reDraw Screen
+  }
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    SetMode(ModeMain);
+    CmdInitPage(1);// посылка команды переключени€ окна на MainMenu и установка признака первого входа
+  }
+     //    HAL_Delay(500);
+     
+
+}
+//------------------------------------------------------------------------------------------------------------
 void BadBattery(void) // плоха€ баттарейка CHECK_OFF
 { 
   char Str[32];
@@ -528,6 +546,666 @@ void BadBattery(void) // плоха€ баттарейка CHECK_OFF
   
 }
 
+//----------------------------------------------------------------------------------------------------
+void ModeSetting(void)// режим установок прибора CHECK_IN
+{
+  static BYTE FrSetting = 0; // указатель на курсор
+  char Str[32];
+  char SetNewWinIfOut = 0; // устнанавливаем признак перхода в другое окно если надо выйти
+  //BYTE CurrLang=GetLang(CURRENT);
+  //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // Need reDraw Screen
+    FrSetting = ChangeFrSet (FrSetting, (3), 0, MINUS);// установка курсора в рамках заданных параметров
+    //ClrKey (BTN_UP);
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // Need reDraw Screen
+    FrSetting = ChangeFrSet (FrSetting, (3), 0, PLUS);// установка курсора в рамках заданных параметров
+    //ClrKey (BTN_DOWN);
+  }
+  switch (FrSetting) // сделаем перестановку полей
+  {
+  case 1: // Data_Time_Set
+    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      PosCurr = 6;
+      SetMode(ModeDateTimeSET);
+      //    NeedDrawCRC = 1;
+      
+      // посылка команды переключени€ окна на Set_datetime (вызов)  
+      // вызовем позже!
+      SetNewWinIfOut = 5; // устнанавливаем признак перхода в другое окно если надо выйти
+      //CmdInitPage(9);
+      //ClrKey (BTN_OK);
+    }
+    break;
+    //  case 4: // BlackLight (1)
+    //  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+    //  {
+    //    myBeep(10);
+    //    g_NeedScr = 1; // Need reDraw Screen
+    //    //ClrKey (BTN_RIGHT);
+    //  }
+    //  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+    //  {
+    //    myBeep(10);
+    //    g_NeedScr = 1; // Need reDraw Screen
+    //    //ClrKey (BTN_LEFT);
+    //  }
+    //  break;// BlackLight
+  case 0: // Language (2)
+    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_FirstScr = 1; // Need reDraw Screen
+      CurrLang=GetLang(INCR);
+      //ClrKey (BTN_RIGHT);
+    }
+    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_FirstScr = 1; // Need reDraw Screen
+      CurrLang=GetLang(DECR);
+      //ClrKey (BTN_LEFT);
+    }
+    break;// Language
+  case 2: //‘айл - параметры файла (3)
+    if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      SetMode(ModeSetupFILE);
+      //    NeedDrawCRC = 1;
+      // посылка команды переключени€ окна на Set_OTDRparams (вызов)  
+      SetNewWinIfOut = 6; // устнанавливаем признак перхода в другое окно если надо выйти
+      //CmdInitPage(6);
+      //  StartSettingBegShift (); // старт измерени€ мертвых зон
+      ClrKey (BTN_OK);
+    }
+    break;// ‘айл
+  case 3: //пам€ть (4)
+    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      //xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
+      //ClrKey (BTN_RIGHT);
+    }
+    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      //xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
+      //ClrKey (BTN_LEFT);
+    }
+    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      //xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
+      //ClrKey (BTN_RIGHT);
+    }
+    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      //xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
+      //ClrKey (BTN_LEFT);
+    }
+    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==66))
+    //  {
+    //    myBeep(10);
+    //    SetMode(TetrisGame);
+    //    InitTetris();
+    //  }
+    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==67))
+    //  {
+    //    myBeep(10);
+    //    SetMode(ArcanoidGame);
+    //    InitArcanoid();
+    //  }
+    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==68))
+    //  {
+    //    myBeep(10);
+    //    SetMode(KeyTestGame);
+    //    
+    //  }
+    break;// Contrast
+  }
+
+  
+  if (g_FirstScr)
+  {
+    // здесь заполн€ем данными пол€ нового индикатора
+    // не требущие изменени€ при первичной инициализации
+    sprintf(Str, "t1.txt=\"%s\"€€€", MsgMass[1][CurrLang]);
+    NEX_Transmit((void*)Str);    // ƒата / ¬рем€
+  
+  
+    sprintf(Str, "t0.txt=\"Language\"€€€"); //!
+    NEX_Transmit((void*)Str);    // язык
+  
+    sprintf(Str, "t2.txt=\"%s\"€€€", MsgMass[29][CurrLang]); //!
+    NEX_Transmit((void*)Str);    // ‘айл
+  
+    sprintf(Str, "t3.txt=\"%s\"€€€", MsgMass[9][CurrLang]); //!
+    NEX_Transmit((void*)Str);    // ѕам€ть
+  
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    // здесь заполн€ем данными пол€ нового индикатора
+    // по результатам изменений вызваныйх обработчиком клавиатуры
+    sprintf(Str, "t6.txt=\"%s\"€€€", MsgMass[0][CurrLang]);
+    NEX_Transmit((void*)Str);    // English
+  
+    sprintf(Str, "t7.txt=\"%d\"€€€", 55);
+    NEX_Transmit((void*)Str);    // ???
+  
+    // раскрашивание пол€ выбора 
+    // закрасим бэкграунды  и установим требуемый
+    sprintf(Str, "t0.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str, "t1.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str, "t2.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str, "t3.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);//
+    sprintf(Str, "t%d.bco=GREEN€€€", FrSetting); // зеленый
+    NEX_Transmit((void*)Str);// 
+  
+  									 // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+  }
+    
+ if(SetNewWinIfOut) // устнанавливаем признак перхода в другое окно если надо выйти
+ {
+        // посылка команды переключени€ окна на Set_datetime (вызов)  
+    CmdInitPage(SetNewWinIfOut);
+    
+ }
+    if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    WriteNeedStruct(0x04);//SaveUserConfig();
+    SetMode(ModeMain);
+        // посылка команды переключени€ окна на MainMenu (возврат)  
+    CmdInitPage(1);
+  }
+  
+}
+//-------------------------------------------------------------------------------------------------
+void ModeDateTimeSET(void) // режим установок времени CHECK_IN
+{
+  //static BYTE PosCurr = 6; // положение курсора устанавливаемых величин
+  static RTCTime NowTime;
+  char Str[32];
+  char St[5];
+  static DWORD old_sec;
+  static DWORD new_sec;
+  //BYTE CurrLang=GetLang(CURRENT);
+  //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
+  if (PosCurr == 6)  NowTime=RTCGetTime(); // фиксируем врем€
+  new_sec = NowTime.RTC_Sec;
+  if(new_sec != old_sec)
+  {
+   old_sec = new_sec;
+   g_NeedScr = 1;
+  }
+
+  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
+    if (PosCurr>0) PosCurr--;
+    else PosCurr=5;
+    //ClrKey (BTN_RIGHT);
+  }
+  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
+    if (PosCurr<5) PosCurr++;
+    else PosCurr=0;
+    //ClrKey (BTN_LEFT);
+  }
+  // установка величин
+  if ((PRESS(BTN_UP))&&((getStateButtons(BTN_UP)==SHORT_PRESSED)||(getStateButtons(BTN_UP)==INF_PRESSED)))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
+    switch (PosCurr)
+    {
+    case 0:// –едактор секунд
+      if (NowTime.RTC_Sec<59) NowTime.RTC_Sec++;
+      else NowTime.RTC_Sec = 0;
+      break;
+    case 1:// –едактор минут
+      if (NowTime.RTC_Min<59) NowTime.RTC_Min++;
+      else NowTime.RTC_Min = 0;
+      break;
+    case 2:// –едактор часов
+      if (NowTime.RTC_Hour<23) NowTime.RTC_Hour++;
+      else NowTime.RTC_Hour = 0;
+      break;
+    case 3:// –едактор дней мес€ца
+      if (NowTime.RTC_Mday<31) NowTime.RTC_Mday++;
+      else NowTime.RTC_Mday = 1;
+      break;
+    case 4:// –едактор  мес€ца
+      if (NowTime.RTC_Mon<12) NowTime.RTC_Mon++;
+      else NowTime.RTC_Mon = 1;
+      break;
+    case 5:// –едактор  года
+      if (NowTime.RTC_Year<2050) NowTime.RTC_Year++;
+      else NowTime.RTC_Year = 2024;
+      break;
+    }
+    //ClrKey (BTN_UP);
+  }
+  if ((PRESS(BTN_DOWN))&&((getStateButtons(BTN_DOWN)==SHORT_PRESSED)||(getStateButtons(BTN_DOWN)==INF_PRESSED)))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
+    switch (PosCurr)
+    {
+    case 0:// –едактор секунд
+      if (NowTime.RTC_Sec>0) NowTime.RTC_Sec--;
+      else NowTime.RTC_Sec = 59;
+      break;
+    case 1:// –едактор минут
+      if (NowTime.RTC_Min>0) NowTime.RTC_Min--;
+      else NowTime.RTC_Min = 59;
+      break;
+    case 2:// –едактор часов
+      if (NowTime.RTC_Hour>0) NowTime.RTC_Hour--;
+      else NowTime.RTC_Hour = 23;
+      break;
+    case 3:// –едактор дней мес€ца
+      if (NowTime.RTC_Mday>1) NowTime.RTC_Mday--;
+      else NowTime.RTC_Mday = 31;
+      break;
+    case 4:// –едактор  мес€ца
+      if (NowTime.RTC_Mon>1) NowTime.RTC_Mon--;
+      else NowTime.RTC_Mon = 12;
+      break;
+    case 5:// –едактор  года
+      if (NowTime.RTC_Year>2025) NowTime.RTC_Year--;
+      else NowTime.RTC_Year = 2050;
+      break;
+    }
+    //ClrKey (BTN_DOWN);
+  }
+  
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // надо перерисовать что то на новом индикаторе
+    RTCSetTime( NowTime );
+    //  if (GetID_Dev()==0)
+    //  {
+    //  sprintf(Str,"(%04X)", CalkCheckSum()); // 
+    //  putString(2,42,Str,1,0);
+    //  }
+    PosCurr = 7;
+    //ClrKey (BTN_OK);
+    // 18.10.2011 - индикаци€ CRC при входе в редактор часов
+    //    if (NeedDrawCRC)
+    //  {
+    //
+    //  if (GetID_Dev()==0)
+    //  {
+    //  GetNumVer(St);
+    //  }
+    //  NeedDrawCRC=0;
+    //  }
+    
+  }
+  // ѕрорисовка нового индикатора
+if(g_FirstScr)
+{
+  // здесь заполн€ем данными пол€ нового индикатора
+  // не требущие изменени€ при первичной инициализации
+      sprintf(Str,"t0.txt=\"%s\"€€€", MsgMass[2][CurrLang]); // "ƒата"" 
+    NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t1.txt=\"%s\"€€€", MsgMass[15][CurrLang]); // "¬рем€"
+    NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t2.txt=\"/\"€€€"); // "слэшь"
+    NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t3.txt=\"/\"€€€"); // "слэшь"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"t4.txt=\":\"€€€"); // "двоеточие"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"t5.txt=\":\"€€€"); // "двоеточие"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"t6.txt=\" \"€€€"); // "пуста€ строка (пробел)"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"t7.txt=\" \"€€€"); // "пуста€ строка (пробел)"
+    NEX_Transmit((void*)Str);// 
+
+  g_FirstScr=0;
+  g_NeedScr=1;
+}
+if(g_NeedScr)
+{
+   // здесь заполн€ем данными пол€ нового индикатора
+  // по результатам изменений вызваныйх обработчиком клавиатуры
+    sprintf(Str,"n5.val=%d€€€",NowTime.RTC_Year%100); // "√од"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n4.val=%d€€€",NowTime.RTC_Mon); // "мес€ц"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n3.val=%d€€€",NowTime.RTC_Mday); // "день"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n2.val=%d€€€",NowTime.RTC_Hour); // "часы"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n1.val=%d€€€",NowTime.RTC_Min); // "минуты"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n0.val=%d€€€",NowTime.RTC_Sec); // "секунды"
+    NEX_Transmit((void*)Str);// 
+ 
+    
+ 
+  // код подсветки требуемой строки если есть есть маркер строки
+    // закрасим бэкграунды  и установим требуемый
+  // забел€ем пол€ редактировани€
+    sprintf(Str,"n0.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n1.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n2.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n3.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n4.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"n5.bco=WHITE€€€"); // белый
+    NEX_Transmit((void*)Str);// 
+  if(PosCurr<6)
+  {
+    sprintf(Str,"n%d.bco=GREEN€€€",PosCurr); // зеленый
+    NEX_Transmit((void*)Str);// 
+  }
+  g_NeedScr = 0;
+  if(PosCurr==7)
+  {
+      GetNumVer(St);
+    sprintf(Str,"t6.txt=\"v%s (%04X)\"€€€",St, CalkCheckSum()); // "верси€ и контрольна€ сумма"
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str,"t7.txt=\"%s\"€€€", MsgMass[59][CurrLang]); // Up-to DATE"
+    NEX_Transmit((void*)Str);// 
+
+  }
+}
+  
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    SetMode(ModeSetting);
+        // посылка команды переключени€ окна на Settings (возврат)  
+    CmdInitPage(4);
+  }
+}
+  // -------------------------------------------------------------------------------------------
+  void ModeSetupFILE(void) // режим установок FILES
+  {
+    static volatile BYTE FrSetSetupFile = 0; // указатель на курсор
+    char Str[64];
+    int NeedReSave=0; // признак пересохранени€ текущих изменений если были
+    
+    //BYTE CurrLang=GetLang(CURRENT);
+    if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      FrSetSetupFile = ChangeFrSet (FrSetSetupFile, 4, 0, MINUS);// установка курсора в рамках заданных параметров
+      //ClrKey (BTN_UP);
+    }
+    if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      FrSetSetupFile = ChangeFrSet (FrSetSetupFile, 4, 0, PLUS);// установка курсора в рамках заданных параметров
+      //ClrKey (BTN_DOWN);
+    }
+    switch (FrSetSetupFile) // обработка выбраных полей установок
+    {
+    case 0: //»м€ кабел€
+      // кнопка ќ  переключаемс€ в редактор!
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        myBeep(10);
+        g_FirstScr = 1; // Need reDraw Screen
+        
+      }
+      break; //»м€ кабел€
+    case 1: //»м€ волокна
+      // кнопка ќ  переключаемс€ в редактор!
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        myBeep(10);
+        g_FirstScr = 1; // Need reDraw Screen
+        
+      }
+      break; //»м€ волокна
+    case 2: //счетчик номера волокна
+      if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+      {
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (UserSet.FiberID<999) UserSet.FiberID++;
+        else UserSet.FiberID=1;
+        NeedReSave = 1;
+        //ClrKey (BTN_RIGHT);
+      }
+      if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
+      {
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (UserSet.FiberID<989) UserSet.FiberID=UserSet.FiberID+10;
+        else UserSet.FiberID=1;
+        //ClrKey (BTN_RIGHT);
+      }
+      if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
+      {
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (UserSet.FiberID>10) UserSet.FiberID=UserSet.FiberID-10;
+        else UserSet.FiberID=990;
+        //ClrKey (BTN_LEFT);
+      }
+      if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+      {
+        myBeep(10);
+        if (UserSet.FiberID>1) UserSet.FiberID--;
+        else UserSet.FiberID=999;
+        NeedReSave = 1;
+        
+        //ClrKey (BTN_LEFT);
+      }
+      if (((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==UP_INF_PRESSED))||((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED)))
+      {
+        NeedReSave = 1;
+      }
+      break; //счетчик номера волокна
+    case 3: //–азрешение счета волкна
+      if (((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))||((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED)))
+      {
+        myBeep(10);
+        if (UserSet.EnaCntFiber) UserSet.EnaCntFiber=0;
+        else UserSet.EnaCntFiber=1;
+        
+        g_NeedScr = 1; // Need reDraw Screen
+        NeedReSave = 1;
+        
+      }
+      break; //–азрешение счета волкна
+    case 4: //“естовый вызов окна редактирвани€ (им€  абел€) 
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        g_NeedScr = 1; // Need reDraw Screen
+        myBeep(10);
+        for (int Ind =ARRAY_SIZE(UserSet.CableID)-2; Ind>=0; Ind--)
+        {
+          if (UserSet.CableID[Ind]<0x20) UserSet.CableID[Ind]=' ';
+          else if (UserSet.CableID[Ind]!=' ' && IndxKBCableID == 0) IndxKBCableID = Ind;
+          //Index_Comm --;
+        }
+        if (UserSet.CableID[IndxKBCableID]!=' ')IndxKBCableID ++;
+        //KbPosX = 11;
+        //KbPosY = 2;
+        SetMode(ModeKBCableID); // редактор им€ кабел€
+        NeedKeyB =1; // надо переключитс€ в клавиатуру
+        //ClrKey (BTN_OK);
+      }
+      break; // оэфф.преломлени€
+    }
+    // если не коэфф преломлени€ 
+    if (NeedReSave)
+    {
+      //WriteNeedStruct(0x02);//
+      EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
+      NeedReSave = 0;
+    }
+    // заполн€ем новый индикатор если в первый раз в основном не измен€емые пол€
+    if(g_FirstScr)
+    {
+      
+      // столбцы названий 
+      sprintf(Str,"t0.txt=\"%s\"€€€", MsgMass[31][CurrLang]); // »м€ кабел€
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t2.txt=\"%s\"€€€", MsgMass[30][CurrLang]); // »м€ волокна 
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t4.txt=\"%s\"€€€", MsgMass[32][CurrLang]); //є волокна
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t6.txt=\"%s\"€€€", MsgMass[33][CurrLang]); //счет волокон
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t8.txt=\"%s\"€€€", MsgMass[34][CurrLang]); //ќ 
+      NEX_Transmit((void*)Str);// 
+      
+      g_NeedScr = 1; // дл€ вызова заполнени€ значений
+      g_FirstScr = 0;
+    }
+    // надо что то изменить в пол€х установок 
+    if(g_NeedScr)
+    {
+      // перва€ строка им€  абел€
+      sprintf(Str,"t1.txt=\"%s\"€€€",UserSet.CableID); // 
+      NEX_Transmit((void*)Str);// 
+      // втора€ строка - »м€ ¬олокна
+      sprintf(Str,"t3.txt=\"%s\"€€€", UserSet.FiberName);
+      NEX_Transmit((void*)Str);// 
+      
+      // треть€ сторка - —четчик волокна
+      sprintf(Str,"t5.txt=\"%d\"€€€", UserSet.FiberID );//
+      NEX_Transmit((void*)Str);// 
+      // четверта€ строка в зависимости от положени€ длины волны
+      sprintf(Str,"t7.txt=\"%s\"€€€", (UserSet.EnaCntFiber)?(MsgMass[23][CurrLang]):(MsgMass[24][CurrLang]));//"разов."
+      NEX_Transmit((void*)Str);// 
+      // п€та€ строка - индекс измерени€ или префикс при авто
+      sprintf(Str,"t9.txt=\"“≈—“\"€€€");// надо убрать
+      NEX_Transmit((void*)Str);// 
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t0.bco=WHITE€€€"); // белый
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t2.bco=WHITE€€€"); // белый
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t4.bco=WHITE€€€"); // белый
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t6.bco=WHITE€€€"); // белый
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t8.bco=WHITE€€€"); // белый
+      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t%d.bco=GREEN€€€",FrSetSetupFile<<1); // зеленый ?
+      NEX_Transmit((void*)Str);// 
+      
+      //FIO1PIN &=~LEDSTART;//Off  LED
+      g_NeedScr = 0;
+    }
+    // кнопка возврата в меню
+    if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+    {
+      SetMode(ModeSetting);
+      // посылка команды переключени€ окна на Settings (возврат)  
+      CmdInitPage(4);
+    }
+    if(NeedKeyB ) // необходимость переключени€ в клавиатуру дл€ редактировани€ PreFix
+    {
+      // согласно выбранного €зыка вызывем клавиатуру
+      if (CurrLang) 
+        // посылка команды переключени€ окна на EnglishPreF Keyboard 
+        CmdInitPage(12); //(22)
+      else
+        // посылка команды переключени€ окна на RussianPreF Keyboard 
+        CmdInitPage(13); //(23)
+      NeedKeyB=0; 
+    }
+  }
+
+// --------------------------------------------------------------------------------------------------------- 
+// обработка клавиатуры при редакторе »мени  абел€
+void ModeKBCableID(void) // режим отображени€ клавиатуры редактора CableID
+{
+  char Str[32];
+  char StrI[32];
+  //static BYTE Shift = 0; // регистр 
+  // тут дл€ нового индикатора
+  if (g_FirstScr)
+  {
+    sprintf(Str, "t0.txt=\"%s\"€€€",MsgMass[31][CurrLang]); 
+    NEX_Transmit((void*)Str);    // 
+
+    // здесь заполн€ем данными пол€ нового индикатора
+    // надо обрезать до последнего пробела....
+    memcpy(StrI,UserSet.CableID,IndxKBCableID+1); 
+    StrI[IndxKBCableID+1]=0;// No more 11 byte size
+    sprintf(Str, "t1.txt=\"%s\"€€€",StrI); 
+    NEX_Transmit((void*)Str);    // 1 строка комментарии
+    g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    g_NeedScr=0;
+  }
+  
+  if(g_GetStr==2) // ”–ј! что то прин€ли назад, можно переписать и сбросить признак
+  {
+    // здесь обработаем строку на приеме
+    IndxKBCableID = GetStringNEX(UserSet.CableID, ARRAY_SIZE(UserSet.CableID));
+    //memcpy(CommentsOLT,&RX_BufNEX[1],(CntRXNEX<18)?(CntRXNEX-2):(15)); 
+    //CommentsOLT[15]=0;
+    for(int i=IndxKBCableID; i< ARRAY_SIZE(UserSet.CableID); ++i) UserSet.CableID[i]=' ';
+    UserSet.CableID[ARRAY_SIZE(UserSet.CableID)-1]=0;
+    // сохраним
+      EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
+    NeedReturn=1;
+  }
+  
+  if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
+  {
+    myBeep(10);
+    SetMode(ModeSetupFILE);  //  переход в режим установок рефлектометра (было)
+    // вернемс€ в окно
+    // важно тут 11 байт и последние пробелы
+    g_GetStr=0; // сбросим признак  необходимости прочитать строчку! из индикатора.
+    // вернемс€ в окно установок FILES
+    CmdInitPage(6);
+    NeedReturn = 0;
+  }
+}
+ 
+  
+//-------------------------------------------------------------------------------------------------------------------
 // переключимс€ в режим программировани€ индикатора (пока на паузу  и сигнал
 void UploadFW_Nextion(void) // обновление индикатора NEXTION
 { 
@@ -1597,21 +2275,21 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
 //    
 //}
 //
-//unsigned char ChangeFrSet (unsigned char FrSet, unsigned char MaxSet, unsigned char MinSet, unsigned char DirSet)// установка курсора в рамках заданных параметров
-//{
-//  if (DirSet) // вверх
-//  {
-//    if (FrSet < MaxSet) FrSet++;
-//    else FrSet = MinSet;
-//  }
-//  else
-//  {
-//    if (FrSet > MinSet) FrSet--;
-//    else FrSet = MaxSet;
-//  }
-//   return FrSet; 
-//}
-//
+unsigned char ChangeFrSet (unsigned char FrSet, unsigned char MaxSet, unsigned char MinSet, unsigned char DirSet)// установка курсора в рамках заданных параметров
+{
+  if (DirSet) // вверх
+  {
+    if (FrSet < MaxSet) FrSet++;
+    else FrSet = MinSet;
+  }
+  else
+  {
+    if (FrSet > MinSet) FrSet--;
+    else FrSet = MaxSet;
+  }
+   return FrSet; 
+}
+
 //unsigned char SearchEndStr(char* EditStr, unsigned char FindEnd) // ищем место курсора в редактируемой строке
 //{
 //unsigned char Find = FindEnd;

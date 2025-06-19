@@ -55,7 +55,6 @@ unsigned beepTick = 0;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 extern DMA_HandleTypeDef hdma_adc1;
 extern DMA_HandleTypeDef hdma_uart5_tx;
 extern DMA_HandleTypeDef hdma_uart7_tx;
@@ -63,6 +62,7 @@ extern DMA_HandleTypeDef hdma_usart3_tx;
 extern UART_HandleTypeDef huart5;
 extern UART_HandleTypeDef huart7;
 extern UART_HandleTypeDef huart3;
+extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* USER CODE BEGIN EV */
 extern ADC_HandleTypeDef hadc1;
 /* USER CODE END EV */
@@ -194,6 +194,19 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+  // control USB 
+  if(BusyUSB>1) BusyUSB--;
+  else if(BusyUSB==1)
+  {
+    BusyUSB = 0;
+    ModeUSB = 1; // надо выключить значек занятости USB
+  }
+  if(PresentUSB>1) PresentUSB--;
+  else if(PresentUSB==1)
+  {
+    PresentUSB = 0;
+    ModeUSB = 2; // надо выключить значек USB
+  }
   // my control BEEP
   if (beepTick > 1)
   {
@@ -361,6 +374,7 @@ void UART7_IRQHandler(void)
   /* USER CODE END UART7_IRQn 0 */
   HAL_UART_IRQHandler(&huart7);
   /* USER CODE BEGIN UART7_IRQn 1 */
+   HAL_NVIC_ClearPendingIRQ(UART7_IRQn);
 
   /* USER CODE END UART7_IRQn 1 */
 }
@@ -372,6 +386,8 @@ void OTG_FS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_FS_IRQn 0 */
 
+  PresentUSB = 1500; // признак что крутится USB - тики когда ничего нет 
+  // приблизительно через секунду
   /* USER CODE END OTG_FS_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_OTG_FS);
   /* USER CODE BEGIN OTG_FS_IRQn 1 */
