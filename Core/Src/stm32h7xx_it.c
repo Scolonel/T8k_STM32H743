@@ -22,6 +22,10 @@
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usart.h"
+#include "adc.h"
+#include "system.h"
+#include "usbd_cdc_acm_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -261,7 +265,7 @@ void DMA1_Stream1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
   HAL_ADC_Stop_DMA(&hadc1);
-
+  LED_START(0);
   /* USER CODE END DMA1_Stream1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_adc1);
   /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */

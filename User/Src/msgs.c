@@ -43,7 +43,7 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"подождите...","please wait...","cekejte...","please wait..."},       //27
 
 {"Прибор","Device","Pristroj","Device"},              //28
-{"Файл","File","Soubor","File"},              //29
+{"Файл:","File:","Soubor:","File:"},              //29
 {"Имя волокна","Name fiber","Nazev vlakna","Name fiber"},              //30
 {"Имя кабеля","Name cable","Nazev kabelu","Name cable"},              //31
 {"№ волокна","№ fiber","№ vlakna","№ fiber"},              //32
@@ -73,7 +73,8 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"ВКЛЮЧЕНИЕ","SWITCH ON","SWITCH ON","SWITCH ON"}, //56
 {"Прибор готов к","Device is ready","Device is ready","Device is ready"},//57
 {"Обновлению ПО LCD","Upgrade FW LCD","Upgrade FW LCD","Upgrade FW LCD"},//58
-{"Дата/Время изменены","Up-to-date","Zmena data a casu","Up-to-date"}//59 Aktuell
+{"Дата/Время изменены","Up-to-date","Zmena data a casu","Up-to-date"},//59 Aktuell
+{" !!! СОХРАНЕНО !!! ","  !!! SAVED !!!  ","  !!! ULOZ !!!  ","  !!! SAVED !!!  "}       //60
 
 
 };

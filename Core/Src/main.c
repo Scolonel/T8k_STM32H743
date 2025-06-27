@@ -59,6 +59,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+const uint16_t TstDacCode[9]={128,512,64,1024,32,2048,256,384,3000};
 uint16_t KeyP; // клавиши нажатые 
   char DigitSet = 1; //шаг изменеия устанавливаемого затухания
   char LvlBatInd=8; //индикатор уровня батарейки
@@ -67,9 +69,12 @@ uint16_t KeyP; // клавиши нажатые
  uint8_t CheckErrID_Plate=0; 
 
      float CWDMData[18]; // данные 
+     float CWDMDataMem[18]; // данные из памяти
      BYTE g_IndexMeas = 0; // счетчик индекс циклов
      BYTE g_IndexLW = 0; // индекс указатель на длину волны индикации
-
+uint8_t g_EnaQuickReDraw=0;; // признак быстрой перерисовки экрана когда анализатор
+ // окна 
+     uint8_t CntChanel=0; // счетчик каналов
 // режим работы прибора для настройки (1 - настройка, 0- работа)
  char ModeWork = 0;
 //variable USB
@@ -126,55 +131,55 @@ void PeriphCommonClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  
   /* USER CODE END 1 */
-
+  
   /* MCU Configuration--------------------------------------------------------*/
-
+  
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
+  
   /* USER CODE BEGIN Init */
-
+  
   /* USER CODE END Init */
-
+  
   /* Configure the system clock */
   SystemClock_Config();
-
-/* Configure the peripherals common clocks */
+  
+  /* Configure the peripherals common clocks */
   PeriphCommonClock_Config();
-
+  
   /* USER CODE BEGIN SysInit */
-    MX_GPIO_Init();
-    MX_DMA_Init();
-    MX_UART7_Init();
-    // Start Uart7 - Nextion
-    uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
-    HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
-    /* disable the UART Parity Error Interrupt */
-    __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
-    /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-    __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
-    
-    // перенастроим UART7  для NEXTION
-    huart7.Init.BaudRate = 9600;
-    if (HAL_UART_Init(&huart7) != HAL_OK)
-    {
-      Error_Handler();
-    }
-    HAL_Delay(10);
-    sprintf((void*)Str,"bauds=115200яяя");
-    HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
-    
-    //NEX_Transmit(Str);// 
-    HAL_Delay(10);
-    huart7.Init.BaudRate = 115200;
-    if (HAL_UART_Init(&huart7) != HAL_OK)
-    {
-      Error_Handler();
-    }
-    //  myBeep(100);
-    HAL_Delay(10);
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_UART7_Init();
+  // Start Uart7 - Nextion
+  uint16_t  Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
+  HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
+  /* disable the UART Parity Error Interrupt */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
+  /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+  __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
+  
+  // перенастроим UART7  для NEXTION
+  huart7.Init.BaudRate = 9600;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HAL_Delay(10);
+  sprintf((void*)Str,"bauds=115200яяя");
+  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+  
+  //NEX_Transmit(Str);// 
+  HAL_Delay(10);
+  huart7.Init.BaudRate = 115200;
+  if (HAL_UART_Init(&huart7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  //  myBeep(100);
+  HAL_Delay(10);
   if(ID_PLATE != GETIDPLT)
   {
     CheckErrID_Plate=1;
@@ -192,59 +197,59 @@ int main(void)
   HAL_Delay(10);
   sprintf((void*)Str, "page 0яяя"); // < START>
   NEX_Transmit((void*)Str);    //
-//       StartRecievNEX (500);
-//    sprintf((void*)Str,"get t10.txtяяя");
-//    NEX_Transmit((void*)Str);//
-    //NEX_Transmit((void*)CmdBuf);//
+  //       StartRecievNEX (500);
+  //    sprintf((void*)Str,"get t10.txtяяя");
+  //    NEX_Transmit((void*)Str);//
+  //NEX_Transmit((void*)CmdBuf);//
   HAL_Delay(10);
   sprintf((void*)Str, "page 0яяя"); // < START>
   NEX_Transmit((void*)Str);    //
   HAL_Delay(10);
-//    sprintf((void*)Str, "t0.txt=\"начало\"яяя"); // auto
-//    NEX_Transmit((void*)Str);    // 
-//      HAL_Delay(10);
-
-       StartRecievNEX (600);
-    sprintf((void*)Str,"get t10.txtяяя");
-    NEX_Transmit((void*)Str);//
+  //    sprintf((void*)Str, "t0.txt=\"начало\"яяя"); // auto
+  //    NEX_Transmit((void*)Str);    // 
+  //      HAL_Delay(10);
+  
+  StartRecievNEX (600);
+  sprintf((void*)Str,"get t10.txtяяя");
+  NEX_Transmit((void*)Str);//
   //HAL_Delay(200);
-    while(!((g_WtRdyNEX)||(ReadyNEX==4)));
-       StartRecievNEX (600);
-    sprintf((void*)Str,"get t10.txtяяя");
-    NEX_Transmit((void*)Str);//
+  while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+  StartRecievNEX (600);
+  sprintf((void*)Str,"get t10.txtяяя");
+  NEX_Transmit((void*)Str);//
   //HAL_Delay(200);
-    while(!((g_WtRdyNEX)||(ReadyNEX==4)));
-    // здесь просто можем повиснуть не дождавшись ответов от индикатора
-    // это плохо при плохих индикаторах
-    // надо ждать получения ответа
-    if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
-    {
-      for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
-      VerFW_LCD[23]=0;
-      // здесь получим идентификатор индикатора (если его прочтем)
-      // он нужен для вариантов отображения при просмотре рефлектограмм и в памяти
-//      switch(VerFW_LCD[3])
-//      {
-//      case '2':
-//        TypeLCD=0;
-//        KnowLCD = 1;
-//        break;
-//      case '5':
-//        TypeLCD=1;
-//        KnowLCD = 1;
-//        break;
-//      default:
-//        TypeLCD=0;
-//        KnowLCD = 0;
-//        break;
-//      }
-    }
+  while(!((g_WtRdyNEX)||(ReadyNEX==4)));
+  // здесь просто можем повиснуть не дождавшись ответов от индикатора
+  // это плохо при плохих индикаторах
+  // надо ждать получения ответа
+  if(RX_BufNEX[0] == 0x70) // есть ответ! перепишем буффер
+  {
+    for(int i=0;i<25;++i)VerFW_LCD[i]=RX_BufNEX[i+1];
+    VerFW_LCD[23]=0;
+    // здесь получим идентификатор индикатора (если его прочтем)
+    // он нужен для вариантов отображения при просмотре рефлектограмм и в памяти
+    //      switch(VerFW_LCD[3])
+    //      {
+    //      case '2':
+    //        TypeLCD=0;
+    //        KnowLCD = 1;
+    //        break;
+    //      case '5':
+    //        TypeLCD=1;
+    //        KnowLCD = 1;
+    //        break;
+    //      default:
+    //        TypeLCD=0;
+    //        KnowLCD = 0;
+    //        break;
+    //      }
+  }
   // пошлем сообщение о включении ...
-    sprintf((void*)Str, "t1.txt=\"Включение...\"яяя"); // auto
-    NEX_Transmit((void*)Str);    // 
-
+  sprintf((void*)Str, "t1.txt=\"Включение...\"яяя"); // auto
+  NEX_Transmit((void*)Str);    // 
+  
   /* USER CODE END SysInit */
-
+  
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -261,14 +266,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
   // сразу пробуем поставить ЦАП
   
-    HAL_DAC_Start(&hdac1,DAC_CHANNEL_2);
-
-      HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,CurrLevelDAC);
+  HAL_DAC_Start(&hdac1,DAC_CHANNEL_2);
   
-   // проверяем конфигурацию платы, чтобы не запустить программу по исправленю
+  HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,CurrLevelDAC);
+  
+  // проверяем конфигурацию платы, чтобы не запустить программу по исправленю
   // если вдруг зашили чужую программу, попытаемся написать в индикатор и зациклится
   
-
+  
   // Start Uart7 - Nextion
   Dummy = huart7.Instance->RDR ; // чистим буффер приема от NEXTION
   HAL_UART_Receive_IT(&huart7, RX_BufNEX,1); // ждем принятия первого байта из внешнего мира
@@ -276,59 +281,59 @@ int main(void)
   __HAL_UART_DISABLE_IT(&huart7, UART_IT_PE);
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart7, UART_IT_ERR);
-
-//  // перенастроим UART7  для NEXTION
-//  huart7.Init.BaudRate = 9600;
-//  if (HAL_UART_Init(&huart7) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//  HAL_Delay(10);
-//  sprintf((void*)Str,"bauds=115200яяя");
-//  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
-//
-//  //NEX_Transmit(Str);// 
-//   HAL_Delay(10);
-//  huart7.Init.BaudRate = 115200;
-//  if (HAL_UART_Init(&huart7) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-// //  myBeep(100);
-//  HAL_Delay(10);
-//  sprintf((void*)Str, "page 0яяя"); // < START>
-//  NEX_Transmit((void*)Str);    //
-//  // пошлем сообщение о включении ...
-//    sprintf((void*)Str, "t1.txt=\"Включение...\"яяя"); // auto
-//    NEX_Transmit((void*)Str);    // 
   
- 
+  //  // перенастроим UART7  для NEXTION
+  //  huart7.Init.BaudRate = 9600;
+  //  if (HAL_UART_Init(&huart7) != HAL_OK)
+  //  {
+  //    Error_Handler();
+  //  }
+  //  HAL_Delay(10);
+  //  sprintf((void*)Str,"bauds=115200яяя");
+  //  HAL_UART_Transmit(&huart7, (void*)Str,strlen((void*)Str),20); // выдаем 
+  //
+  //  //NEX_Transmit(Str);// 
+  //   HAL_Delay(10);
+  //  huart7.Init.BaudRate = 115200;
+  //  if (HAL_UART_Init(&huart7) != HAL_OK)
+  //  {
+  //    Error_Handler();
+  //  }
+  // //  myBeep(100);
+  //  HAL_Delay(10);
+  //  sprintf((void*)Str, "page 0яяя"); // < START>
+  //  NEX_Transmit((void*)Str);    //
+  //  // пошлем сообщение о включении ...
+  //    sprintf((void*)Str, "t1.txt=\"Включение...\"яяя"); // auto
+  //    NEX_Transmit((void*)Str);    // 
+  
+  
   
   // так как повторяем конфигурацию из 7kAR, то скомбинируем из DataDevice MemFlash(у нас PCA955x)
   CheckErrMEM =   BeginConfig();
   
   CheckErrMEM |= StartInitSDcard();
-
-// подготовка внутреннего АЦП
-    if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
+  
+  // подготовка внутреннего АЦП
+  if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED) != HAL_OK)
   {
-      myBeep(100);
-
-    Error_Handler();
-   }
-        // конец обработки клавы и АЦП, запустим снова АЦП
-     // if(HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&BufADC,3) != HAL_OK) Error_Handler();//3
-
-  if (HAL_ADC_Start_DMA(&hadc1,
-                        (uint32_t *)&BufADC,
-                        3
-                          ) != HAL_OK)
-  {
-      myBeep(100);
+    myBeep(100);
+    
     Error_Handler();
   }
-
-    // Start Uart3 - внешний мир
+  // конец обработки клавы и АЦП, запустим снова АЦП
+  // if(HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&BufADC,3) != HAL_OK) Error_Handler();//3
+  
+  if (HAL_ADC_Start_DMA(&hadc1,
+                        (uint32_t *)&BufADC,
+                        8
+                          ) != HAL_OK)
+  {
+    myBeep(100);
+    Error_Handler();
+  }
+  LED_START(1);
+  // Start Uart3 - внешний мир
   Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем принятия первого байта из внешнего мира
   /* disable the UART Parity Error Interrupt */
@@ -346,41 +351,41 @@ int main(void)
   /* disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
   __HAL_UART_DISABLE_IT(&huart5, UART_IT_ERR);
   //UARTSendExt ((BYTE*)TxBufAns, strlen(TxBufAns));
-// инициализация клавиатуры 
+  // инициализация клавиатуры 
   InitBtns(); 
   
-    // начало работы..
+  // начало работы..
   TimeBegin = HAL_GetTick();
-// получим и посчитаем батарейку
-        Ubat = 2.5*DEL_PWR*BufADC[0]/4096; 
-        // перебор уровня батаhейки, для индикации
-        LvlBatInd = 0;
-        if(Ubat > 5.1) LvlBatInd = 8;
-        else if (Ubat > 5.02) LvlBatInd = 7;
-        else if (Ubat > 4.95) LvlBatInd = 6;
-        else if (Ubat > 4.88) LvlBatInd = 5;
-        else if (Ubat > 4.81) LvlBatInd = 4;
-        else if (Ubat > 4.74) LvlBatInd = 3;
-        else if (Ubat > 4.67) LvlBatInd = 2;
-        else if (Ubat > 4.6) LvlBatInd = 1;
-        if(GETEXTPWR == 0)  LvlBatInd = 9;
-   // CountBat = 0;    
+  // получим и посчитаем батарейку
+  Ubat = 2.5*DEL_PWR*BufADC[0]/4096; 
+  // перебор уровня батаhейки, для индикации
+  LvlBatInd = 0;
+  if(Ubat > 5.1) LvlBatInd = 8;
+  else if (Ubat > 5.02) LvlBatInd = 7;
+  else if (Ubat > 4.95) LvlBatInd = 6;
+  else if (Ubat > 4.88) LvlBatInd = 5;
+  else if (Ubat > 4.81) LvlBatInd = 4;
+  else if (Ubat > 4.74) LvlBatInd = 3;
+  else if (Ubat > 4.67) LvlBatInd = 2;
+  else if (Ubat > 4.6) LvlBatInd = 1;
+  if(GETEXTPWR == 0)  LvlBatInd = 9;
+  // CountBat = 0;    
   LvlBatSav.BatControl[0] = CountBat++;
   LvlBatSav.BatControl[CountBat] = Ubat;
   // пропишем в память
   EEPROM_write(&LvlBatSav.BatControl[0], ADR_BatSave  , 4);
   EEPROM_write(&LvlBatSav.BatControl[CountBat], ADR_BatSave +  4*CountBat , 4);
-
-
+  
+  
   CmdInitPage(0);// вызов окна заставки
   HAL_Delay(10);
   SetMode (ModeWelcome);
   CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
-    MX_USB_DEVICE_Init();
-
-
+  MX_USB_DEVICE_Init();
+  
+  
   /* USER CODE END 2 */
-
+  
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -388,13 +393,40 @@ int main(void)
     // проверка кнопок 
     if((GetSysTick(0)>30)&&(!ProgFW_LCD))// каждые 30 мС или больше...и не в программировании
     {
+      // расчет данных по полученным данным из АЦП, каждый момент имеем два значения АЦП
+      uint32_t SumAdcOne=0;
+      uint32_t SumAdcTwo=0;
+      for(int i=NUMAVRG-1;i>0;i--)
+      {
+        SumAdcOne +=AdcCodes[CntChanel].dADC[i] = AdcCodes[CntChanel].dADC[i-1];
+        SumAdcTwo +=AdcCodes[CntChanel+9].dADC[i] = AdcCodes[CntChanel+9].dADC[i-1];
+      }
+      SumAdcOne +=AdcCodes[CntChanel].dADC[0] = BufADC[2];
+      SumAdcTwo +=AdcCodes[CntChanel+9].dADC[0] = BufADC[3];
+      AdcCodes[CntChanel].AvrgADC = SumAdcOne/NUMAVRG;
+      AdcCodes[CntChanel+9].AvrgADC = SumAdcTwo/NUMAVRG;
+      // которое прописываем в соотв ячейку
+      //CWDMData[CntChanel] = BufADC[2]*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[CntChanel];    
+      //CWDMData[CntChanel+9] = BufADC[3]*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9];    
+      CWDMData[CntChanel] = AdcCodes[CntChanel].AvrgADC*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[CntChanel];    
+      CWDMData[CntChanel+9] = AdcCodes[CntChanel+9].AvrgADC*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9];    
+      // изменяем счетчик перебора
+      if(CntChanel<8)CntChanel++;
+      else CntChanel=0;
+      // управление ключами по счетчику
+      CtrlExpand(CntChanel<<3,0x78);
+      // выведем текущий уровень ЦАП по счетчику
+      //HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,TstDacCode[CurrLevelDAC]);
+      HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,TstDacCode[CntChanel]);
+      //
       KeyP = SetBtnStates( GetExpand (), 1 ); // опрос клавиатуры
       GetSysTick(1);// сброс системного ожидания
       // управление красным лазером
       // поконтролить батарейку
       // инекремент таймаре PA
-      // выведем текущий уровень ЦАП
-      HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,CurrLevelDAC);
+      HAL_Delay(1);
+      if(CurrLevelDAC<7)CurrLevelDAC++;
+      else CurrLevelDAC=0;
       
       CountTimerPA++;
       if(CountTimerPA>33)
@@ -464,18 +496,19 @@ int main(void)
           
           CcMinute=0;
         }
-        
-        //LvlBatInd++;
-        CountTimerPA = 0;
-        // здесь можно запустить Измерение АЦП
-        if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,3) != HAL_OK)
-        {
-          myBeep(100);
-          Error_Handler();
-        }
-      g_IndexMeas++;
-      g_NeedScr=1;
+        g_IndexMeas++;
+        g_NeedScr=1;
+      CountTimerPA = 0;
       }
+      //if(g_EnaQuickReDraw)g_NeedScr=1;
+      //LvlBatInd++;
+      // здесь можно запустить Измерение АЦП
+      if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,8) != HAL_OK)
+      {
+        myBeep(100);
+        Error_Handler();
+      }
+      LED_START(1);
       
     }
     // проверка приема по UART EXT
@@ -511,7 +544,7 @@ int main(void)
     if(!ProgFW_LCD)
       ModeFuncTmp();
     /* USER CODE END WHILE */
-
+    
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

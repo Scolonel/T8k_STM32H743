@@ -21,7 +21,7 @@
 //число сообщений и €зыков
 #define LANG_NUM 4  // число столбцов в таблице €зыков
 
-#define MSG_NUM 60
+#define MSG_NUM 61
 #define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //врем€ цикла красного глаза по 500 м—
@@ -41,7 +41,7 @@
 //#define RAWSIZE    5500 //4384 //0x1200  //(4096+288)
 //#define FLTSIZE    5 // размерность фильтра
 // массивы из первичной проверки...перекликаютс€ с размерами объ€вленными ранее
-#define SizeBuf_ADC_int 4
+#define SizeBuf_ADC_int 8
 //#define SizeBuf_ADC 6000//8192
 //#define SizeLogBuf 8000
 //#define SizeBuf_DAC 75
@@ -117,6 +117,7 @@ static int  NUM_VER =
 #include "lasti.h"
 ;
 
+extern const uint16_t ColorsPCO[18];
 extern const char* DeviceIDN[2];
 
 extern  char DigitSet; //шаг изменеи€ устанавливаемого затухани€
@@ -142,6 +143,7 @@ extern UART_HandleTypeDef huart5;
 extern char ScreenReDraw; // признак необходимости перерисовать экран
 extern char NeedSaveParam; // признак необходимости сохранить параметры
 extern uint16_t CurrLevelDAC; //текущий уровень дл€ ÷јѕ (востанавливаем из тех что храним в UserSet)
+extern uint8_t g_EnaQuickReDraw;; // признак быстрой перерисовки экрана когда анализатор
 
 extern volatile unsigned char rawPressure;
 extern volatile unsigned char rawPressKeyS; // признак необработанной нажатой клавиши S по прерыванию

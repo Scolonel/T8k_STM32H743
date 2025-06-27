@@ -12,7 +12,7 @@
 
 #include "system.h"
 
-const char* DeviceIDN[2]= {"ТОПАЗ-5000","MOT-500M-60"};
+const char* DeviceIDN[2]= {"ТОПАЗ-8021N","MOT-800M-18B"};
 
 volatile DWORD UART0Status;
 volatile BYTE UART0TxEmpty = 1;
@@ -105,7 +105,7 @@ void DecodeCommandRS (void)
   //char Str[128];
   //char BufString[225];
   char Str[32];
-  char StartStr[7]={"#48419\0"}; // 4-х значные номера!!!
+  //char StartStr[7]={"#48419\0"}; // 4-х значные номера!!!
   //VICINTENCLEAR  = 1 << UART0_INT; /* Disable Interrupt */
   volatile char NeedTransmit; //
   char NeedPrint= 0; //
@@ -343,7 +343,7 @@ void DecodeCommandRS (void)
       //===== КОМАНДЫ РЕЖИМА УСТАНОВОК ======================    
       if (1)
       {
-        
+        float fParam;
         WORD Data;
         //NeedTransmit = 0;
         
@@ -429,7 +429,38 @@ void DecodeCommandRS (void)
             sprintf(BufString,"SN#%04d\r",GetNumDevice());//c
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
           }
+        }    
+        // ;SET:CHAn запрос установка коэфф пропроциональности
+                // ;
+        if (!memcmp ((void*)RX_Buf, ";SET:CHA",8)) //
+        {
+          
+          Data = (WORD)atoi((char*)&RX_Buf[8]); // получим номер канала он двухзначный
+          if(Data<2)
+          {
+            if(RX_Buf[10] == '?') // надо послать соотв коэффициент
+            {
+//              sprintf(BufString,"%.6f\r",CoeffLW.SlopeChADC[Data]);//c
+//              UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
+            }
+            if(RX_Buf[10] == ' ') // надо записать соотв коэффициент
+            {
+              fParam = (float)atof((char*)&RX_Buf[11]); // получим значение коефф.
+              CoeffLW.SlopeChADC[Data] = fParam;
+              // нужно сохранить
+              NeedSaveParam |= 0x04;
+              NeedTransmit = 1;
+            }             
+          }
+          //New
+          if(NeedTransmit)
+          {
+            sprintf(BufString,"%.6f\r",CoeffLW.SlopeChADC[Data]);//c
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          }
         }        
+
         // ;set:LWi  - установка длин волн по местам
          
         // установка уровня в дБ, привязанных к длине волны
@@ -456,7 +487,7 @@ void DecodeCommandRS (void)
       if (!memcmp ((void*)RX_Buf, ";SET:FWLCDON",12)) //
       {
         SetMode(UploadFW_Nextion);
-        CmdInitPage(4); // переключаемся на режим индикации сообщения что в режиме программирования
+        CmdInitPage(9); // переключаемся на режим индикации сообщения что в режиме программирования
         //ProgFW_LCD = 1; // перенесем в First обработку что бы "правильно" работало
         //123          //UART2Count = 0;
         //123          //UART0Count = 0;

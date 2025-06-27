@@ -11,6 +11,7 @@
 #define NEXT 1
 #define MODELSNUM 5
 #define MODERENUM 3
+#define NUMAVRG 8
 
 
 
@@ -21,9 +22,15 @@ float BatControl[2048];// контроль разряда батареи
 } BAT_CNTR;
 
 
+// структура Данных АЦП и накоплений(усреднений)
+typedef struct
+{
+    uint32_t dADC[NUMAVRG];   // таблица последовательных данных АЦП по каналам
+    uint32_t AvrgADC;   // усредненные данные
+} ADC_CODE;
 
 
-// структура коэффициентов затухания в тиках перебора по 0.05 дБ
+// структура коэффициентов 
 typedef struct
 {
     float SlopeChADC[2];   // наклон канала АЦП 8
@@ -83,6 +90,8 @@ void GetNumVer (char* Str); // получение номера версии
 // структура данных о батарейки, пишем по элементу каждую минуту от включения(0...1023)
 extern BAT_CNTR LvlBatSav;
 extern uint32_t CountBat; // счетчик записей по батареи
+
+extern ADC_CODE AdcCodes[18];
 
 // структура коэффициентов измерителя мощности
 extern TAB_SET CoeffLW;

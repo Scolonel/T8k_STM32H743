@@ -13,6 +13,9 @@
 
 #include "main.h"
 
+const uint16_t ColorsPCO[18]={56731,40412,40545,52448,65049,63387,65535,50712,0,64872,33808,60445,31,1024,65504,64800,63488,37440};
+
+
 volatile BYTE g_NeedScr=1; // перерисовки экрана ! Аккуратно! надо проверить 
 volatile BYTE g_FirstScr=1; // первый вход в экран, нужна полная перерисовка (заполнение), далее изменяем только нужные поля, для NEXTION
 volatile BYTE g_NeedChkAnsvNEX=0; // признак получения строки из редактора.и ее проверка
@@ -51,6 +54,7 @@ char IndxKBCableID = 0; // Индексы указатели для строк редактирования - Имя кабе
 char IndxKBFiberName = 0; // Индексы указатели для строк редактирования - Имя волокна
 char IndxKBComments = 0; // Индексы указатели для строк редактирования - Комментарий
 volatile int NeedReturn = 0; // необходимость вернуться в окно сохранения
+volatile int NeedWinKBReturn = 0; // необходимость вернуться в окно откуда вызвали редактор
 
 //static char* globalStringToCopy = 0;
 
@@ -167,7 +171,7 @@ void ModeWelcome(void)// режим заставки
     NEX_Transmit((void*)Str);//
     // Version
     // версия ПО
-    sprintf (St, "v3.%02d%c", NUM_VER/26, (0x61+(NUM_VER%26))); // версия должна быть не ниже 2.01 (28.06.2022)
+    sprintf (St, "v4.%02d%c", NUM_VER/26, (0x61+(NUM_VER%26))); // версия должна быть не ниже 2.01 (28.06.2022)
     sprintf (Str,"t8.txt=\"%s(%X)\"яяя",St,CheckErrMEM); // Version
     NEX_Transmit((void*)Str);//
     // Number
@@ -371,11 +375,11 @@ void ModeMain(void)// режим основной
 void ModeDrawMeasure(void) // режим отображения рефлектограммы
 {
   char Str[32];
-
+  
   static volatile BYTE FrSetIndex = 0; // указатель на курсор
   int Res;
   // получение данных от измерителя
-  GetAllDataMeas((g_IndexMeas)&0xF);
+  //GetAllDataMeas((g_IndexMeas)&0xF);
   // Прорисовка нового индикатора
   if(g_FirstScr) // заполнение незменяемых полей
   {
@@ -390,47 +394,48 @@ void ModeDrawMeasure(void) // режим отображения рефлектограммы
     //    NEX_Transmit((void*)Str);//
     //    // установки
     
-    
-    
+        g_EnaQuickReDraw =1;
+
+    rawPressKeyS=0;// если вдруг кто нажимал это до этого
     g_FirstScr = 0;
     g_NeedScr = 1;
   }
   // обработка клавиатуры кнопки Влево Вправо
-    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))//
-    {
-      myBeep(10);
-      if(g_IndexLW>0)g_IndexLW--;
-      else g_IndexLW = 17;
-      g_NeedScr = 1; // Need reDraw Screen
-    }  
-    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))//
-    {
-      myBeep(10);
-      if(g_IndexLW<17)g_IndexLW++;
-      else g_IndexLW = 0;
-      g_NeedScr = 1; // Need reDraw Screen
-    }  
+  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))//
+  {
+    myBeep(10);
+    if(g_IndexLW>0)g_IndexLW--;
+    else g_IndexLW = 17;
+    g_NeedScr = 1; // Need reDraw Screen
+  }  
+  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))//
+  {
+    myBeep(10);
+    if(g_IndexLW<17)g_IndexLW++;
+    else g_IndexLW = 0;
+    g_NeedScr = 1; // Need reDraw Screen
+  }  
   if(g_NeedScr)
   {
     // рисуем
-//    line 0,300,340,300,YELLOW
-//draw 0,270,340,270,GREEN
-//draw 0,240,340,240,YELLOW
-//draw 0,210,340,210,GREEN
-//draw 0,180,340,180,YELLOW
-//draw 0,150,340,150,GREEN
-//draw 0,120,340,120,YELLOW
-//draw 0,90,340,90,GREEN
-//draw 0,60,340,60,WHITE
-//draw 0,30,340,30,GREEN
-//draw 0,0,340,0,YELLOW
-//xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
-//xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
-//xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
-//xstr 345,110,35,20,3,BLUE,WHITE,0,1,1,"-10"
-//xstr 345,50,35,20,3,BLUE,WHITE,0,1,1,"0"
-//xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
- //   xstr 380,90,100,55,2,BLACK,WHITE,0,1,1,"-40.2
+    //    line 0,300,340,300,YELLOW
+    //draw 0,270,340,270,GREEN
+    //draw 0,240,340,240,YELLOW
+    //draw 0,210,340,210,GREEN
+    //draw 0,180,340,180,YELLOW
+    //draw 0,150,340,150,GREEN
+    //draw 0,120,340,120,YELLOW
+    //draw 0,90,340,90,GREEN
+    //draw 0,60,340,60,WHITE
+    //draw 0,30,340,30,GREEN
+    //draw 0,0,340,0,YELLOW
+    //xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
+    //xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
+    //xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
+    //xstr 345,110,35,20,3,BLUE,WHITE,0,1,1,"-10"
+    //xstr 345,50,35,20,3,BLUE,WHITE,0,1,1,"0"
+    //xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
+    //   xstr 380,90,100,55,2,BLACK,WHITE,0,1,1,"-40.2
     if(UserSet.ChnMod) // Graph
     {
       for(int i=0;i<18;i++)
@@ -444,20 +449,32 @@ void ModeDrawMeasure(void) // режим отображения рефлектограммы
         sprintf(Str,"j%d.val=%dяяя",i,Res);
         NEX_Transmit((void*)Str);//
       }
-//      sprintf(Str,"tm0.en=1яяя");
-//      NEX_Transmit((void*)Str);//
+      //      sprintf(Str,"tm0.en=1яяя");
+      //      NEX_Transmit((void*)Str);//
       sprintf(Str,"t0.txt=\"%d%s\"яяя",1270+g_IndexLW*20,MsgMass[38][CurrLang]);// LW_nm
+      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t0.bco=%dяяя",ColorsPCO[g_IndexLW]);// LW_nm
       NEX_Transmit((void*)Str);//
       sprintf(Str,"t1.txt=\"%.1f\"яяя",CWDMData[g_IndexLW]);// значение
       NEX_Transmit((void*)Str);//
       sprintf(Str,"t2.txt=\"%s\"яяя",MsgMass[18][CurrLang]);// дБм
       NEX_Transmit((void*)Str);//
+      if((g_IndexLW==8)||(g_IndexLW==12))
+      {
+      sprintf(Str,"t0.pco=65535яяя");// LW_nm
+      NEX_Transmit((void*)Str);//
+      }
+      else
+      {
+      sprintf(Str,"t0.pco=0яяя");// LW_nm
+      NEX_Transmit((void*)Str);//
+      }
       //sprintf(Str,"h0.val=%dяяя",g_IndexLW);
       //NEX_Transmit((void*)Str);//
       sprintf(Str,"p1.pic=%dяяя",g_IndexLW+17);
       NEX_Transmit((void*)Str);//
-//      sprintf(Str,"tm0.en=0яяя");
-//      NEX_Transmit((void*)Str);//
+      //      sprintf(Str,"tm0.en=0яяя");
+      //      NEX_Transmit((void*)Str);//
     }
     else // Table
     {
@@ -475,12 +492,12 @@ void ModeDrawMeasure(void) // режим отображения рефлектограммы
     if(UserSet.ChnMod) // Graph
     {
       UserSet.ChnMod = 0;
-        CmdInitPage(3);// посылка команды переключения окна на Анализатор
+      CmdInitPage(3);// посылка команды переключения окна на Анализатор
     }
     else
     {
       UserSet.ChnMod = 1;
-        CmdInitPage(2);// посылка команды переключения окна на Анализатор
+      CmdInitPage(2);// посылка команды переключения окна на Анализатор
     }
     g_FirstScr = 1;
     //g_NeedScr = 1; // Need reDraw Screen
@@ -489,10 +506,24 @@ void ModeDrawMeasure(void) // режим отображения рефлектограммы
   {
     SetMode(ModeMain);
     CmdInitPage(1);// посылка команды переключения окна на MainMenu и установка признака первого входа
+    g_EnaQuickReDraw =0;
   }
-     //    HAL_Delay(500);
-     
+  // вызов сохранения файла (его меню)
+  if (rawPressKeyS) // START Measure из режима установок рефлектометра
+  {        
+    myBeep(10);
+    //  SaveFileSD(0);
+    SetMode(ModeSaverFILE);
+    rawPressKeyS=0;
+    //CreatDelay (30000); // 3.3 мС
+    HAL_Delay(3);
+    CmdInitPage(7);// посылка команды переключения окна на Меню Сохранения
+    g_EnaQuickReDraw =0;
 
+  }
+  //    HAL_Delay(500);
+  
+  
 }
 //------------------------------------------------------------------------------------------------------------
 void BadBattery(void) // плохая баттарейка CHECK_OFF
@@ -955,7 +986,7 @@ if(g_NeedScr)
   }
 }
   // -------------------------------------------------------------------------------------------
-  void ModeSetupFILE(void) // режим установок FILES
+  void ModeSetupFILE(void) // режим установок FILES (6 окно)
   {
     static volatile BYTE FrSetSetupFile = 0; // указатель на курсор
     char Str[64];
@@ -966,14 +997,14 @@ if(g_NeedScr)
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      FrSetSetupFile = ChangeFrSet (FrSetSetupFile, 4, 0, MINUS);// установка курсора в рамках заданных параметров
+      FrSetSetupFile = ChangeFrSet (FrSetSetupFile, 3, 0, MINUS);// установка курсора в рамках заданных параметров
       //ClrKey (BTN_UP);
     }
     if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      FrSetSetupFile = ChangeFrSet (FrSetSetupFile, 4, 0, PLUS);// установка курсора в рамках заданных параметров
+      FrSetSetupFile = ChangeFrSet (FrSetSetupFile, 3, 0, PLUS);// установка курсора в рамках заданных параметров
       //ClrKey (BTN_DOWN);
     }
     switch (FrSetSetupFile) // обработка выбраных полей установок
@@ -982,18 +1013,40 @@ if(g_NeedScr)
       // кнопка ОК переключаемся в редактор!
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
+        g_NeedScr = 1; // Need reDraw Screen
         myBeep(10);
-        g_FirstScr = 1; // Need reDraw Screen
-        
+        for (int Ind =ARRAY_SIZE(UserSet.CableID)-2; Ind>=0; Ind--)
+        {
+          if (UserSet.CableID[Ind]<0x20) UserSet.CableID[Ind]=' ';
+          else if (UserSet.CableID[Ind]!=' ' && IndxKBCableID == 0) IndxKBCableID = Ind;
+          //Index_Comm --;
+        }
+        if (UserSet.CableID[IndxKBCableID]!=' ')IndxKBCableID ++;
+        //KbPosX = 11;
+        //KbPosY = 2;
+        SetMode(ModeKBCableID); // редактор имя кабеля
+        NeedKeyB = 1; // надо переключится в клавиатуру
+        //ClrKey (BTN_OK);
       }
       break; //Имя кабеля
     case 1: //Имя волокна
       // кнопка ОК переключаемся в редактор!
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
+        g_NeedScr = 1; // Need reDraw Screen
         myBeep(10);
-        g_FirstScr = 1; // Need reDraw Screen
-        
+        for (int Ind =ARRAY_SIZE(UserSet.FiberName)-2; Ind>=0; Ind--)
+        {
+          if (UserSet.FiberName[Ind]<0x20) UserSet.FiberName[Ind]=' ';
+          else if (UserSet.FiberName[Ind]!=' ' && IndxKBFiberName == 0) IndxKBFiberName = Ind;
+          //Index_Comm --;
+        }
+        if (UserSet.FiberName[IndxKBCableID]!=' ')IndxKBFiberName ++;
+        //KbPosX = 11;
+        //KbPosY = 2;
+        SetMode(ModeKBFiberName); // редактор имя волокна
+        NeedKeyB =1; // надо переключится в клавиатуру
+        //ClrKey (BTN_OK);
       }
       break; //Имя волокна
     case 2: //счетчик номера волокна
@@ -1048,25 +1101,25 @@ if(g_NeedScr)
         
       }
       break; //Разрешение счета волкна
-    case 4: //Тестовый вызов окна редактирвания (имя Кабеля) 
-      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
-      {
-        g_NeedScr = 1; // Need reDraw Screen
-        myBeep(10);
-        for (int Ind =ARRAY_SIZE(UserSet.CableID)-2; Ind>=0; Ind--)
-        {
-          if (UserSet.CableID[Ind]<0x20) UserSet.CableID[Ind]=' ';
-          else if (UserSet.CableID[Ind]!=' ' && IndxKBCableID == 0) IndxKBCableID = Ind;
-          //Index_Comm --;
-        }
-        if (UserSet.CableID[IndxKBCableID]!=' ')IndxKBCableID ++;
-        //KbPosX = 11;
-        //KbPosY = 2;
-        SetMode(ModeKBCableID); // редактор имя кабеля
-        NeedKeyB =1; // надо переключится в клавиатуру
-        //ClrKey (BTN_OK);
-      }
-      break; //Коэфф.преломления
+      //    case 4: //Тестовый вызов окна редактирвания (имя Кабеля) 
+      //      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      //      {
+      //        g_NeedScr = 1; // Need reDraw Screen
+      //        myBeep(10);
+      //        for (int Ind =ARRAY_SIZE(UserSet.CableID)-2; Ind>=0; Ind--)
+      //        {
+      //          if (UserSet.CableID[Ind]<0x20) UserSet.CableID[Ind]=' ';
+      //          else if (UserSet.CableID[Ind]!=' ' && IndxKBCableID == 0) IndxKBCableID = Ind;
+      //          //Index_Comm --;
+      //        }
+      //        if (UserSet.CableID[IndxKBCableID]!=' ')IndxKBCableID ++;
+      //        //KbPosX = 11;
+      //        //KbPosY = 2;
+      //        SetMode(ModeKBCableID); // редактор имя кабеля
+      //        NeedKeyB =1; // надо переключится в клавиатуру
+      //        //ClrKey (BTN_OK);
+      //      }
+      //      break; //Коэфф.преломления
     }
     // если не коэфф преломления 
     if (NeedReSave)
@@ -1088,8 +1141,8 @@ if(g_NeedScr)
       NEX_Transmit((void*)Str);// 
       sprintf(Str,"t6.txt=\"%s\"яяя", MsgMass[33][CurrLang]); //счет волокон
       NEX_Transmit((void*)Str);// 
-      sprintf(Str,"t8.txt=\"%s\"яяя", MsgMass[34][CurrLang]); //ОК
-      NEX_Transmit((void*)Str);// 
+      //      sprintf(Str,"t8.txt=\"%s\"яяя", MsgMass[34][CurrLang]); //ОК
+      //      NEX_Transmit((void*)Str);// 
       
       g_NeedScr = 1; // для вызова заполнения значений
       g_FirstScr = 0;
@@ -1111,8 +1164,8 @@ if(g_NeedScr)
       sprintf(Str,"t7.txt=\"%s\"яяя", (UserSet.EnaCntFiber)?(MsgMass[23][CurrLang]):(MsgMass[24][CurrLang]));//"разов."
       NEX_Transmit((void*)Str);// 
       // пятая строка - индекс измерения или префикс при авто
-      sprintf(Str,"t9.txt=\"ТЕСТ\"яяя");// надо убрать
-      NEX_Transmit((void*)Str);// 
+      //      sprintf(Str,"t9.txt=\"ТЕСТ\"яяя");// надо убрать
+      //      NEX_Transmit((void*)Str);// 
       // закрасим бэкграунды  и установим требуемый
       sprintf(Str,"t0.bco=WHITEяяя"); // белый
       NEX_Transmit((void*)Str);// 
@@ -1147,6 +1200,7 @@ if(g_NeedScr)
         // посылка команды переключения окна на RussianPreF Keyboard 
         CmdInitPage(13); //(23)
       NeedKeyB=0; 
+      NeedWinKBReturn = 0;
     }
   }
 
@@ -1190,21 +1244,412 @@ void ModeKBCableID(void) // режим отображения клавиатуры редактора CableID
       EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
     NeedReturn=1;
   }
-  
+    // сохранение по кнопке OK на клавиатуре прибора (точка)
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+    // обработка кнопки Ок
+  {
+    myBeep(7);
+    //  sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
+    //NEX_Transmit((void*)Str);    //
+      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
+    NEX_Transmit((void*)Str);    //
+    // здесь реально отвечает через не более 2 мС
+    // StartRecievNEX (10);// время ожидания начала ответов от индикатора
+
+  }
+
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
   {
     myBeep(10);
-    SetMode(ModeSetupFILE);  //  переход в режим установок рефлектометра (было)
+    if(NeedWinKBReturn)
+    {
+    SetMode(ModeSaverFILE);  //  переход в режим сохранения ФАЙЛА
+    CmdInitPage(7);
+    }
+    else
+    {
+    SetMode(ModeSetupFILE);  //  переход в режим установок ФАЙЛА
+    CmdInitPage(6);
+    }
+    NeedWinKBReturn = 0;
     // вернемся в окно
     // важно тут 11 байт и последние пробелы
     g_GetStr=0; // сбросим признак  необходимости прочитать строчку! из индикатора.
     // вернемся в окно установок FILES
-    CmdInitPage(6);
     NeedReturn = 0;
   }
 }
- 
+
+// --------------------------------------------------------------------------------------------------------- 
+// обработка клавиатуры при редакторе Имени Кабеля
+void ModeKBFiberName(void) // режим отображения клавиатуры редактора FiberName
+{
+  char Str[32];
+  char StrI[32];
+  //static BYTE Shift = 0; // регистр 
+  // тут для нового индикатора
+  if (g_FirstScr)
+  {
+    sprintf(Str, "t0.txt=\"%s\"яяя",MsgMass[30][CurrLang]); 
+    NEX_Transmit((void*)Str);    // 
+
+    // здесь заполняем данными поля нового индикатора
+    // надо обрезать до последнего пробела....
+    memcpy(StrI,UserSet.FiberName,IndxKBFiberName+1); 
+    StrI[IndxKBFiberName+1]=0;// No more 11 byte size
+    sprintf(Str, "t1.txt=\"%s\"яяя",StrI); 
+    NEX_Transmit((void*)Str);    // 1 строка комментарии
+    g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    g_NeedScr=0;
+  }
   
+  if(g_GetStr==2) // УРА! что то приняли назад, можно переписать и сбросить признак
+  {
+    // здесь обработаем строку на приеме
+    IndxKBFiberName = GetStringNEX(UserSet.FiberName, ARRAY_SIZE(UserSet.FiberName));
+    //memcpy(CommentsOLT,&RX_BufNEX[1],(CntRXNEX<18)?(CntRXNEX-2):(15)); 
+    //CommentsOLT[15]=0;
+    for(int i=IndxKBFiberName; i< ARRAY_SIZE(UserSet.FiberName); ++i) UserSet.FiberName[i]=' ';
+    UserSet.FiberName[ARRAY_SIZE(UserSet.FiberName)-1]=0;
+    // сохраним
+      EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
+    NeedReturn=1;
+  }
+    // сохранение по кнопке OK на клавиатуре прибора (точка)
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+    // обработка кнопки Ок
+  {
+    myBeep(7);
+    //  sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
+    //NEX_Transmit((void*)Str);    //
+      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
+    NEX_Transmit((void*)Str);    //
+    // здесь реально отвечает через не более 2 мС
+    // StartRecievNEX (10);// время ожидания начала ответов от индикатора
+
+  }
+  
+  if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
+  {
+    myBeep(10);
+    if(NeedWinKBReturn)
+    {
+    SetMode(ModeSaverFILE);  //  переход в режим сохранения ФАЙЛА
+    CmdInitPage(7);
+    }
+    else
+    {
+    SetMode(ModeSetupFILE);  //  переход в режим установок ФАЙЛА
+    CmdInitPage(6);
+    }
+    NeedWinKBReturn = 0;
+    // вернемся в окно
+    // важно тут 11 байт и последние пробелы
+    g_GetStr=0; // сбросим признак  необходимости прочитать строчку! из индикатора.
+    // вернемся в окно установок FILES
+    NeedReturn = 0;
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// обработка клавиатуры при редакторе Comments
+void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
+{
+  char Str[32];
+  char StrI[32];
+  //static BYTE Shift = 0; // регистр 
+  // тут для нового индикатора
+  if (g_FirstScr)
+  {
+    sprintf(Str, "t0.txt=\"%s\"яяя",MsgMass[37][CurrLang]); 
+    NEX_Transmit((void*)Str);    // 
+
+    // здесь заполняем данными поля нового индикатора
+    // надо обрезать до последнего пробела....
+    memcpy(StrI,UserSet.Comments,IndxKBComments+1); 
+    StrI[IndxKBComments+1]=0;// No more 11 byte size
+    sprintf(Str, "t1.txt=\"%s\"яяя",StrI); 
+    NEX_Transmit((void*)Str);    // 1 строка комментарии
+    g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    g_NeedScr=0;
+  }
+  
+  if(g_GetStr==2) // УРА! что то приняли назад, можно переписать и сбросить признак
+  {
+    // здесь обработаем строку на приеме
+    IndxKBComments = GetStringNEX(UserSet.Comments, ARRAY_SIZE(UserSet.Comments));
+    //memcpy(CommentsOLT,&RX_BufNEX[1],(CntRXNEX<18)?(CntRXNEX-2):(15)); 
+    //CommentsOLT[15]=0;
+    for(int i=IndxKBComments; i< ARRAY_SIZE(UserSet.Comments); ++i) UserSet.Comments[i]=' ';
+    UserSet.Comments[ARRAY_SIZE(UserSet.Comments)-1]=0;
+    // сохраним
+      EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
+    NeedReturn=1;
+  }
+  
+    // сохранение по кнопке OK на клавиатуре прибора (точка)
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+    // обработка кнопки Ок
+  {
+    myBeep(7);
+    //  sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
+    //NEX_Transmit((void*)Str);    //
+      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
+    NEX_Transmit((void*)Str);    //
+    // здесь реально отвечает через не более 2 мС
+    // StartRecievNEX (10);// время ожидания начала ответов от индикатора
+  }
+  
+  if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
+  {
+    myBeep(10);
+    if(NeedWinKBReturn)
+    {
+    SetMode(ModeSaverFILE);  //  переход в режим сохранения ФАЙЛА
+    CmdInitPage(7);
+    }
+    else
+    {
+    SetMode(ModeSetupFILE);  //  переход в режим установок ФАЙЛА
+    CmdInitPage(6);
+    }
+    NeedWinKBReturn = 0;
+    // вернемся в окно
+    // важно тут 11 байт и последние пробелы
+    g_GetStr=0; // сбросим признак  необходимости прочитать строчку! из индикатора.
+    // вернемся в окно установок FILES
+    NeedReturn = 0;
+  }
+}
+
+  // -------------------------------------------------------------------------------------------
+  void ModeSaverFILE(void) // режим сохранения FILES
+  {
+    static volatile BYTE FrSetSaverFile = 3; // указатель на курсор
+    char Str[64];
+    char StrF[24];
+    int NeedReSave=0; // признак пересохранения текущих изменений если были
+    
+    //BYTE CurrLang=GetLang(CURRENT);
+    if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      FrSetSaverFile = ChangeFrSet (FrSetSaverFile, 3, 1, MINUS);// установка курсора в рамках заданных параметров
+      //ClrKey (BTN_UP);
+    }
+    if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+    {
+      myBeep(10);
+      g_NeedScr = 1; // Need reDraw Screen
+      FrSetSaverFile = ChangeFrSet (FrSetSaverFile, 3, 1, PLUS);// установка курсора в рамках заданных параметров
+      //ClrKey (BTN_DOWN);
+    }
+    switch (FrSetSaverFile) // обработка выбраных полей установок
+    {
+    case 1: //Имя кабеля
+      // кнопка ОК переключаемся в редактор!
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        g_NeedScr = 1; // Need reDraw Screen
+        myBeep(10);
+        for (int Ind =ARRAY_SIZE(UserSet.CableID)-2; Ind>=0; Ind--)
+        {
+          if (UserSet.CableID[Ind]<0x20) UserSet.CableID[Ind]=' ';
+          else if (UserSet.CableID[Ind]!=' ' && IndxKBCableID == 0) IndxKBCableID = Ind;
+          //Index_Comm --;
+        }
+        if (UserSet.CableID[IndxKBCableID]!=' ')IndxKBCableID ++;
+        //KbPosX = 11;
+        //KbPosY = 2;
+        SetMode(ModeKBCableID); // редактор имя кабеля
+        NeedKeyB =1; // надо переключится в клавиатуру
+        NeedWinKBReturn = 7;
+        //ClrKey (BTN_OK);
+      }
+      break; //Имя кабеля
+    case 2: //Имя волокна
+      // кнопка ОК переключаемся в редактор!
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        g_NeedScr = 1; // Need reDraw Screen
+        myBeep(10);
+        for (int Ind =ARRAY_SIZE(UserSet.FiberName)-2; Ind>=0; Ind--)
+        {
+          if (UserSet.FiberName[Ind]<0x20) UserSet.FiberName[Ind]=' ';
+          else if (UserSet.FiberName[Ind]!=' ' && IndxKBFiberName == 0) IndxKBFiberName = Ind;
+          //Index_Comm --;
+        }
+        if (UserSet.FiberName[IndxKBFiberName]!=' ')IndxKBFiberName ++;
+        //KbPosX = 11;
+        //KbPosY = 2;
+        SetMode(ModeKBFiberName); // редактор имя волокна
+        NeedKeyB =1; // надо переключится в клавиатуру
+        NeedWinKBReturn = 7;
+        //ClrKey (BTN_OK);
+      }
+      break; //Имя волокна
+    case 3: //Комментарий
+      // кнопка ОК переключаемся в редактор!
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        g_NeedScr = 1; // Need reDraw Screen
+        myBeep(10);
+        for (int Ind =ARRAY_SIZE(UserSet.Comments)-2; Ind>=0; Ind--)
+        {
+          if (UserSet.Comments[Ind]<0x20) UserSet.Comments[Ind]=' ';
+          else if (UserSet.Comments[Ind]!=' ' && IndxKBComments == 0) IndxKBComments = Ind;
+          //Index_Comm --;
+        }
+        if (UserSet.Comments[IndxKBComments]!=' ')IndxKBComments ++;
+        //KbPosX = 11;
+        //KbPosY = 2;
+        SetMode(ModeKBComments); // редактор имя волокна
+        NeedKeyB =1; // надо переключится в клавиатуру
+        //ClrKey (BTN_OK);
+      }
+    }
+    //  
+    if (NeedReSave)
+    {
+      //WriteNeedStruct(0x02);//
+      EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
+      NeedReSave = 0;
+    }
+    // заполняем новый индикатор если в первый раз в основном не изменяемые поля
+    if(g_FirstScr)
+    {
+        TimeSaveOTDR = RTCGetTime(); // сохраняем время сохранения
+
+      // столбцы названий 
+      sprintf(Str,"t0.txt=\"%s\"яяя", MsgMass[29][CurrLang]); // Имя Файла
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t2.txt=\"%s\"яяя", MsgMass[35][CurrLang]); // Кабель 
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t4.txt=\"%s\"яяя", MsgMass[36][CurrLang]); //Волокно
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t6.txt=\"%s\"яяя", MsgMass[37][CurrLang]); //счет волокон
+      NEX_Transmit((void*)Str);// 
+      //      sprintf(Str,"t8.txt=\"%s\"яяя", MsgMass[34][CurrLang]); //ОК
+      //      NEX_Transmit((void*)Str);// 
+      
+      g_NeedScr = 1; // для вызова заполнения значений
+      g_FirstScr = 0;
+    }
+    // надо что то изменить в полях установок 
+    if(g_NeedScr)
+    {
+      //первая имя ФАЙЛА
+      // имя файла из времени
+            sprintf(StrF,"%02d%02d%02d_%02d%02d%02d.t8k",TimeSaveOTDR.RTC_Year%100,
+          TimeSaveOTDR.RTC_Mon,
+          TimeSaveOTDR.RTC_Mday,
+          TimeSaveOTDR.RTC_Hour,
+          TimeSaveOTDR.RTC_Min,
+          TimeSaveOTDR.RTC_Sec );
+
+      //sprintf(Str,"t1.txt=\"T8K%04d\"яяя",UserSet.FileNumber); // 
+      sprintf(Str,"t1.txt=\"%s\"яяя",StrF); // 
+      NEX_Transmit((void*)Str);// 
+      
+      // вторая строка имя Кабеля
+      sprintf(Str,"t3.txt=\"%s\"яяя",UserSet.CableID); // 
+      NEX_Transmit((void*)Str);// 
+      //  третья строка - Имя Волокна
+      sprintf(Str,"t5.txt=\"%s\"яяя", UserSet.FiberName);
+      NEX_Transmit((void*)Str);// 
+      
+      // четвертая сторка - Comments
+      sprintf(Str,"t7.txt=\"%s\"яяя", UserSet.Comments );//
+      NEX_Transmit((void*)Str);// 
+      // пятая строка Comments
+      sprintf(Str,"t8.txt=\"%s\"яяя", (UserSet.Comments));//
+      NEX_Transmit((void*)Str);// 
+      //  строка - индекс измерения или префикс при авто
+      //      sprintf(Str,"t9.txt=\"ТЕСТ\"яяя");// надо убрать
+      //      NEX_Transmit((void*)Str);// 
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t0.bco=WHITEяяя"); // белый
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t2.bco=WHITEяяя"); // белый
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t4.bco=WHITEяяя"); // белый
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t6.bco=WHITEяяя"); // белый
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t8.bco=WHITEяяя"); // белый
+      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t%d.bco=GREENяяя",FrSetSaverFile<<1); // зеленый ?
+      NEX_Transmit((void*)Str);// 
+      
+      //FIO1PIN &=~LEDSTART;//Off  LED
+      g_NeedScr = 0;
+    }
+    // кнопка возврата в меню
+    if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+    {
+      // возврат в режим АНАЛИЗАТОР
+      SetMode(ModeDrawMeasure);
+      // инициализация списка комбинаций установок лазеров
+      if(UserSet.ChnMod)
+        CmdInitPage(2);// посылка команды переключения окна на Анализатор
+      else
+        CmdInitPage(3);// посылка команды переключения окна на Анализатор
+    }
+    if(NeedKeyB ) // необходимость переключения в клавиатуру для редактирования PreFix
+    {
+      // согласно выбранного языка вызывем клавиатуру
+      if (CurrLang) 
+        // посылка команды переключения окна на EnglishPreF Keyboard 
+        CmdInitPage(12); //(22)
+      else
+        // посылка команды переключения окна на RussianPreF Keyboard 
+        CmdInitPage(13); //(23)
+      NeedWinKBReturn = 1; // для возврата в это же окно
+      
+      NeedKeyB=0; 
+    }
+    // кнопка "S"
+    // вызов сохранения файла (его меню)
+    if (rawPressKeyS) // START Measure из режима установок рефлектометра
+    {        
+      myBeep(100);
+      SaveFileSD(1);
+      sprintf(Str,"xstr 80,145,350,60,2,BLACK,RED,0,1,1,\"%s\"яяя",MsgMass[60][CurrLang]); // зеленый ?
+      NEX_Transmit((void*)Str);//
+      // здесь сохраняем файл, затем меняем счетчик
+      if(UserSet.FileNumber<999)UserSet.FileNumber++;
+      else UserSet.FileNumber=1;
+    // сохраним
+      EEPROM_write(&UserSet, ADR_UserMeasConfig, sizeof(UserSet));
+      //
+      HAL_Delay(500);
+      // возврат в режим АНАЛИЗАТОР
+      SetMode(ModeDrawMeasure);
+      // инициализация списка комбинаций установок лазеров
+      if(UserSet.ChnMod)
+        CmdInitPage(2);// посылка команды переключения окна на Анализатор
+      else
+        CmdInitPage(3);// посылка команды переключения окна на Анализатор
+      //CreatDelay (30000); // 3.3 мС
+      rawPressKeyS=0;
+    }
+    //    HAL_Delay(500);
+    
+    
+  }
+
+
 //-------------------------------------------------------------------------------------------------------------------
 // переключимся в режим программирования индикатора (пока на паузу  и сигнал
 void UploadFW_Nextion(void) // обновление индикатора NEXTION

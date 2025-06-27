@@ -33,7 +33,7 @@ uint32_t PageFiles; // страница файлов
   FRESULT FR_Status, res;
 
   char*   fn;
-  const  char PathMainDir[9]={"0:/_T8KM\0"}; // 
+  const  char PathMainDir[9]={"0:/_T8KN\0"}; // 
   char PathF[64];
   //char   path=;
   uint32_t TotalSize, FreeSpace;
@@ -1275,6 +1275,11 @@ unsigned short SaveTrace(void) // сохранение рефлектограммы
 
 void SaveFileSD(int Mod)
 {
+  UINT len;                  //для хранения количества реально записанных байт
+  DWORD cnt_seek = 0;
+  DWORD add_seek = 0;
+    char Str[40];
+
 //  //        //        unsigned long NowEND;
 //  //        //        unsigned long NowBEG;
 //  unsigned short NumEventNow = GetNumEvents();
@@ -1336,206 +1341,134 @@ void SaveFileSD(int Mod)
 //  // попробуем записать файл
 //  // откроем SD Card, сохраняем всегда в файл 0.sor 
 //  // для простоты пока
-//  do
-//  {
-//    //------------------[ Mount The SD Card ]--------------------
-//    FR_Status = f_mount(&FatFs, SDPath, 1);
-//    if (FR_Status != FR_OK)
-//    {
-//      break;
-//    }
-//    // создаем или проверяем наличие дирректории _OTDR
-//    res = f_mkdir(PathMainDir);//"0:/_OTDR"
-//    if(res == FR_EXIST)
-//    {
-//      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
-//      res = FR_OK;
-//    }
-//    // откроем файл для записи
-//    if(Mod) // сохраняем в дирректроию недели и с именем файла по времени
-//    {
-//      // подготовим путь
-//      // папка для сохранения делаем папку  
-//      GetFolder(FileSDir);
-//
-//    sprintf(PathF,"%s/%s",PathMainDir,FileSDir);
-//    res = f_mkdir(PathF);
-//    //res = f_unlink(PathF);
-//    if(res == FR_EXIST)
-//    {
-//      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
-//      res = FR_OK;
-//    }
-//        HAL_Delay(2);
-//    // почитаем директории...только что созданные 
-//    res = f_opendir(&dir, PathF);
-//        HAL_Delay(2);
-//    f_closedir(&dir);
-//    // папка создана
-//      // имя файла
-//      sprintf(FileNameS,"%02d%02d%02d_%02d%02d%01d.sor",TimeSaveOTDR.RTC_Year%100,
-//          TimeSaveOTDR.RTC_Mon,
-//          TimeSaveOTDR.RTC_Mday,
-//          TimeSaveOTDR.RTC_Hour,
-//          TimeSaveOTDR.RTC_Min,
-//          TimeSaveOTDR.RTC_Sec/10 );
-//       // имя файла есть
-//      //создадим полны путь к файлу чтобы его открыть
-//    sprintf(PathFileS,"%s/%s",PathF,FileNameS);
-//      
-//    }
-//    
-//    //Open the file
-//    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
-//    else
-//    sprintf(PathFileS,"0.sor");
-//    FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
-//    //    if(FR_Status != FR_OK)
-//    //    {
-//    //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
-//    //      UARTSendExt ((BYTE*)TxBuffer, strlen (TxBuffer));
-//    //      break;
-//    //    }
-//    
-//    //unsigned short NumEventNow = 0; // пока без событий
-//    // начинаем передачу трассы (Заголовок)
-//    //uint32_t HowSizeFile = 8419 + ((NumEventNow)?(NumEventNow*32+40):(0));
-//    
-//    //sprintf (StartStr, "#4%4d",8419 + ((NumEventNow)?(NumEventNow*32+40):(0)));
-//    //UARTSendExt ((BYTE*)StartStr, 6);
-//    // Мар страница белкора с учетом Таблицы событий (блок 0)
-//    // если есть таблица событий....
-//    GetHeaderBelcore (BufString, 0, NumEventNow); // заполняем шапку белкора первые 56 байт Block=0
-//    //UARTSendExt ((BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)));
-//    FR_Status = f_write(&Fil, (BYTE*)BufString, 56+16*((NumEventNow)?(1):(0)),&WWC);
-//    
-//    // подготовка для расчета контрольной суммы
-//    unsigned short old_crc = 0xffff; 
-//    unsigned short new_crc = 0xffff;
-//    c = (unsigned char*)&BufString;
-//    for (int i=0;i<56+16*((NumEventNow)?(1):(0));i++)
-//    {
-//      /* первый вариант подсчета контрольной суммы - табличный                                             */		
-//      value = *c;
-//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//      old_crc = new_crc;
-//      c++;
-//    }
-//    // записали 56 или +16 байт в файл = 56 (72)
-//    // заполняем шапку белкора  62 байт Block=1 (продолжение Мар блока + GenParams)
-//    GetHeaderBelcore (BufString, 1, NumEventNow); 
-//    //UARTSendExt ((BYTE*)BufString, 62);
-//    FR_Status = f_write(&Fil, (BYTE*)BufString, 62,&WWC);
-//    c = (unsigned char*)&BufString;
-//    for (int i=0;i<62;i++)
-//    {
-//      /* Считаем контрольную сумму переданного блока                                             */		
-//      value = *c;
-//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//      old_crc = new_crc;
-//      c++;
-//    }
-//    // записали 56+62 или +16 байт в файл = 118 (134)
-//    // заполняем шапку белкора  94 байт Block=2 - (SupParams FxdParam)
-//    GetHeaderBelcore (BufString, 2, NumEventNow); 
-//    //UARTSendExt ((BYTE*)BufString, 95);
-//    FR_Status = f_write(&Fil, (BYTE*)BufString, 95,&WWC);
-//    c = (unsigned char*)&BufString;
-//    for (int i=0;i<95;i++)
-//    {
-//      /* Считаем контрольную сумму переданного блока                                             */		
-//      value = *c;
-//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//      old_crc = new_crc;
-//      c++;
-//    }
-//    // записали 118+95 или +16 байт в файл = 213 (229)
-//
-//    // Проверяем и передаем блок событий если он есть (блок событий)
-//    if (NumEventNow) // если есть события 2 байта +
-//      // события в фиксированном размере для каждого 32 байта  +  22 байт общее для всего блока, итого 24+N*32
-//    {
-//      // передаем  число событий  2 байта
-//      //UARTSendExt ((BYTE*)&NumEventNow, 2);
-//      FR_Status = f_write(&Fil, (BYTE*)&NumEventNow, 2,&WWC);
-//      c = (unsigned char*)&NumEventNow;
-//      for (int i=0;i<2;i++)
-//      {
-//        /* Считаем контрольную сумму переданного блока                                             */		
-//        value = *c;
-//        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//        old_crc = new_crc;
-//        c++;
-//      }
-//      // передаем информационные блоки событий  N*32
-//      for (int s=0; s<NumEventNow; s++)
-//      {
-//        //UARTSendExt ((BYTE*)&EvenTrace[s], 32);
-//        FR_Status = f_write(&Fil, (BYTE*)&EvenTrace[s], 32,&WWC);
-//        c = (unsigned char*)&EvenTrace[s];
-//        for (int i=0;i<32;i++)
-//        {
-//          /* Считаем контрольную сумму переданного блока                                             */		
-//          value = *c;
-//          new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//          old_crc = new_crc;
-//          c++;
-//        }
-//        
-//      }
-//      // передаем конечный блок событий 22 байта
-//      //UARTSendExt ((BYTE*)&EndEvenBlk, 22);
-//      FR_Status = f_write(&Fil, (BYTE*)&EndEvenBlk, 22,&WWC);
-//      c = (unsigned char*)&EndEvenBlk;
-//      for (int i=0;i<22;i++)
-//      {
-//        /* Считаем контрольную сумму переданного блока                                             */		
-//        value = *c;
-//        new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//        old_crc = new_crc;
-//        c++;
-//      }
-//    }
-//    
-//    // заполняем шапку белкора 12 байт Block=3 (DataPts)
-//    GetHeaderBelcore (BufString, 3, NumEventNow); 
-//    //UARTSendExt ((BYTE*)BufString, 12);
-//    FR_Status = f_write(&Fil, (BYTE*)BufString, 12,&WWC);
-//    c = (unsigned char*)&BufString;
-//    for (int i=0;i<12;i++)
-//    {
-//      /* Считаем контрольную сумму переданного блока                                             */		
-//      value = *c;
-//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//      old_crc = new_crc;
-//      c++;
-//    }
-//    
-//    // блок данных 
-//    //UARTSendExt ((BYTE*)LogData, OUTSIZE*2);
-//    FR_Status = f_write(&Fil, (BYTE*)LogData, OUTSIZE*2,&WWC);
-//    c = (unsigned char*)&LogData;
-//    for (int i=0;i<OUTSIZE*2;i++)
-//    {
-//      /* первый вариант подсчета контрольной суммы - табличный                                             */		
-//      value = *c;
-//      new_crc = (old_crc << 8) ^ table[((old_crc >> 8) ^ ((unsigned short int)value)) & 0xff];
-//      old_crc = new_crc;
-//      c++;
-//    }
-//    
-//    //UARTSendExt ((BYTE*)&new_crc, 2);
-//    FR_Status = f_write(&Fil, (BYTE*)&new_crc, 2,&WWC);
-//        HAL_Delay(2);
-//
-//    f_close(&Fil);
-//    
-//  } while(0);
-//      HAL_Delay(2);
-//
-//  //------------------[ Test Complete! Unmount The SD Card ]--------------------
-//  FR_Status = f_mount(NULL, "", 0);
-//  
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      break;
+    }
+    // создаем или проверяем наличие дирректории _OTDR
+    FR_Status = f_mkdir(PathMainDir);//"0:/_T8KN"
+    if(FR_Status == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      FR_Status = FR_OK;
+    }
+    // откроем файл для записи
+    if(Mod) // сохраняем в дирректроию недели и с именем файла по времени
+    {
+      // подготовим путь
+      // папка для сохранения делаем папку  
+      GetFolder(FileSDir);
+      
+      sprintf(PathF,"%s/%s",PathMainDir,FileSDir);
+      FR_Status = f_mkdir(PathF);
+      //res = f_unlink(PathF);
+      if(FR_Status == FR_EXIST)
+      {
+        //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+        FR_Status = FR_OK;
+      }
+      HAL_Delay(2);
+      // почитаем директории...только что созданные 
+      FR_Status = f_opendir(&dir, PathF);
+      HAL_Delay(2);
+      FR_Status = f_closedir(&dir);
+      // папка создана
+      // имя файла
+      sprintf(FileNameS,"%02d%02d%02d_%02d%02d%02d.t8k",TimeSaveOTDR.RTC_Year%100,
+              TimeSaveOTDR.RTC_Mon,
+              TimeSaveOTDR.RTC_Mday,
+              TimeSaveOTDR.RTC_Hour,
+              TimeSaveOTDR.RTC_Min,
+              TimeSaveOTDR.RTC_Sec);
+      // имя файла
+      
+      // имя файла есть
+      //создадим полны путь к файлу чтобы его открыть
+      sprintf(PathFileS,"%s/%s",PathF,FileNameS);
+      //sprintf(PathFileS,"%s",FileNameS);
+      //sprintf(PathFileS,"qukum.t8k");
+      
+    }
+    
+    //Open the file
+    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
+    else
+      sprintf(PathFileS,"0.sor");
+    // создаем файл для сохранения
+    //FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
+    FR_Status = f_open(&Fil, PathFileS, FA_WRITE  | FA_CREATE_ALWAYS);
+    //записываем строку в файл
+    // пишем дату
+    add_seek = sprintf(Str,"%s :; %02d.%02d.20%02d;\n", MsgMass[2][CurrLang],TimeSaveOTDR.RTC_Mday, TimeSaveOTDR.RTC_Mon, TimeSaveOTDR.RTC_Year%100);
+    FR_Status = f_write(&Fil, Str, strlen(Str), &len);
+    //if(res) return res;    //если произошла ошибка
+    cnt_seek += add_seek;
+    f_lseek (&Fil, cnt_seek);
+    // пишем время
+    add_seek = sprintf(Str,"%s :; %02d:%02d:%02d;\n", MsgMass[15][CurrLang],TimeSaveOTDR.RTC_Hour, TimeSaveOTDR.RTC_Min, TimeSaveOTDR.RTC_Sec);
+    FR_Status = f_write(&Fil, Str, strlen(Str), &len);
+    //if(res) return res;    //если произошла ошибка
+    cnt_seek += add_seek;
+    f_lseek (&Fil, cnt_seek);
+    // пишем идентификатор NUM_VER/26, (0x61+(NUM_VER%26))
+    add_seek =  sprintf(Str,"%s;v4.%02d%c;SN%04d;\n",(ConfigDevice.ID_Device)?("MOT-700"):("TOPAZ-8021N"),NUM_VER/26, (0x61+(NUM_VER%26)),ConfigDevice.NumDevice);
+    res = f_write(&Fil, Str, strlen(Str), &len);
+    cnt_seek += add_seek;
+    f_lseek (&Fil, cnt_seek);
+    // Кабель
+    //имя кабеля //само имя кабеля
+    add_seek =  sprintf(Str,"%s;%s;\n",MsgMass[31][CurrLang],UserSet.CableID);
+    res = f_write(&Fil, Str, strlen(Str), &len);
+    cnt_seek += add_seek;
+    f_lseek (&Fil, cnt_seek);
+    
+    //волокно (составное имя)
+    add_seek =  sprintf(Str,"%s;%s%d;\n",MsgMass[30][CurrLang],UserSet.FiberName,UserSet.FiberID);
+    res = f_write(&Fil, Str, strlen(Str), &len);
+    cnt_seek += add_seek;
+    f_lseek (&Fil, cnt_seek);
+    // резрешен авто счет волокна
+    if (UserSet.EnaCntFiber)
+    {
+      if (UserSet.FiberID<999) UserSet.FiberID++;// установка курсора в рамках заданных параметров
+      else UserSet.FiberID=1;
+    }
+    // комментарий
+    add_seek =  sprintf(Str,"%s;%s;\n",MsgMass[37][CurrLang],UserSet.Comments);
+    res = f_write(&Fil, Str, strlen(Str), &len);
+    cnt_seek += add_seek;
+    f_lseek (&Fil, cnt_seek);
+    
+    // пишем строку заголовка таблицы
+    add_seek =  sprintf(Str,"%s, %s;%s, %s;\n",MsgMass[17][CurrLang],MsgMass[38][CurrLang],MsgMass[39][CurrLang],MsgMass[18][CurrLang]);
+    res = f_write(&Fil, Str, strlen(Str), &len);
+    cnt_seek += add_seek;
+    f_lseek (&Fil, cnt_seek);
+    // пишем таблицу результатов
+    for(int i=0;i<18;i++)
+    {
+      add_seek =  sprintf(Str,"%4d;%2.1f;\n",i*20+1270, CWDMData[i]);
+      res = f_write(&Fil, Str, strlen(Str), &len);
+      cnt_seek += add_seek;
+      f_lseek (&Fil, cnt_seek);
+    }
+    // EOF (конец файла)
+    sprintf (Str, "\r");
+    res = f_write(&Fil, Str, strlen(Str), &len);
+    
+    // закроем файл
+    f_close(&Fil);
+    
+  } while(0);
+      HAL_Delay(2);
+
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+  
 }
 
 void CopyFileSave (void) // копирование файла "0" в файл который сохраняем

@@ -47,6 +47,7 @@ extern "C" {
       extern uint16_t Dummy; // пустое чтение буфферов UART
 extern uint32_t BadLevelBat; //режим плохого уровня батарейки
 extern float CWDMData[18]; // данные 
+extern float CWDMDataMem[18]; // данные из памяти
 extern BYTE g_IndexMeas ; // счетчик индекс циклов
 extern BYTE g_IndexLW; // индекс указатель на длину волны индикации
 
@@ -80,12 +81,8 @@ void myBeep (unsigned sound);
 #define NEX_TX_GPIO_Port GPIOF
 #define KTS_Pin GPIO_PIN_2
 #define KTS_GPIO_Port GPIOA
-#define FREE1_Pin GPIO_PIN_7
-#define FREE1_GPIO_Port GPIOA
 #define PM_SCLK_Pin GPIO_PIN_4
 #define PM_SCLK_GPIO_Port GPIOC
-#define FREE2_Pin GPIO_PIN_5
-#define FREE2_GPIO_Port GPIOC
 #define LD1_Pin GPIO_PIN_0
 #define LD1_GPIO_Port GPIOB
 #define V_BAT_Pin GPIO_PIN_11

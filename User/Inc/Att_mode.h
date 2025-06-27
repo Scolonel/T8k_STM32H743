@@ -22,6 +22,9 @@ void ModeSetting(void);// режим установок прибора CHECK_IN
 void ModeDateTimeSET(void); // режим установок времени CHECK_IN
 void ModeSetupFILE(void); // режим установок FILES
 void ModeKBCableID(void); // режим отображения клавиатуры редактора CableID
+void ModeKBFiberName(void); // режим отображения клавиатуры редактора FiberName
+void ModeKBComments(void); // режим отображения клавиатуры редактора Comments
+void ModeSaverFILE(void); // режим сохранения FILES
 
 // окно индикации анализатора, тут будем измерять
 void ModeDrawMeasure(void); // режим отображения рефлектограммы
