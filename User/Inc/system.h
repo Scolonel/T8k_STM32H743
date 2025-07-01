@@ -130,6 +130,19 @@ void NEX_Transmit(uint8_t *Str);
 // управление таймером в измерителе ј¬“ќћј“≈
 WORD TimerPA (BYTE Set);
 
+//for Memory Dir & Files
+extern char NameDir[100][6];
+extern char NameFiles[1000][18];
+extern uint32_t NumNameDir; // число имен директорий
+extern uint32_t IndexNameDir;// индекс дирректории на которую указываем
+extern uint32_t IndexLCDNameDir;// индекс указател€ на индикаторе дирректории на которую указываем
+extern uint32_t NumNameFiles; // число имен файлов
+extern uint32_t IndexNameFiles;// индекс файла на который указываем
+extern uint32_t IndexLCDNameFiles;// индекс указател€ на индикаторе файла на который указываем
+extern uint32_t PageDir; 
+extern uint32_t PageFiles; 
+
+
 // check Speed Uart2
 int CheckSpeedUart2 (void);
 // for T5K 
@@ -207,9 +220,9 @@ extern volatile int NeedReturn; // необходимость вернутьс€ в окно сохранени€
 
 //extern BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDR
 //extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDRExt
-extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
-extern uint16_t PresentUSB ; // признак подключенного USB
-extern uint8_t ModeUSB ; // признак подключенного USB
+extern uint32_t BusyUSB ; // признак передачи данных по USB, с SD картой
+extern uint32_t PresentUSB ; // признак подключенного USB
+extern uint32_t ModeUSB ; // признак подключенного USB
 
 //extern   FIL Fil;
 //extern   FRESULT FR_Status;

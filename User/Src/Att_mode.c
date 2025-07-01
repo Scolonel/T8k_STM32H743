@@ -13,6 +13,63 @@
 
 #include "main.h"
 
+#include "fatfs.h"
+
+const char *MsgWeek[53]={
+"1янв-7янв",
+"8янв-14янв",
+"15янв-21янв",
+"22янв-28янв",
+"29янв-4фев",
+"5фев-11фев",
+"12фев-18фев",
+"19фев-25фев",
+"26фев-3мар",
+"4мар-10мар",
+"11мар-17мар",
+"18мар-24мар",
+"25мар-31мар",
+"1апр-7апр",
+"8апр-14апр",
+"15апр-21апр",
+"22апр-28апр",
+"29апр-5май",
+"6май-12май",
+"13май-19май",
+"20май-26май",
+"27май-2июн",
+"3июн-9июн",
+"10июн-16июн",
+"17июн-23июн",
+"24июн-30июн",
+"1июл-7июл",
+"8июл-14июл",
+"15июл-21июл",
+"22июл-28июл",
+"29июл-4авг",
+"5авг-11авг",
+"12авг-18авг",
+"19авг-25авг",
+"26авг-1сен",
+"2сен-8сен",
+"9сен-15сен",
+"16сен-22сен",
+"23сен-29сен",
+"30сен-6окт",
+"7окт-13окт",
+"14окт-20окт",
+"21окт-27окт",
+"28окт-3ноя",
+"4ноя-10ноя",
+"11ноя-17ноя",
+"18ноя-24ноя",
+"25ноя-1дек",
+"2дек-8дек",
+"9дек-15дек",
+"16дек-22дек",
+"23дек-29дек",
+"30дек-31дек"
+};
 const uint16_t ColorsPCO[18]={56731,40412,40545,52448,65049,63387,65535,50712,0,64872,33808,60445,31,1024,65504,64800,63488,37440};
 
 
@@ -349,12 +406,16 @@ void ModeMain(void)// режим основной
       //     PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
       break;
     case 2: // ПАМЯТЬ
-      //123      PWM_LMOD_Init (OFF); // выключаем LMOD от PWM 0 - OFF, 1- 270Hz 2-2kHz  
-      //SetMode(ModeSelectMEM);
-      //ModeDevice = MODEOTHER;
-      //123      SSPInit_Any(MEM_FL1); // Инициализация SSP для управления FLASH (порт 1 та что на плате отладочной)
-      CmdInitPage(4);// посылка команды переключения окна на MemoryMenu
       
+//    if(ModeUSB) // запрещаем работу с памятью, так как занята 
+//    {
+//    myBeep(500);
+//    }
+//    else
+//    {
+      SetMode(ModeFileMngDir);
+      CmdInitPage(10);// посылка команды переключения окна на MemoryMenu
+//    } 
       break;
     case 3: // УСТАНОВКИ
       SetMode(ModeSetting);
@@ -509,17 +570,23 @@ void ModeDrawMeasure(void) // режим отображения рефлектограммы
     g_EnaQuickReDraw =0;
   }
   // вызов сохранения файла (его меню)
-  if (rawPressKeyS) // START Measure из режима установок рефлектометра
-  {        
+  if (rawPressKeyS) // 
+  { 
+//    if(ModeUSB) // запрещаем запись так как 
+//    {
+//    myBeep(500);
+//    }
+//    else
+//    {
     myBeep(10);
     //  SaveFileSD(0);
     SetMode(ModeSaverFILE);
-    rawPressKeyS=0;
     //CreatDelay (30000); // 3.3 мС
     HAL_Delay(3);
     CmdInitPage(7);// посылка команды переключения окна на Меню Сохранения
     g_EnaQuickReDraw =0;
-
+//    }
+    rawPressKeyS=0;
   }
   //    HAL_Delay(500);
   
@@ -1251,11 +1318,11 @@ void ModeKBCableID(void) // режим отображения клавиатуры редактора CableID
     myBeep(7);
     //  sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
     //NEX_Transmit((void*)Str);    //
-      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
+    StartRecievNEX (10);// время ожидания начала ответов от индикатора
+    sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
     NEX_Transmit((void*)Str);    //
     // здесь реально отвечает через не более 2 мС
-    // StartRecievNEX (10);// время ожидания начала ответов от индикатора
-
+    
   }
 
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
@@ -1327,11 +1394,11 @@ void ModeKBFiberName(void) // режим отображения клавиатуры редактора FiberName
     myBeep(7);
     //  sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
     //NEX_Transmit((void*)Str);    //
-      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
+    StartRecievNEX (10);// время ожидания начала ответов от индикатора
+    sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
     NEX_Transmit((void*)Str);    //
     // здесь реально отвечает через не более 2 мС
-    // StartRecievNEX (10);// время ожидания начала ответов от индикатора
-
+    
   }
   
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
@@ -1404,10 +1471,10 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
     myBeep(7);
     //  sprintf(Str, "click brok,1яяя"); // тест кнопка ок на клавиатуре
     //NEX_Transmit((void*)Str);    //
-      sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
+    StartRecievNEX (10);// время ожидания начала ответов от индикатора
+    sprintf(Str, "click bok,1яяя"); // тест кнопка ок на клавиатуре ENGLISH
     NEX_Transmit((void*)Str);    //
     // здесь реально отвечает через не более 2 мС
-    // StartRecievNEX (10);// время ожидания начала ответов от индикатора
   }
   
   if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
@@ -1623,6 +1690,12 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
     // вызов сохранения файла (его меню)
     if (rawPressKeyS) // START Measure из режима установок рефлектометра
     {        
+//    if(ModeUSB) // запрещаем работу с памятью, так как занята 
+//    {
+//    myBeep(500);
+//    }
+//    else
+//    {
       myBeep(100);
       SaveFileSD(1);
       sprintf(Str,"xstr 80,145,350,60,2,BLACK,RED,0,1,1,\"%s\"яяя",MsgMass[60][CurrLang]); // зеленый ?
@@ -1642,6 +1715,7 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
       else
         CmdInitPage(3);// посылка команды переключения окна на Анализатор
       //CreatDelay (30000); // 3.3 мС
+//    }
       rawPressKeyS=0;
     }
     //    HAL_Delay(500);
@@ -1649,6 +1723,283 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
     
   }
 
+//----------------------------------------------------------------------------------
+// вызываем чтение SD Card для поиска директорий, составляем список
+// "правильных" директорий, устанавливаем курсоры если они не изменились,
+// если не совпадают с полученными размерами сбрасываем в начало
+// вызываем ОКНО 10
+void ModeFileMngDir(void) // режим файл менеджера директорий
+{
+  char Str[32];
+  int Nweek;
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  {
+    myBeep(10);
+    if(IndexNameDir>0)IndexNameDir--;
+    g_NeedScr=1;
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    if((IndexNameDir+1)<NumNameDir)IndexNameDir++;
+    g_NeedScr=1;
+  }
+  if (g_FirstScr)
+  {
+    SDMMC_SDCard_DIR(); // прочитаем дирректроии
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации
+    sprintf(Str, "t0.txt=\"0:/_T8KN\"яяя"); // < событиe >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t14.txt=\"%d\"яяя", NumNameDir); // < сколько папок нашли >
+    NEX_Transmit((void*)Str);    //
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    sprintf(Str, "t13.txt=\"%d\"яяя", IndexNameDir+1); // < какая папка выбрана >
+    NEX_Transmit((void*)Str);    //
+    if (IndexNameDir > NumNameDir) IndexNameDir = 0; 
+    // тут нужен сложный подсчет указателя на папки в индикации
+    // из выполнения условий текущий индекс папки должен быть меньше
+    // числа паПок,и индикационный тндекс должен устанавливаться в соответствии с 
+    // текущим индексом выбранной папки
+    IndexLCDNameDir = IndexNameDir%12; // как как у нас 12 полей
+    PageDir = IndexNameDir/12; // получим страницу перечня директорий котрую нужно отображать
+    // заполним поля индикатора именами директорий
+    for (int i=0; i<12; i++)
+    {
+      Nweek=0;
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameDir[PageDir*12+i]); // < событиe >
+      NEX_Transmit((void*)Str);    //
+      // можно получить строчку дат объявленной папки
+      Nweek = atoi(&NameDir[PageDir*12+i][3]);
+      if(Nweek)
+      {
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+15 ,MsgWeek[Nweek-1]); // < событиe >
+      NEX_Transmit((void*)Str);    //
+      }
+    }
+    for (int i=0; i<12; i++)
+    {
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t%d.bco=WHITEяяя",i+1); // белый
+      NEX_Transmit((void*)Str);// 
+    }
+    sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameDir+1); // GREEN
+    NEX_Transmit((void*)Str);    //
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+  }
+  // обработка кнопки "OK"
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+//    if(ModeUSB) // запрещаем работу с памятью, так как занята 
+//    {
+//    myBeep(500);
+//    }
+//    else
+//    {
+    
+    myBeep(10);
+      SetMode(ModeFileMngFiles);
+      //ModeDevice = MODEMEMR;
+      //ModeMemDraw = VIEWNEXT;
+      //ReturnMemView = 1; // надо вернуться сюда же по ESC
+         // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      CmdInitPage(11); // новое окно лист бокс перечня файлов в текущей дирректории
+       //CreatDelay(1000000);
+//    }
+      ClrKey(BTN_OK);
+      HAL_Delay(100);
+  }
+
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    // здесь над витвится в зависимости от признака откуда пришли
+    //if(ReturnMemView)
+    //{
+      //DeleteTrace = 0;
+      SetMode(ModeMain);
+      //ModeDevice = MODEOTHER;
+      myBeep(10);
+      // посылка команды переключения окна на MainMenu (возврат)  
+      CmdInitPage(1);
+    //}
+  }
+}
+//--------------------------------------------------------------------------------
+// вызываем чтение SD Card для поиска файлов , составляем список
+// "правильных" файлов, устанавливаем курсоры если они не изменились,
+// если не совпадают с полученными размерами сбрасываем в начало
+// вызываем ОКНО 11
+void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
+{
+  // таблица экрана поля ввода, верхняя строка t0, левая колонка t1-t12
+  //        t0
+  // t13  t14   t15
+  //            t16
+  // t20        t17  
+  // t21        t18
+  //        t19
+  char Str[32];
+  char FilPath[64];
+  uint32_t BlkSz; // размер блока заголовка
+  uint32_t EvntSz=0; // размер блока событий, пока не читаем события просто для смещения
+  uint32_t PosDataLog=0xe1; // позиция начала блока данных для копирования в 
+  // на начало данных
+  UINT RWC;
+  FATFS FatFs;
+  FIL Fil;
+  FRESULT FR_Status;
+  
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    myBeep(10);
+  }
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  { 
+//    if(ModeUSB) // запрещаем работу с памятью, так как занята 
+//    {
+//      myBeep(500);
+//    }
+//    else
+//    {
+      myBeep(10);
+      if(IndexNameFiles>0)IndexNameFiles--;
+      g_NeedScr=1;
+//    }
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+//    if(ModeUSB) // запрещаем работу с памятью, так как занята 
+//    {
+//      myBeep(500);
+//    }
+//    else
+//    {
+      myBeep(10);
+      if((IndexNameFiles+1)<NumNameFiles)IndexNameFiles++;
+      g_NeedScr=1;
+//    }
+  }
+  if (g_FirstScr)
+  {
+    SDMMC_SDCard_FILES(); // прочитаем файлы, 
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации
+    sprintf(Str, "t0.txt=\"0:/_T8KN/%s\"яяя",NameDir[IndexNameDir]); // < событиe >
+    NEX_Transmit((void*)Str);    //
+    HAL_Delay(1);
+    sprintf(Str, "t14.txt=\"%d\"яяя", NumNameFiles); // < сколько файлов нашли >
+    NEX_Transmit((void*)Str);    //
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    sprintf(Str, "t13.txt=\"%d\"яяя", IndexNameFiles+1); // < какой файл выбран >
+    NEX_Transmit((void*)Str);    //
+    if (IndexNameFiles > NumNameFiles) IndexNameFiles = 0; 
+    // тут нужен сложный подсчет указателя на папки в индикации
+    // из выполнения условий текущий индекс папки должен быть меньше
+    // числа паПок,и индикационный тндекс должен устанавливаться в соответствии с 
+    // текущим индексом выбранной папки
+    IndexLCDNameFiles = IndexNameFiles%12; // как как у нас 12 полей
+    PageFiles = IndexNameFiles/12; // получим страницу перечня файлов который нужно отображать
+    // заполним поля индикатора именами файлов
+    for (int i=0; i<12; i++)
+    {
+      
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameFiles[PageFiles*12+i]); // < имена файлов >
+      NEX_Transmit((void*)Str);    //
+      
+    }
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    
+    // здесь можно прочитать файл на котрый указываем и разобрать его
+    sprintf(FilPath, "0:/_T8KN/%s/%s",NameDir[IndexNameDir],NameFiles[IndexNameFiles]); // путь к файлу
+    // откроем файл и прочитаем размер блока
+    FR_Status = f_open(&Fil, FilPath, FA_READ);
+    if(FR_Status == FR_OK)
+    {
+      // ТУТ надо разобрать окрытый файл    
+      //     f_lseek (&Fil, 2); // переместимся на 2 байта
+      //     f_read (&Fil, (void*)&BlkSz, 4, &RWC);
+      //     if(BlkSz==98) // есть события
+      //     {
+      //     f_lseek (&Fil, 0x44); // переместимся на 0x44 байта чтобы прочитать размер блока событий 
+      //     f_read (&Fil, (void*)&EvntSz, 4, &RWC);
+      //     PosDataLog = 0xe1 + 16 + EvntSz;
+      //     }
+      //     f_lseek (&Fil, BlkSz); // переместимся на  байта
+      //     f_read (&Fil, (void*)&F_SOR, 142, &RWC);
+      //      // читаем блок данных из файла
+      //     f_lseek (&Fil, PosDataLog); // переместимся на начало блока данных байта
+      //     f_read (&Fil, (void*)&LogData, F_SOR.NPPW*2, &RWC);
+      
+    }
+    f_close(&Fil);
+    FR_Status = f_mount(NULL, "", 0);
+    
+    for (int i=0; i<12; i++)
+    {
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t%d.bco=WHITEяяя",i+1); // белый
+      NEX_Transmit((void*)Str);// 
+    }
+    sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameFiles+1); // GREEN
+    NEX_Transmit((void*)Str);    //
+    // код подсветки требуемой строки если есть есть маркер строки
+    
+    // тут надозаполнить пля из файла
+    //        sprintf(Str, "t15.txt=\"%d %d\"яяя", BlkSz, EvntSz); // < ракзмер заголовка, есть ли там события >
+    //    NEX_Transmit((void*)Str);    //
+    //        sprintf(Str, "t16.txt=\"%dnm\"яяя", F_SOR.AW/10); // < длина волны >
+    //    NEX_Transmit((void*)Str);    //
+    //        sprintf(Str, "t17.txt=\"%d\"яяя", F_SOR.NPPW); // < число точек >
+    //    NEX_Transmit((void*)Str);    //
+    //        //sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.AR); // < какой файл выбран >
+    //        sprintf(Str, "t18.txt=\"%d\"яяя", F_SOR.NAV); // < число накоплений >
+    //    NEX_Transmit((void*)Str);    //
+    //        sprintf(Str, "t19.txt=\"%s\"яяя", F_SOR.CMT); // < комметарий >
+    //    NEX_Transmit((void*)Str);    //
+    // надо нарисовать заполненную таблицу измерений в виде графика...
+    
+    g_NeedScr = 0;
+  }
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+//    if(ModeUSB) // запрещаем работу с памятью, так как занята 
+//    {
+//      myBeep(500);
+//    }
+//    else
+//    {
+      
+      // здесь над витвится в зависимости от признака откуда пришли
+      //if(ReturnMemView)
+      //{
+      SetMode(ModeFileMngDir);
+      //ModeDevice = MODEMEMR;
+      //ModeMemDraw = VIEWNEXT;
+      //ReturnMemView = 1; // надо вернуться сюда же по ESC
+      // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      CmdInitPage(10); // новое окно лист бокс перечня директорий
+//    }
+    //CreatDelay(1000000);
+    ClrKey(BTN_MENU);
+    HAL_Delay(100);
+    //}
+  }
+}
 
 //-------------------------------------------------------------------------------------------------------------------
 // переключимся в режим программирования индикатора (пока на паузу  и сигнал

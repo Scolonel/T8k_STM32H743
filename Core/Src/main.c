@@ -79,10 +79,10 @@ uint8_t g_EnaQuickReDraw=0;; // признак быстрой перерисовки экрана когда анализа
  char ModeWork = 0;
 //variable USB
 //uint32_t RecievUSB=0 ; // признак прин€ти€ данных по USB, число данных в буфере
-uint8_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
+uint32_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
 // при приеме передаче взводим на 10 м— , и перезаводим при следующей передаче/приеме
-uint16_t PresentUSB = 0; // признак подключенного USB
-uint8_t ModeUSB = 0; // признак работы USB дл€ индикации
+uint32_t PresentUSB = 0; // признак подключенного USB
+uint32_t ModeUSB = 0; // признак работы USB дл€ индикации
  
 unsigned int CheckErrMEM; 
 BYTE CurrLang; // текущий €зык
@@ -542,7 +542,39 @@ int main(void)
     }
     // основное отображение режима
     if(!ProgFW_LCD)
+    {
       ModeFuncTmp();
+      if(ModeUSB) // устанавливаем когда пишем или читаем по USB SDCard
+      {
+        switch (ModeUSB)
+        {
+        case 3:
+        
+        sprintf((void*)Str,"fill 0,0,480,4,RED€€€");
+        NEX_Transmit((void*)Str);//
+        sprintf((void*)Str,"fill 0,0,4,320,RED€€€");
+        NEX_Transmit((void*)Str);//
+        sprintf((void*)Str,"fill 476,4,4,320,RED€€€");
+        NEX_Transmit((void*)Str);//
+        sprintf((void*)Str,"fill 0,316,4480,4,RED€€€");
+        NEX_Transmit((void*)Str);//
+        break;
+        default:
+        
+        sprintf((void*)Str,"fill 0,0,480,4,WHITE€€€");
+        NEX_Transmit((void*)Str);//
+        sprintf((void*)Str,"fill 0,0,4,320,WHITE€€€");
+        NEX_Transmit((void*)Str);//
+        sprintf((void*)Str,"fill 476,4,4,320,WHITE€€€");
+        NEX_Transmit((void*)Str);//
+        sprintf((void*)Str,"fill 0,316,4480,4,WHITE€€€");
+        NEX_Transmit((void*)Str);//
+        ModeUSB = 0;
+        break;
+        }
+      }
+    }
+    
     /* USER CODE END WHILE */
     
     /* USER CODE BEGIN 3 */

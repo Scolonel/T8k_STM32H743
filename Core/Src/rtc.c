@@ -329,7 +329,7 @@ unsigned int TotalSec( RTCTime CurrentTime) // подсчет общего времени в сек
   
 }
 
-void GetFolder (char *Str) // получение названия папки по текущему времени каждые 7 дней меняется папка
+uint32_t GetFolder (char *Str) // получение названия папки по текущему времени каждые 7 дней меняется папка
 {
     unsigned int MDays[]={0,31,59,90,120,151,181,212,243,273,304,334};
   RTC_DateTypeDef          Date;  
@@ -337,8 +337,9 @@ void GetFolder (char *Str) // получение названия папки по текущему времени кажды
   k_GetDate(&Date);  
   AllDay = MDays[Date.Month-1] + Date.Date;
   if((!((Date.Year) % 4))&&(Date.Month>2)) AllDay++;
-  AllDay = AllDay/7+1;
+  AllDay = (AllDay-1)/7+1;
   sprintf(Str, "%2d_%02d",Date.Year%100, AllDay);
+  return AllDay;
 }
 
 void Sec2Date( unsigned long TimeSec, RTCTime* CurrentTime) // перевод секунд в дату

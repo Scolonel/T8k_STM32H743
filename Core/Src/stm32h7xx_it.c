@@ -199,7 +199,11 @@ void SysTick_Handler(void)
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
   // control USB 
-  if(BusyUSB>1) BusyUSB--;
+  if(BusyUSB>1)
+  {
+    BusyUSB--;
+    ModeUSB = 3; // надо выключить значек занятости USB
+  }
   else if(BusyUSB==1)
   {
     BusyUSB = 0;
@@ -209,7 +213,7 @@ void SysTick_Handler(void)
   else if(PresentUSB==1)
   {
     PresentUSB = 0;
-    ModeUSB = 2; // надо выключить значек USB
+    //ModeUSB = 2; // надо выключить значек USB
   }
   // my control BEEP
   if (beepTick > 1)

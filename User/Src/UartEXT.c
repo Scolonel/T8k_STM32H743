@@ -393,7 +393,7 @@ void DecodeCommandRS (void)
             Data = (WORD)atoi((char*)&RX_Buf[9]);
             if(Data) ModeWork = 1;
             else
-            ModeWork = 0;  
+              ModeWork = 0;  
             g_NeedScr = 1;
             NeedTransmit = 1;
           }
@@ -431,7 +431,7 @@ void DecodeCommandRS (void)
           }
         }    
         // ;SET:CHAn запрос установка коэфф пропроциональности
-                // ;
+        // ;
         if (!memcmp ((void*)RX_Buf, ";SET:CHA",8)) //
         {
           
@@ -440,8 +440,8 @@ void DecodeCommandRS (void)
           {
             if(RX_Buf[10] == '?') // надо послать соотв коэффициент
             {
-//              sprintf(BufString,"%.6f\r",CoeffLW.SlopeChADC[Data]);//c
-//              UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              //              sprintf(BufString,"%.6f\r",CoeffLW.SlopeChADC[Data]);//c
+              //              UARTSendExt ((BYTE*)BufString, strlen (BufString));
               NeedTransmit = 1;
             }
             if(RX_Buf[10] == ' ') // надо записать соотв коэффициент
@@ -460,13 +460,67 @@ void DecodeCommandRS (void)
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
           }
         }        
-
+        // ;READ:POW? запрос данных, или коды АЦП
+        // ;
+        if (!memcmp ((void*)RX_Buf, ";READ:POW?",10)) //
+        {
+          NeedTransmit = 1;
+          if (!memcmp ((void*)&RX_Buf[10], " ADC",4)) //
+          {
+            for(int i=0;i<18;i++)
+            {
+              sprintf(BufString,"%4d,%d\n",1270+i*20,AdcCodes[i].AvrgADC);//c
+              UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            }
+          }
+          else
+          {
+            for(int i=0;i<18;i++)
+            {
+              sprintf(BufString,"%4d,%2.1f\n",1270+i*20,CWDMData[i]);//c
+              UARTSendExt ((BYTE*)BufString, strlen (BufString));
+            }
+          }
+          sprintf(BufString,"\r");//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        }      
+        // ;SET:CHBnn запрос установка смещений по длинам волн
+        // ;
+        if (!memcmp ((void*)RX_Buf, ";SET:CHB",8)) //
+        {
+          
+          Data = (WORD)atoi((char*)&RX_Buf[8]); // получим номер канала он двухзначный
+          if(Data<18)
+          {
+            if(RX_Buf[10] == '?') // надо послать соотв коэффициент
+            {
+              //              sprintf(BufString,"%.6f\r",CoeffLW.SlopeChADC[Data]);//c
+              //              UARTSendExt ((BYTE*)BufString, strlen (BufString));
+              NeedTransmit = 1;
+            }
+            if(RX_Buf[10] == ' ') // надо записать соотв коэффициент
+            {
+              fParam = (float)atof((char*)&RX_Buf[11]); // получим значение коефф.
+              CoeffLW.OffsetLW[Data] = fParam;
+              // нужно сохранить
+              NeedSaveParam |= 0x04;
+              NeedTransmit = 1;
+            }             
+          }
+          //New
+          if(NeedTransmit)
+          {
+            sprintf(BufString,"%.6f\r",CoeffLW.OffsetLW[Data]);//c
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          }
+        }        
+        
         // ;set:LWi  - установка длин волн по местам
-         
+        
         // установка уровня в дБ, привязанных к длине волны
-                
+        
         // установка табличного коэфф. по месту в памяти и ее значение ;SET:SHF1 234,1599
-                
+        
         // ;set:LAMDA XXXX // установка требуемой длины волны
         
       }
@@ -487,7 +541,7 @@ void DecodeCommandRS (void)
       if (!memcmp ((void*)RX_Buf, ";SET:FWLCDON",12)) //
       {
         SetMode(UploadFW_Nextion);
-        CmdInitPage(9); // переключаемся на режим индикации сообщения что в режиме программирования
+        CmdInitPage(8); // переключаемся на режим индикации сообщения что в режиме программирования
         //ProgFW_LCD = 1; // перенесем в First обработку что бы "правильно" работало
         //123          //UART2Count = 0;
         //123          //UART0Count = 0;
