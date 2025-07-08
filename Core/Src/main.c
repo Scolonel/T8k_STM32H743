@@ -77,6 +77,13 @@ uint8_t g_EnaQuickReDraw=0;; // признак быстрой перерисовки экрана когда анализа
      uint8_t CntChanel=0; // счетчик каналов
 // режим работы прибора дл€ настройки (1 - настройка, 0- работа)
  char ModeWork = 0;
+ // признак перерисовки экрана в динамических режимах
+ char ModeReDrawLCD = 0; // јнализатор, главное меню (там часы)
+ // Ќомер текущей страницы индикатора дл€ востановлени€
+  char NumCurrPage = 0; // 
+ // нужно обработать функцию. по времени или по событию
+  char NeedRunFunc = 0; // 
+
 //variable USB
 //uint32_t RecievUSB=0 ; // признак прин€ти€ данных по USB, число данных в буфере
 uint32_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
@@ -93,9 +100,10 @@ uint8_t TxDMA = 0; // признак зан€тости DMA
 char TxBufAns[512]; // буффер передачи в USB
 // переменные UART I2C
 uint16_t Dummy; // пустое чтение буфферов UART
-uint16_t BufADC[SizeBuf_ADC_int]; // буфер внутреннего ј÷ѕ (8), в него пишем при съеме DMA, размер до 8
 // строка дл€ индикатора
-uint8_t Str[64];
+char Str[64];
+static char Stri[32]; // строка дл€ отображени€ сообщени€ о подключении USB
+
 char VerFW_LCD[25] = {"No version LCD          \0"}; //верси€ ѕќ индикатора NEXION
 
 // ¬—ѕќћќ√ј“≈Ћ№Ќџ≈ ѕ≈–≈ћ≈ЌЌџ≈
@@ -110,6 +118,7 @@ uint32_t BadLevelBat=0; //режим плохого уровн€ батарейки
 uint32_t BadBatCnt = 0; // счетчик времени плохой батарейки
   
 float Ubat=4.6; // начальное напр€жение батареи
+uint16_t BufADC[SizeBuf_ADC_int]; // буфер внутреннего ј÷ѕ (8), в него пишем при съеме DMA, размер до 8
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -332,7 +341,7 @@ int main(void)
     myBeep(100);
     Error_Handler();
   }
-  LED_START(1);
+  //LED_START(1);
   // Start Uart3 - внешний мир
   Dummy = huart3.Instance->RDR ; // чистим буффер приема от SIM
   HAL_UART_Receive_IT(&huart3, RxBufExt,1); // ждем прин€ти€ первого байта из внешнего мира
@@ -376,8 +385,8 @@ int main(void)
   EEPROM_write(&LvlBatSav.BatControl[0], ADR_BatSave  , 4);
   EEPROM_write(&LvlBatSav.BatControl[CountBat], ADR_BatSave +  4*CountBat , 4);
   
-  
   CmdInitPage(0);// вызов окна заставки
+  
   HAL_Delay(10);
   SetMode (ModeWelcome);
   CmdInitPage(0);// посылка команды переключени€ окна на Welcome и установка признака первого входа
@@ -390,7 +399,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    // проверка кнопок 
+    // проверка кнопок каждые 30 м—, и тут переключаем и измер€ем каналы
+    // взводим признак необходимости выполнени€ функции
     if((GetSysTick(0)>30)&&(!ProgFW_LCD))// каждые 30 м— или больше...и не в программировании
     {
       // расчет данных по полученным данным из ј÷ѕ, каждый момент имеем два значени€ ј÷ѕ
@@ -480,8 +490,8 @@ int main(void)
         //LvlBatInd = (char)(Ubat*10. - 40.)+1;
         //if(Ubat<4.0) LvlBatInd = 0;
         //if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
-        sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
-        NEX_Transmit((void*)Str);//
+        //        sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
+        //        NEX_Transmit((void*)Str);//
         // получим текущее врем€ и оработаем его
         if(CcMinute++>60)
         {
@@ -497,8 +507,10 @@ int main(void)
           CcMinute=0;
         }
         g_IndexMeas++;
-        g_NeedScr=1;
-      CountTimerPA = 0;
+        CountTimerPA = 0;
+        if(ModeReDrawLCD)
+          g_NeedScr=1;
+        
       }
       //if(g_EnaQuickReDraw)g_NeedScr=1;
       //LvlBatInd++;
@@ -508,13 +520,14 @@ int main(void)
         myBeep(100);
         Error_Handler();
       }
-      LED_START(1);
-      
-    }
+      //LED_START(1);
+      NeedRunFunc = 1;
+    }// конец 30 м— обработки
     // проверка приема по UART EXT
     if (RSDecYes) // вызов программы обработки комманды прин€той по UART
     {
       DecodeCommandRS();
+      NeedRunFunc = 1;
     }
     
     // режим программировани€ индикатора и ответы от индикатора
@@ -528,6 +541,7 @@ int main(void)
       {
         // что-то прин€ли в ответ от индикатора, можно посмотреть
         CheckStrNEX (); // проверка прин€той строки  
+        NeedRunFunc = 1;
         
       }
       Uart2DecYes=0;
@@ -539,40 +553,91 @@ int main(void)
       
       WriteNeedStruct(NeedSaveParam);
       NeedSaveParam = 0;
+      NeedRunFunc = 1;
     }
     // основное отображение режима
-    if(!ProgFW_LCD)
+    if((!ProgFW_LCD)&&(NeedRunFunc)) 
     {
-      ModeFuncTmp();
+      // сюда попадаем по времени каждые 30м— или по событи€м приема, 
+      // дл€ перерисовки экрана
+//      if(ModeUSB) // устанавливаем когда пишем или читаем по USB SDCard
+//      {
+//        // сбрасываем нажатые кнопки
+//        ClrKeyAll();
+//      }
+      // прорисовка основной функции
+//        ModeFuncTmp();
+      // если ‘лэшка зан€та, 
+
+      NeedRunFunc = 0; 
       if(ModeUSB) // устанавливаем когда пишем или читаем по USB SDCard
       {
+        // сбрасываем нажатые кнопки
+        ClrKeyAll();
         switch (ModeUSB)
         {
         case 3:
-        
-        sprintf((void*)Str,"fill 0,0,480,4,RED€€€");
-        NEX_Transmit((void*)Str);//
-        sprintf((void*)Str,"fill 0,0,4,320,RED€€€");
-        NEX_Transmit((void*)Str);//
-        sprintf((void*)Str,"fill 476,4,4,320,RED€€€");
-        NEX_Transmit((void*)Str);//
-        sprintf((void*)Str,"fill 0,316,4480,4,RED€€€");
-        NEX_Transmit((void*)Str);//
-        break;
+          //sprintf(Stri,"xstr 80,85,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[61][CurrLang]); // зеленый ?
+          //NEX_Transmit((void*)Stri);//
+         //HAL_Delay(2);
+         //sprintf(Stri,"xstr 80,145,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[27][CurrLang]); // зеленый ?
+         //NEX_Transmit((void*)Stri);//
+         // HAL_Delay(50);
+                    sprintf((void*)Str,"pic 144,94,%d€€€",(g_IndexMeas%3)+53);
+                    //sprintf((void*)Str,"pic 144,94,53€€€");
+                    NEX_Transmit((void*)Str);//
+ 
+//                    sprintf((void*)Str,"fill 0,0,480,4,RED€€€");
+//                    NEX_Transmit((void*)Str);//
+//                    sprintf((void*)Str,"fill 0,0,4,320,RED€€€");
+//                    NEX_Transmit((void*)Str);//
+//                    sprintf((void*)Str,"fill 476,4,4,320,RED€€€");
+//                    NEX_Transmit((void*)Str);//
+//                    sprintf((void*)Str,"fill 0,316,4480,4,RED€€€");
+//                    NEX_Transmit((void*)Str);//
+          ModeUSB=2;
+          break;
+        case 2:
+          //sprintf(Stri,"xstr 80,85,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[61][CurrLang]); // зеленый ?
+          //NEX_Transmit((void*)Stri);//
+          HAL_Delay(20);
+          //sprintf(Stri,"xstr 80,145,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[27][CurrLang]); // зеленый ?
+          //NEX_Transmit((void*)Stri);//
+          //HAL_Delay(50);
+          
+          //          sprintf((void*)Str,"fill 0,0,480,4,RED€€€");
+          //          NEX_Transmit((void*)Str);//
+          //          sprintf((void*)Str,"fill 0,0,4,320,RED€€€");
+          //          NEX_Transmit((void*)Str);//
+          //          sprintf((void*)Str,"fill 476,4,4,320,RED€€€");
+          //          NEX_Transmit((void*)Str);//
+          //          sprintf((void*)Str,"fill 0,316,4480,4,RED€€€");
+          //          NEX_Transmit((void*)Str);//
+          break;
         default:
-        
-        sprintf((void*)Str,"fill 0,0,480,4,WHITE€€€");
-        NEX_Transmit((void*)Str);//
-        sprintf((void*)Str,"fill 0,0,4,320,WHITE€€€");
-        NEX_Transmit((void*)Str);//
-        sprintf((void*)Str,"fill 476,4,4,320,WHITE€€€");
-        NEX_Transmit((void*)Str);//
-        sprintf((void*)Str,"fill 0,316,4480,4,WHITE€€€");
-        NEX_Transmit((void*)Str);//
-        ModeUSB = 0;
-        break;
+          
+//                    sprintf((void*)Str,"fill 0,0,480,4,WHITE€€€");
+//                    NEX_Transmit((void*)Str);//
+//                    sprintf((void*)Str,"fill 0,0,4,320,WHITE€€€");
+//                    NEX_Transmit((void*)Str);//
+//                    sprintf((void*)Str,"fill 476,4,4,320,WHITE€€€");
+//                    NEX_Transmit((void*)Str);//
+//                    sprintf((void*)Str,"fill 0,316,4480,4,WHITE€€€");
+//                    NEX_Transmit((void*)Str);//
+          ModeUSB = 0;
+          CmdInitPage(NumCurrPage);
+          
+          break;
         }
       }
+      else
+      {
+      // прорисовка основной функции
+        ModeFuncTmp();
+      }
+
+      LED_START(0);
+      
     }
     
     /* USER CODE END WHILE */

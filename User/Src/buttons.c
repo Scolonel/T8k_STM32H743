@@ -70,6 +70,19 @@ void SetKeyMd (unsigned char Keys, unsigned char States)
   // KeyP |= BTN_OK;
 }
 
+void ClrKeyAll (void) // сброс всех клавиш
+{
+  for(unsigned i = 0; i < BTNS_NUM; ++i )
+  {
+    Buttons[ i ].State = NOT_PRESSED;
+    Buttons[ i ].Time = 0;
+  }
+  KeyP = 0;
+  rawPressKeyS=0;
+  
+}
+
+
 void ClrKey (uint16_t Button) // сброс бита обработанной клавиши
 {
   KeyPressed &= ~Button;

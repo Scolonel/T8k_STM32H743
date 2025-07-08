@@ -6,7 +6,7 @@
 #include "fatfs.h"
 
 char NameDir[100][6];
-char NameFiles[1000][18];
+char NameFiles[512][18];
 uint32_t NumNameDir=0; // число имен директорий
 uint32_t IndexNameDir=0;// индекс дирректории на которую указываем
 uint32_t IndexLCDNameDir=0;// индекс указателя на индикаторе дирректории на которую указываем
@@ -150,7 +150,7 @@ void SDMMC_SDCard_FILES(void) // прочитаем список файлов в директории
     //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
     
     NumNameFiles=0; // число имен 
-    IndexNameFiles=0;// индекс файла на который указываем
+    //IndexNameFiles=0;// индекс файла на который указываем
     IndexLCDNameFiles=0;// индекс указателя на индикаторе файла на который указываем
     //NameDir[IndexNameDir][0] = 0; // обнулим массив  
     memset(&NameFiles,0,sizeof(NameFiles));

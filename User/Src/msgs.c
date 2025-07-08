@@ -74,7 +74,8 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"Прибор готов к","Device is ready","Device is ready","Device is ready"},//57
 {"Обновлению ПО LCD","Upgrade FW LCD","Upgrade FW LCD","Upgrade FW LCD"},//58
 {"Дата/Время изменены","Up-to-date","Zmena data a casu","Up-to-date"},//59 Aktuell
-{" !!! СОХРАНЕНО !!! ","  !!! SAVED !!!  ","  !!! ULOZ !!!  ","  !!! SAVED !!!  "}       //60
+{" !!! СОХРАНЕНО !!! ","  !!! SAVED !!!  ","  !!! ULOZ !!!  ","  !!! SAVED !!!  "},       //60
+{"Подключение USB","Connecting USB","Connecting USB","Connecting USB"} //61
 
 
 };

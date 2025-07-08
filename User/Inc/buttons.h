@@ -43,6 +43,8 @@
 
 unsigned short SetBtnStates( unsigned int states, unsigned int timeStep );
 char getStateButtons ( int a);
+void ClrKeyAll (void); // сброс всех клавиш
+
 void ClrKey (uint16_t Button); // сброс бита обработанной клавиши
 void SetKeyMd (unsigned char Keys, unsigned char States);
 

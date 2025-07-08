@@ -97,11 +97,11 @@ void ClearRS (void)
 // обработка принятой команды по RS
 void DecodeCommandRS (void)
 {
-  unsigned char *c;
-  unsigned char value;
-  uint32_t IndxLW; 
-  uint16_t IndxPtn;  // индекс точки сохранения кода ЦАП
-  float TmpLvlDB;
+//  unsigned char *c;
+//  unsigned char value;
+//  uint32_t IndxLW; 
+//  uint16_t IndxPtn;  // индекс точки сохранения кода ЦАП
+//  float TmpLvlDB;
   //char Str[128];
   //char BufString[225];
   char Str[32];

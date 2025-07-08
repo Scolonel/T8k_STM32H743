@@ -87,6 +87,7 @@ static volatile unsigned char FrSetOnOff = 1; // указатель на курсор в режиме вы
 static volatile unsigned char FrSetClear = 1; // указатель на курсор в режиме очистки памяти
 static volatile char CntFolder=0; // счетчик папок при удалении
 
+
 static volatile unsigned char SubModeMem = 0; // подрежим индикации памяти
 static volatile  unsigned char FrCurrMem = 0; // курсор в режиме просмотра в графике
 //static volatile unsigned char ChannelsMode = UserConfig.ChnMod; // режим отображения каналов
@@ -99,10 +100,10 @@ static BYTE PosCurr = 6; // положение курсора устанавливаемых величин в настройк
 
 //static unsigned char Ptr; // указатель с какой строкой работаем (чтобы перекопировать)
 static void (*ModeFunc)(void);
-static void (*ModeFuncPrev)(void) = 0;
+//static void (*ModeFuncPrev)(void) = 0;
 
-static unsigned char FrdBSet=1; //признак включения рамки у рабочего значения затухания (сверху)
-static unsigned char FrFreeSet=0; //признак включения рамки основного курсора левый столбец
+//static unsigned char FrdBSet=1; //признак включения рамки у рабочего значения затухания (сверху)
+//static unsigned char FrFreeSet=0; //признак включения рамки основного курсора левый столбец
 //static unsigned char FrValSet = 1; //признак включения рамки основного курсора правый столбец
 unsigned char ScrRedraw = 1; //признак перерисовки экрана
 
@@ -113,8 +114,14 @@ char IndxKBComments = 0; // Индексы указатели для строк редактирования - Коммент
 volatile int NeedReturn = 0; // необходимость вернуться в окно сохранения
 volatile int NeedWinKBReturn = 0; // необходимость вернуться в окно откуда вызвали редактор
 
-//static char* globalStringToCopy = 0;
+static volatile BYTE ViewMod = 1; // режим простотра таблица или график
 
+//static char* globalStringToCopy = 0;
+//char Str[64];
+char StrN[32];
+char St[5];
+char StrI[32];
+char StrF[24];
 //static char AnlzMode = MOD_ANLZ_TAB;
 
 //static unsigned char TabFiles[16];
@@ -149,6 +156,7 @@ unsigned short CalkCheckSum (void)// подсчет контрольной суммы конфигурации приб
 void CmdInitPage(int Num)
 {
   char str[44];
+  NumCurrPage = Num;
   sprintf(str, "page %dяяя",Num); // < событиe >
   NEX_Transmit((void*)str);    //
   
@@ -178,10 +186,9 @@ void SetMode( void(f)(void) )
 //-------------------------------------------------------------------------------------------------------------
 void ModeWelcome(void)// режим заставки
 {
-  char Str[32];
-  char StrN[32];
+  //char StrN[32];
   
-  char St[5];
+  //char St[5];
   CntWelcome++;
   static DWORD SecOld=100;
   //static DWORD BatOld=150;
@@ -234,7 +241,7 @@ void ModeWelcome(void)// режим заставки
     // Number
     sprintf (Str,"t9.txt=\"№%d\"яяя",GetNumDevice()); // Number
     NEX_Transmit((void*)Str);//
-    
+    ModeReDrawLCD = 1;
   }
   // проверка изменения величин для изменений (время и аккумулятор)
   // time
@@ -281,8 +288,8 @@ void ModeMain(void)// режим основной
   //static WORD ProcBatNow = 55;
   static BYTE OnlyBat = 1;
   
-  char Str[32];
-  char StrN[32];
+  //char Str[32];
+  //char StrN[32];
   current_time = RTCGetTime();
   
   //  static long tutu=0;
@@ -327,6 +334,7 @@ void ModeMain(void)// режим основной
     NEX_Transmit((void*)Str);//
     
     
+    ModeReDrawLCD = 1;
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -435,7 +443,7 @@ void ModeMain(void)// режим основной
 // окно индикации анализатора, тут будем измерять
 void ModeDrawMeasure(void) // режим отображения рефлектограммы
 {
-  char Str[32];
+  //char Str[32];
   
   static volatile BYTE FrSetIndex = 0; // указатель на курсор
   int Res;
@@ -456,6 +464,7 @@ void ModeDrawMeasure(void) // режим отображения рефлектограммы
     //    // установки
     
         g_EnaQuickReDraw =1;
+    ModeReDrawLCD = 1;
 
     rawPressKeyS=0;// если вдруг кто нажимал это до этого
     g_FirstScr = 0;
@@ -595,7 +604,7 @@ void ModeDrawMeasure(void) // режим отображения рефлектограммы
 //------------------------------------------------------------------------------------------------------------
 void BadBattery(void) // плохая баттарейка CHECK_OFF
 { 
-  char Str[32];
+  //char Str[32];
   if(g_FirstScr)
   {
     
@@ -648,7 +657,8 @@ void BadBattery(void) // плохая баттарейка CHECK_OFF
 void ModeSetting(void)// режим установок прибора CHECK_IN
 {
   static BYTE FrSetting = 0; // указатель на курсор
-  char Str[32];
+  //char Str[64];
+    char Stro[32];
   char SetNewWinIfOut = 0; // устнанавливаем признак перхода в другое окно если надо выйти
   //BYTE CurrLang=GetLang(CURRENT);
   //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
@@ -780,20 +790,22 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   
   if (g_FirstScr)
   {
+    ModeReDrawLCD = 0;
+    //HAL_Delay(25);
     // здесь заполняем данными поля нового индикатора
     // не требущие изменения при первичной инициализации
-    sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[1][CurrLang]);
-    NEX_Transmit((void*)Str);    // Дата / Время
+    sprintf(Stro, "t1.txt=\"%s\"яяя", MsgMass[1][CurrLang]);
+    NEX_Transmit((void*)Stro);    // Дата / Время
   
   
-    sprintf(Str, "t0.txt=\"Language\"яяя"); //!
-    NEX_Transmit((void*)Str);    // Язык
+    sprintf(Stro, "t0.txt=\"Language\"яяя"); //!
+    NEX_Transmit((void*)Stro);    // Язык
   
-    sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[29][CurrLang]); //!
-    NEX_Transmit((void*)Str);    // Файл
+    sprintf(Stro, "t2.txt=\"%s\"яяя", MsgMass[29][CurrLang]); //!
+    NEX_Transmit((void*)Stro);    // Файл
   
-    sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[9][CurrLang]); //!
-    NEX_Transmit((void*)Str);    // Память
+    sprintf(Stro, "t3.txt=\"%s\"яяя", MsgMass[9][CurrLang]); //!
+    NEX_Transmit((void*)Stro);    // Память
   
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -802,24 +814,24 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   {
     // здесь заполняем данными поля нового индикатора
     // по результатам изменений вызваныйх обработчиком клавиатуры
-    sprintf(Str, "t6.txt=\"%s\"яяя", MsgMass[0][CurrLang]);
-    NEX_Transmit((void*)Str);    // English
+    sprintf(Stro, "t6.txt=\"%s\"яяя", MsgMass[0][CurrLang]);
+    NEX_Transmit((void*)Stro);    // English
   
-    sprintf(Str, "t7.txt=\"%d\"яяя", 55);
-    NEX_Transmit((void*)Str);    // ???
+    sprintf(Stro, "t7.txt=\"%d\"яяя", 55);
+    NEX_Transmit((void*)Stro);    // ???
   
     // раскрашивание поля выбора 
     // закрасим бэкграунды  и установим требуемый
-    sprintf(Str, "t0.bco=WHITEяяя"); // белый
-    NEX_Transmit((void*)Str);// 
-    sprintf(Str, "t1.bco=WHITEяяя"); // белый
-    NEX_Transmit((void*)Str);// 
-    sprintf(Str, "t2.bco=WHITEяяя"); // белый
-    NEX_Transmit((void*)Str);// 
-    sprintf(Str, "t3.bco=WHITEяяя"); // белый
-    NEX_Transmit((void*)Str);//
-    sprintf(Str, "t%d.bco=GREENяяя", FrSetting); // зеленый
-    NEX_Transmit((void*)Str);// 
+    sprintf(Stro, "t0.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Stro);// 
+    sprintf(Stro, "t1.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Stro);// 
+    sprintf(Stro, "t2.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Stro);// 
+    sprintf(Stro, "t3.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Stro);//
+    sprintf(Stro, "t%d.bco=GREENяяя", FrSetting); // зеленый
+    NEX_Transmit((void*)Stro);// 
   
   									 // код подсветки требуемой строки если есть есть маркер строки
     g_NeedScr = 0;
@@ -846,8 +858,8 @@ void ModeDateTimeSET(void) // режим установок времени CHECK_IN
 {
   //static BYTE PosCurr = 6; // положение курсора устанавливаемых величин
   static RTCTime NowTime;
-  char Str[32];
-  char St[5];
+  //char Str[32];
+  //char St[5];
   static DWORD old_sec;
   static DWORD new_sec;
   //BYTE CurrLang=GetLang(CURRENT);
@@ -990,6 +1002,7 @@ if(g_FirstScr)
     sprintf(Str,"t7.txt=\" \"яяя"); // "пустая строка (пробел)"
     NEX_Transmit((void*)Str);// 
 
+    ModeReDrawLCD = 0;
   g_FirstScr=0;
   g_NeedScr=1;
 }
@@ -1056,7 +1069,7 @@ if(g_NeedScr)
   void ModeSetupFILE(void) // режим установок FILES (6 окно)
   {
     static volatile BYTE FrSetSetupFile = 0; // указатель на курсор
-    char Str[64];
+    //char Str[64];
     int NeedReSave=0; // признак пересохранения текущих изменений если были
     
     //BYTE CurrLang=GetLang(CURRENT);
@@ -1210,6 +1223,7 @@ if(g_NeedScr)
       NEX_Transmit((void*)Str);// 
       //      sprintf(Str,"t8.txt=\"%s\"яяя", MsgMass[34][CurrLang]); //ОК
       //      NEX_Transmit((void*)Str);// 
+    ModeReDrawLCD = 0;
       
       g_NeedScr = 1; // для вызова заполнения значений
       g_FirstScr = 0;
@@ -1275,8 +1289,8 @@ if(g_NeedScr)
 // обработка клавиатуры при редакторе Имени Кабеля
 void ModeKBCableID(void) // режим отображения клавиатуры редактора CableID
 {
-  char Str[32];
-  char StrI[32];
+  //char Str[32];
+  //char StrI[32];
   //static BYTE Shift = 0; // регистр 
   // тут для нового индикатора
   if (g_FirstScr)
@@ -1293,6 +1307,7 @@ void ModeKBCableID(void) // режим отображения клавиатуры редактора CableID
     g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
     g_FirstScr = 0;
     g_NeedScr = 1;
+    ModeReDrawLCD = 0;
   }
   if (g_NeedScr)
   {
@@ -1351,8 +1366,8 @@ void ModeKBCableID(void) // режим отображения клавиатуры редактора CableID
 // обработка клавиатуры при редакторе Имени Кабеля
 void ModeKBFiberName(void) // режим отображения клавиатуры редактора FiberName
 {
-  char Str[32];
-  char StrI[32];
+  //char Str[32];
+  //char StrI[32];
   //static BYTE Shift = 0; // регистр 
   // тут для нового индикатора
   if (g_FirstScr)
@@ -1369,6 +1384,7 @@ void ModeKBFiberName(void) // режим отображения клавиатуры редактора FiberName
     g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
     g_FirstScr = 0;
     g_NeedScr = 1;
+    ModeReDrawLCD = 0;
   }
   if (g_NeedScr)
   {
@@ -1427,8 +1443,8 @@ void ModeKBFiberName(void) // режим отображения клавиатуры редактора FiberName
 // обработка клавиатуры при редакторе Comments
 void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
 {
-  char Str[32];
-  char StrI[32];
+  //char Str[32];
+  //char StrI[32];
   //static BYTE Shift = 0; // регистр 
   // тут для нового индикатора
   if (g_FirstScr)
@@ -1445,6 +1461,7 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
     g_GetStr=1; // взведем признак  необходимости прочитать строчку! из индикатора.
     g_FirstScr = 0;
     g_NeedScr = 1;
+    ModeReDrawLCD = 0;
   }
   if (g_NeedScr)
   {
@@ -1503,8 +1520,8 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
   void ModeSaverFILE(void) // режим сохранения FILES
   {
     static volatile BYTE FrSetSaverFile = 3; // указатель на курсор
-    char Str[64];
-    char StrF[24];
+    //char Str[64];
+    //char StrF[24];
     int NeedReSave=0; // признак пересохранения текущих изменений если были
     
     //BYTE CurrLang=GetLang(CURRENT);
@@ -1612,6 +1629,7 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
       
       g_NeedScr = 1; // для вызова заполнения значений
       g_FirstScr = 0;
+    ModeReDrawLCD = 0;
     }
     // надо что то изменить в полях установок 
     if(g_NeedScr)
@@ -1730,7 +1748,7 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
 // вызываем ОКНО 10
 void ModeFileMngDir(void) // режим файл менеджера директорий
 {
-  char Str[32];
+  //char Str[32];
   int Nweek;
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
   {
@@ -1754,6 +1772,7 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
     sprintf(Str, "t14.txt=\"%d\"яяя", NumNameDir); // < сколько папок нашли >
     NEX_Transmit((void*)Str);    //
     
+    ModeReDrawLCD = 0;
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -1806,6 +1825,7 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
     
     myBeep(10);
       SetMode(ModeFileMngFiles);
+      IndexNameFiles=0;// индекс файла на который указываем
       //ModeDevice = MODEMEMR;
       //ModeMemDraw = VIEWNEXT;
       //ReturnMemView = 1; // надо вернуться сюда же по ESC
@@ -1846,21 +1866,17 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
   // t20        t17  
   // t21        t18
   //        t19
-  char Str[32];
+  char StrR[64];
   char FilPath[64];
-  uint32_t BlkSz; // размер блока заголовка
-  uint32_t EvntSz=0; // размер блока событий, пока не читаем события просто для смещения
-  uint32_t PosDataLog=0xe1; // позиция начала блока данных для копирования в 
+//  uint32_t BlkSz; // размер блока заголовка
+//  uint32_t EvntSz=0; // размер блока событий, пока не читаем события просто для смещения
+//  uint32_t PosDataLog=0xe1; // позиция начала блока данных для копирования в 
   // на начало данных
-  UINT RWC;
+//  UINT RWC;
   FATFS FatFs;
   FIL Fil;
   FRESULT FR_Status;
   
-  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
-  {
-    myBeep(10);
-  }
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
   { 
 //    if(ModeUSB) // запрещаем работу с памятью, так как занята 
@@ -1898,6 +1914,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     sprintf(Str, "t14.txt=\"%d\"яяя", NumNameFiles); // < сколько файлов нашли >
     NEX_Transmit((void*)Str);    //
     
+    ModeReDrawLCD = 0;
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -1924,11 +1941,99 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     FR_Status = f_mount(&FatFs, SDPath, 1);
     
     // здесь можно прочитать файл на котрый указываем и разобрать его
+    // перепишем егов структуру что бы второй раз не читаить
     sprintf(FilPath, "0:/_T8KN/%s/%s",NameDir[IndexNameDir],NameFiles[IndexNameFiles]); // путь к файлу
     // откроем файл и прочитаем размер блока
     FR_Status = f_open(&Fil, FilPath, FA_READ);
     if(FR_Status == FR_OK)
     {
+      int i, j;
+      int len, Res;
+      float fDt; 
+      f_gets(StrR, 64,&Fil); // read 1 string (DATA)
+      // разбор строки, 
+      len = strlen(StrR);
+      for(i=0;i<len;i++)
+      {
+        if(StrR[i]==';') break;
+      }
+      i++;
+      i++;
+      StrR[len-2]=0;
+      sprintf(MemD.DateMem, "%s", &StrR[i]); // < дата >
+      
+      f_gets(StrR, 64,&Fil); // read 2 string (Time)
+      // разбор строки, 
+      len = strlen(StrR);
+      for(i=0;i<len;i++)
+      {
+        if(StrR[i]==';') break;
+      }
+      i++;
+      i++;
+      StrR[len-2]=0;
+      sprintf(MemD.TimeMem, "t16.txt=\"%s\"яяя", &StrR[i]); // < время >
+
+      f_gets(StrR, 64,&Fil); // read 3 string (name, version, Serial number)
+      f_gets(StrR, 64,&Fil); // read 4 string (CableID)
+      // разбор строки, 
+      len = strlen(StrR);
+      for(i=0;i<len;i++)
+      {
+        if(StrR[i]==';') break;
+      }
+      i++;
+      i++;
+      StrR[len-2]=0;
+      sprintf(MemD.CableID, "%s", &StrR[i]); // < имя кабеля >
+      sprintf(Str, "t16.txt=\"%s\"яяя", &StrR[i]); // < имя кабеля >
+      NEX_Transmit((void*)Str);    //
+      
+      f_gets(StrR, 64,&Fil); // read 5 string (Fiber Name)
+      // разбор строки, 
+      len = strlen(StrR);
+      for(i=0;i<len;i++)
+      {
+        if(StrR[i]==';') break;
+      }
+      i++;
+      i++;
+      StrR[len-2]=0;
+      sprintf(MemD.FiberName, "%s", &StrR[i]); // < имя волокна >
+       sprintf(Str, "t17.txt=\"%s\"яяя", &StrR[i]); // < имя волокна >
+       NEX_Transmit((void*)Str);    //
+      f_gets(StrR, 64,&Fil); // read 6 string (Comments)
+      // разбор строки, 
+      len = strlen(StrR);
+      for(i=0;i<len;i++)
+      {
+        if(StrR[i]==';') break;
+      }
+      i++;
+      i++;
+      StrR[len-2]=0;
+      sprintf(MemD.Comments, "%s", &StrR[i]); // < комметарий >
+      sprintf(Str, "t18.txt=\"%s\"яяя", &StrR[i]); // < комметарий >
+       NEX_Transmit((void*)Str);    //
+
+      f_gets(StrR, 64,&Fil); // read 7 string (Шапка данных)
+       
+for(j=0; j<18; j++)
+{
+        f_gets(StrR, 64,&Fil); // read 8..25 string (Данные сохраненные)
+        fDt = atof(&StrR[5]);
+        if((fDt<-70.)&&(fDt>25.)) fDt = -100.;
+        MemD.CWDMDataMem[j]= fDt;
+       // заполним картинку
+        Res=0;
+        if(MemD.CWDMDataMem[j]>-40.0)
+        {
+          Res=(int)((MemD.CWDMDataMem[j]+40.0)*2);
+          if(Res>100) Res=100;
+        }
+        sprintf(Str,"j%d.val=%dяяя",j,Res);
+        NEX_Transmit((void*)Str);//
+}
       // ТУТ надо разобрать окрытый файл    
       //     f_lseek (&Fil, 2); // переместимся на 2 байта
       //     f_read (&Fil, (void*)&BlkSz, 4, &RWC);
@@ -1974,6 +2079,16 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     
     g_NeedScr = 0;
   }
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+      SetMode(ModeViewMemory);
+      if(ViewMod)
+        CmdInitPage(2);// посылка команды переключения окна на Анализатор
+      else
+        CmdInitPage(3);// посылка команды переключения окна на Анализатор
+    
+    myBeep(10);
+  }
   if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
   {
 //    if(ModeUSB) // запрещаем работу с памятью, так как занята 
@@ -2001,11 +2116,174 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
   }
 }
 
+//-------------------------------------------------------------------------------------------------------
+// окно индикации результатов анализатора из памяти, тут будем просматривать
+void ModeViewMemory(void) // режим отображения из файла (памяти)
+{
+  //char Str[32];
+  
+  static volatile BYTE FrSetIndx = 0; // указатель на курсор
+  static volatile BYTE IndxViewLW = 0; // указатель на длину волны
+  int Res;
+  // получение данных от измерителя
+  //GetAllDataMeas((g_IndexMeas)&0xF);
+  // Прорисовка нового индикатора
+  if(g_FirstScr) // заполнение незменяемых полей
+  {
+    //    // наименование прибора
+    //    sprintf (StrN,"t5.txt=\"%s\"яяя",MsgMass[6][CurrLang]); // 
+    //    NEX_Transmit((void*)StrN);//
+    //    // Анализатор
+    //    sprintf(Str,"t1.txt=\"%s\"яяя",MsgMass[7][CurrLang]);
+    //    NEX_Transmit((void*)Str);//
+    //    // память
+    //    sprintf(Str,"t2.txt=\"%s\"яяя",MsgMass[9][CurrLang]);
+    //    NEX_Transmit((void*)Str);//
+    //    // установки
+    
+    //    g_EnaQuickReDraw =1;
+    //ModeReDrawLCD = 1;
+
+    rawPressKeyS=0;// если вдруг кто нажимал это до этого
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  // обработка клавиатуры кнопки Влево Вправо
+  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))//
+  {
+    myBeep(10);
+    if(IndxViewLW>0)IndxViewLW--;
+    else IndxViewLW = 17;
+    g_NeedScr = 1; // Need reDraw Screen
+  }  
+  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))//
+  {
+    myBeep(10);
+    if(IndxViewLW<17)IndxViewLW++;
+    else IndxViewLW = 0;
+    g_NeedScr = 1; // Need reDraw Screen
+  }  
+  if(g_NeedScr)
+  {
+    // рисуем
+    //    line 0,300,340,300,YELLOW
+    //draw 0,270,340,270,GREEN
+    //draw 0,240,340,240,YELLOW
+    //draw 0,210,340,210,GREEN
+    //draw 0,180,340,180,YELLOW
+    //draw 0,150,340,150,GREEN
+    //draw 0,120,340,120,YELLOW
+    //draw 0,90,340,90,GREEN
+    //draw 0,60,340,60,WHITE
+    //draw 0,30,340,30,GREEN
+    //draw 0,0,340,0,YELLOW
+    //xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
+    //xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
+    //xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
+    //xstr 345,110,35,20,3,BLUE,WHITE,0,1,1,"-10"
+    //xstr 345,50,35,20,3,BLUE,WHITE,0,1,1,"0"
+    //xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
+    //   xstr 380,90,100,55,2,BLACK,WHITE,0,1,1,"-40.2
+    if(ViewMod) // Graph
+    {
+      for(int i=0;i<18;i++)
+      {
+        Res=0;
+        if(CWDMData[i]>-40.0)
+        {
+          Res=(int)((CWDMData[i]+40.0)*2);
+          if(Res>100) Res=100;
+        }
+        sprintf(Str,"j%d.val=%dяяя",i,Res);
+        NEX_Transmit((void*)Str);//
+      }
+      //      sprintf(Str,"tm0.en=1яяя");
+      //      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t0.txt=\"%d%s\"яяя",1270+IndxViewLW*20,MsgMass[38][CurrLang]);// LW_nm
+      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t0.bco=%dяяя",ColorsPCO[IndxViewLW]);// LW_nm
+      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t1.txt=\"%.1f\"яяя",CWDMData[IndxViewLW]);// значение
+      NEX_Transmit((void*)Str);//
+      sprintf(Str,"t2.txt=\"%s\"яяя",MsgMass[18][CurrLang]);// дБм
+      NEX_Transmit((void*)Str);//
+      if((IndxViewLW==8)||(IndxViewLW==12))
+      {
+      sprintf(Str,"t0.pco=65535яяя");// LW_nm
+      NEX_Transmit((void*)Str);//
+      }
+      else
+      {
+      sprintf(Str,"t0.pco=0яяя");// LW_nm
+      NEX_Transmit((void*)Str);//
+      }
+      //sprintf(Str,"h0.val=%dяяя",g_IndexLW);
+      //NEX_Transmit((void*)Str);//
+      sprintf(Str,"p1.pic=%dяяя",IndxViewLW+17);
+      NEX_Transmit((void*)Str);//
+      //      sprintf(Str,"tm0.en=0яяя");
+      //      NEX_Transmit((void*)Str);//
+    }
+    else // Table
+    {
+      for(int i=0;i<18;i++)
+      {
+        sprintf(Str,"t%d.txt=\"%.2fdBm\"яяя",i+40,CWDMData[i]); // зеленый
+        NEX_Transmit((void*)Str);// 
+      }
+    }
+    g_NeedScr = 0;
+  }
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // возврат в режим просмотра
+  {
+    myBeep(10);
+    if(ViewMod) // Graph
+    {
+      ViewMod = 0;
+      CmdInitPage(3);// посылка команды переключения окна на Анализатор
+    }
+    else
+    {
+      ViewMod = 1;
+      CmdInitPage(2);// посылка команды переключения окна на Анализатор
+    }
+    g_FirstScr = 1;
+    //g_NeedScr = 1; // Need reDraw Screen
+  }
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))// нужно вернутся к памяти
+  {
+    myBeep(10);
+      SetMode(ModeFileMngFiles);
+      CmdInitPage(11); // новое окно лист бокс перечня файлов в текущей дирректории
+  }
+  // вызов сохранения файла (его меню)
+  if (rawPressKeyS) // 
+  { 
+////    if(ModeUSB) // запрещаем запись так как 
+////    {
+////    myBeep(500);
+////    }
+////    else
+////    {
+//    myBeep(10);
+//    //  SaveFileSD(0);
+//    SetMode(ModeSaverFILE);
+//    //CreatDelay (30000); // 3.3 мС
+//    HAL_Delay(3);
+//    CmdInitPage(7);// посылка команды переключения окна на Меню Сохранения
+//    g_EnaQuickReDraw =0;
+////    }
+    rawPressKeyS=0;
+  }
+  //    HAL_Delay(500);
+  
+  
+}
 //-------------------------------------------------------------------------------------------------------------------
 // переключимся в режим программирования индикатора (пока на паузу  и сигнал
 void UploadFW_Nextion(void) // обновление индикатора NEXTION
 { 
-  char Str[32];
+  //char Str[32];
   // здесь порисуем для нового индиктора
   if (g_FirstScr)
   {
@@ -2021,6 +2299,7 @@ void UploadFW_Nextion(void) // обновление индикатора NEXTION
     HAL_Delay(50);
     ProgFW_LCD = 1; // переключим режим работы UART только здесь когда все заслали
     
+    ModeReDrawLCD = 0;
     g_FirstScr = 0;
     g_NeedScr = 0;
   }

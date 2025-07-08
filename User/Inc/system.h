@@ -21,7 +21,7 @@
 //число сообщений и языков
 #define LANG_NUM 4  // число столбцов в таблице языков
 
-#define MSG_NUM 61
+#define MSG_NUM 62
 #define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //время цикла красного глаза по 500 мС
@@ -126,13 +126,13 @@ extern  char LvlBatInd; //индикатор уровня батарейки
       // тики опроса клавиатура взято из Т7К_АР
 uint32_t GetSysTick( int Mode); // получение тиков 1 мС. 0 - получение счетчика от предыдущего сброса 1- сброс
 
-void NEX_Transmit(uint8_t *Str);
+//void NEX_Transmit(uint8_t *Str);
 // управление таймером в измерителе АВТОМАТЕ
 WORD TimerPA (BYTE Set);
 
 //for Memory Dir & Files
 extern char NameDir[100][6];
-extern char NameFiles[1000][18];
+extern char NameFiles[512][18];
 extern uint32_t NumNameDir; // число имен директорий
 extern uint32_t IndexNameDir;// индекс дирректории на которую указываем
 extern uint32_t IndexLCDNameDir;// индекс указателя на индикаторе дирректории на которую указываем
@@ -150,6 +150,8 @@ extern unsigned int CheckErrMEM; // контроль
 
 extern WORD ProcBat , ProcBatInd; // процент баттареи
 
+// строка для индикатора
+extern char Str[64];
 
 extern UART_HandleTypeDef huart5;
 
@@ -185,7 +187,11 @@ extern unsigned short KeyP; // клавиши нажатые
 //extern int CntAccumulat; // счетчик накоплений
 // кнопки клавиатуры
 // режим работы прибора, переключает индикацию
-extern  char ModeWork; 
+extern char ModeWork; 
+ // признак перерисовки экрана в динамических режимах
+extern char ModeReDrawLCD ; // Анализатор, главное меню (там часы)
+ // Номер текущей страницы индикатора для востановления
+extern char NumCurrPage ; // 
 
 // внешняя переменная для конфигурации пина управления (CW) лазером
 //extern unsigned long PIN_PHLD;

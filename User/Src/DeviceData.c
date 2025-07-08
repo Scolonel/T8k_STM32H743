@@ -42,7 +42,8 @@ CFG_USR UserSet;
 ADC_CODE AdcCodes[18];
 //char CommentsOTDR[20] = {"                   \0"}; //комментарии рефлектометра перенесено из modes.c
 uint8_t StrTXOpt[64]; // буффер передачи данных по оптике
-
+// структура данных из памяти (из файла)
+FILESDATA MemD;
 uint8_t TxOptBusy=0; // признак занятости UatrOptic
 uint8_t TimeSCWP=0; // счетчик времени для переключения лазеров
 
@@ -57,7 +58,7 @@ static volatile unsigned short CheckSum = 0;
 //
 unsigned InvalidDevice() //boolean actually
 {
-  BYTE N_LS=0;
+//  BYTE N_LS=0;
      unsigned err_str = 0;
   unsigned res = ConfigDevice.NumDevice > 9999; // 0x80
   res = (res<<1) | (ConfigDevice.ID_Device >1); // чей прибор (топаз или MOT) 0x04

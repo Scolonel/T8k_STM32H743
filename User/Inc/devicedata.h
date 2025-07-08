@@ -72,7 +72,7 @@ typedef struct
     char FiberName[20];                             // имя волокна 10
     char Comments[20];                              // комментарий по умолчанию 20
     float CWDMDataMem[18]; // данные сохранений
-} strFILESDATA;                                      // 
+} FILESDATA;                                      // 
 
 unsigned InvalidDevice(); //boolean actually
 void InitDevice(unsigned Err);
@@ -86,6 +86,8 @@ BYTE GetLang(int Dir); // получение текущего языка/ или переключение
 WORD GetNumDevice(void); // получение номера  прибора
 WORD SetNumDevice(WORD Num); // установка номера  прибора
 void GetNumVer (char* Str); // получение номера версии
+// получение идентификатора "железа" , что и как сконфигурировано
+void GetDeviceHW( char* name ); // from Computer
 
 // структура данных о батарейки, пишем по элементу каждую минуту от включения(0...1023)
 extern BAT_CNTR LvlBatSav;
@@ -99,6 +101,8 @@ extern TAB_SET CoeffLW;
 extern CFG_DEV ConfigDevice;
 // пользовательские настройки (текущие) для востановления после включения
 extern CFG_USR UserSet;
+// структура данных из памяти (из файла)
+extern FILESDATA MemD;
 
 
 #endif  /* __DEVICEDATA_H__ */
