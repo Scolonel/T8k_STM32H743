@@ -639,6 +639,8 @@ int main(void)
       LED_START(0);
       
     }
+    // проверка окончания записи индикатора
+    if(ProgFW_LCD==2) ProgFW_LCD=0;
     
     /* USER CODE END WHILE */
     
