@@ -119,6 +119,10 @@ uint32_t BadBatCnt = 0; // счетчик времени плохой батарейки
   
 float Ubat=4.6; // начальное напр€жение батареи
 uint16_t BufADC[SizeBuf_ADC_int]; // буфер внутреннего ј÷ѕ (8), в него пишем при съеме DMA, размер до 8
+
+uint8_t g_ErrFW_LCD = 0; // не правильна€ прошивка индикатора
+uint8_t TimerDraw = 0; // врем€ прорисовки ошибки , каждую секунду...
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -196,33 +200,21 @@ int main(void)
   {
     CheckErrID_Plate=1;
   }
+  
+  CmdInitPage(0);// вызов окна заставки
+
+  CmdInitPage(0);// вызов окна заставки
+  
   if(CheckErrID_Plate)
   {
     sprintf((void*)Str, "t0.txt=\"! ќЎ»Ѕ ј !\"€€€"); // auto
     NEX_Transmit((void*)Str);    // 
-    sprintf((void*)Str, "t1.txt=\"!прибор не тот!\"€€€"); // auto
+    sprintf((void*)Str, "t1.txt=\"ѕќ от другого прибора\"€€€"); // auto
     NEX_Transmit((void*)Str);    // 
     
     while(1);
     
   }
-    CmdInitPage(0);// вызов окна заставки
-
-//  HAL_Delay(10);
-//  sprintf((void*)Str, "page 0€€€"); // < START>
-//  NEX_Transmit((void*)Str);    //
-  //       StartRecievNEX (500);
-  //    sprintf((void*)Str,"get t10.txt€€€");
-  //    NEX_Transmit((void*)Str);//
-  //NEX_Transmit((void*)CmdBuf);//
-  CmdInitPage(0);// вызов окна заставки
-//  HAL_Delay(10);
-//  sprintf((void*)Str, "page 0€€€"); // < START>
-//  NEX_Transmit((void*)Str);    //
-//  HAL_Delay(10);
-  //    sprintf((void*)Str, "t0.txt=\"начало\"€€€"); // auto
-  //    NEX_Transmit((void*)Str);    // 
-  //      HAL_Delay(10);
   
   StartRecievNEX (400);
   sprintf((void*)Str,"get tlcd.txt€€€");
@@ -259,6 +251,10 @@ int main(void)
     //        KnowLCD = 0;
     //        break;
     //      }
+    
+    if(VerFW_LCD[6]!='8')
+      g_ErrFW_LCD = 1;;
+      
   }
   // пошлем сообщение о включении ...
   sprintf((void*)Str, "t1.txt=\"¬ключение...\"€€€"); // auto
@@ -448,7 +444,8 @@ int main(void)
       CountTimerPA++;
       if(CountTimerPA>33)
       {
-        // каждую секунду, посчитаем батарейку
+        TimerDraw = 1;
+         // каждую секунду, посчитаем батарейку
         // (BufADC[0]*(2.5/4096))
         // хорошо зар€женные 5.3-5.4 -
         // без аккумул€тора от сети вижу 4.33 

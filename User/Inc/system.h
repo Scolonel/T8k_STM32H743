@@ -230,6 +230,10 @@ extern uint32_t BusyUSB ; // признак передачи данных по USB, с SD картой
 extern uint32_t PresentUSB ; // признак подключенного USB
 extern uint32_t ModeUSB ; // признак подключенного USB
 
+extern uint8_t g_ErrFW_LCD; // не правильная прошивка индикатора
+extern uint8_t TimerDraw; // время прорисовки ошибки , каждую секунду...
+
+
 //extern   FIL Fil;
 //extern   FRESULT FR_Status;
 //extern   FRESULT res;

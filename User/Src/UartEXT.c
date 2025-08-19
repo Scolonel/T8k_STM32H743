@@ -134,7 +134,7 @@ void DecodeCommandRS (void)
                 Mdl=0; // определяем модель по конфигурации длинн волн
     
             // версия ПО
-            sprintf (Str, "v3.%02d%c", NUM_VER/26, (0x61+(NUM_VER%26))); // версия должна быть не ниже 2.01 (28.06.2022)
+            sprintf (Str, "v4.%02d%c(%03d)", NUM_VER/26, (0x61+(NUM_VER%26)),NUM_VER); // версия должна быть не ниже 2.01 (28.06.2022)
 
           // GetDeviceName( BufString ); // запрос сторки идентификатора
           sprintf(BufString,"%s-%d,%s,SN%04d\r",DeviceIDN[ConfigDevice.ID_Device],Mdl,Str,ConfigDevice.NumDevice);
