@@ -59,8 +59,23 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+// программа для цифровой платы STM743 для ТОпаз-8000
+// сигналы с цифровой платы на аналоговую
+// используем на цифровой плате только короткие разъемы 8 пин
+// по схеме цифровой,  пин контроллера, пин цифровой, пин аналоговый, функция,
+// GND -  * - x16.2 - x2.8 - Земля 
+// GND  - * - x16.4 - x2.6 - Земля
+// 5V_A2 - * - x17.6 - x3.4 = питание 5 вольт
+// 1 - U8.9 (P5) - x17.8 - x3.2 - ANLG_A2 - выбор адреса канала
+// 3 - U8.7 (P3) - x17.7 - x3.1 - ANLG_A0 - выбор адреса канала
+// 2 - U8.8 (P4) - x17.5 - x3.3 - ANLG_A1 - выбор адреса канала
+// SHDN - U8.10 (P6) - x17.4 - x3.6 - ANLG_A3 - выбор адреса канала
+// CTRL - U8.5 (P1) - x17.3 - x3.5 - WR - запись адреса канала
+// CLK_ADC_OUT - FREE1 (PA7) ADC_INP7 - x16.7 - x2.1 - ANLG_CHNLS1 аналоговый выход на АЦП
+// CLK_ADC_IN - FREE2 (PC5) ADC_INP8 - x16.6 - x2.4 - ANLG_CHNLS2 аналоговый выход на АЦП
 
-const uint16_t TstDacCode[9]={128,512,64,1024,32,2048,256,384,3000};
+//const uint16_t TstDacCode[9]={128,512,64,1024,32,2048,256,384,3000};
+const uint16_t TstDacCode[9]={1500,1800,2100,2400,2700,3000,3300,3600,4000};
 uint16_t KeyP; // клавиши нажатые 
   char DigitSet = 1; //шаг изменеия устанавливаемого затухания
   char LvlBatInd=8; //индикатор уровня батарейки
@@ -416,13 +431,17 @@ int main(void)
       }
       SumAdcOne +=AdcCodes[CntChanel].dADC[0] = BufADC[2];
       SumAdcTwo +=AdcCodes[CntChanel+9].dADC[0] = BufADC[3];
+      // записываем текущее значение усредненного уровня по текущему индексу (поКЛЮЧУ)
       AdcCodes[CntChanel].AvrgADC = SumAdcOne/NUMAVRG;
       AdcCodes[CntChanel+9].AvrgADC = SumAdcTwo/NUMAVRG;
       // которое прописываем в соотв ячейку
       //CWDMData[CntChanel] = BufADC[2]*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[CntChanel];    
-      //CWDMData[CntChanel+9] = BufADC[3]*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9];    
-      CWDMData[CntChanel] = AdcCodes[CntChanel].AvrgADC*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[CntChanel];    
-      CWDMData[CntChanel+9] = AdcCodes[CntChanel+9].AvrgADC*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9];    
+      //CWDMData[CntChanel+9] = BufADC[3]*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9]; 
+      // здесь сложная ориентация перезаписи, то есть перебор по местам в КЛЮЧЕ от 0 до 8 по двум
+      // каналам но в CWDMData совсем другие индексы CWDM , главное записать в правильную ячейку
+      int IndxCWDM[]={13,12,11,10,9,8,7,6,5,14,15,16,17,0,1,2,3,4};
+      CWDMData[IndxCWDM[CntChanel]] = AdcCodes[CntChanel].AvrgADC*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[IndxCWDM[CntChanel]];    
+      CWDMData[IndxCWDM[CntChanel+9]] = AdcCodes[CntChanel+9].AvrgADC*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[IndxCWDM[CntChanel+9]];    
       // изменяем счетчик перебора
       if(CntChanel<8)CntChanel++;
       else CntChanel=0;
@@ -432,6 +451,9 @@ int main(void)
       //HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,TstDacCode[CurrLevelDAC]);
       HAL_DAC_SetValue(&hdac1,DAC_CHANNEL_2,DAC_ALIGN_12B_R,TstDacCode[CntChanel]);
       //
+      // управление сигналом записи (CTRL - ANLG_WR)
+      CtrlExpand(0,0x2);
+      CtrlExpand(2,0x2);
       KeyP = SetBtnStates( GetExpand (), 1 ); // опрос клавиатуры
       GetSysTick(1);// сброс системного ожидания
       // управление красным лазером

@@ -1415,7 +1415,7 @@ void SaveFileSD(int Mod)
     cnt_seek += add_seek;
     f_lseek (&Fil, cnt_seek);
     // пишем идентификатор NUM_VER/26, (0x61+(NUM_VER%26))
-    add_seek =  sprintf(Str,"%s;v4.%02d%c;SN%04d;\n",(ConfigDevice.ID_Device)?("MOT-700"):("TOPAZ-8021N"),NUM_VER/26, (0x61+(NUM_VER%26)),ConfigDevice.NumDevice);
+    add_seek =  sprintf(Str,"%s;v4.%02d%c;SN%04d;\n",(ConfigDevice.ID_Device)?("MOT-700"):("TOPAZ-8025"),NUM_VER/26, (0x61+(NUM_VER%26)),ConfigDevice.NumDevice);
     res = f_write(&Fil, Str, strlen(Str), &len);
     cnt_seek += add_seek;
     f_lseek (&Fil, cnt_seek);

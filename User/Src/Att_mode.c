@@ -213,15 +213,15 @@ void ModeWelcome(void)// режим заставки
     // инициализация не изменяемых величин
     // наименование прибора
     int  Mdl=0; // определяем модель по конфигурации длинн волн
-    //    for (int y=0;y<4;++y)
-    //    {
-    //      if((ConfigDevice.PlaceLW[y]>0)&&(ConfigDevice.PlaceLW[y]<1310))
-    //        Mdl|=1;
-    //      if(ConfigDevice.PlaceLW[y]>1300)
-    //        Mdl|=2;
-    //    }
+//        for (int y=0;y<4;++y)
+//        {
+//          if((ConfigDevice.PlaceLW[y]>0)&&(ConfigDevice.PlaceLW[y]<1310))
+//            Mdl|=1;
+//          if((ConfigDevice.PlaceLW[y]>1300)||(ConfigDevice.PlaceLW[y]==1064))
+//            Mdl|=2;
+//        }
     
-    sprintf(StrN,"%s-%d",DeviceIDN[ConfigDevice.ID_Device],Mdl);
+    sprintf(StrN,"%s",DeviceIDN[ConfigDevice.ID_Device]);
     sprintf (Str,"t0.txt=\"%s\"яяя",StrN); // 
     NEX_Transmit((void*)(void*)Str);//
     // производитель

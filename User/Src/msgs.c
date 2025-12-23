@@ -13,7 +13,7 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"Сохранить?","Save ?","Uloz ?","Save ?"},       //5
 
 // Главное меню
-{"ТОПАЗ-8021N ","TOPAZ-8021N ","MOT-800M-18B","MOT-800M-18B"},              //6
+{"ТОПАЗ-8025 ","TOPAZ-8025 ","MOT-800M-18B","MOT-800M-18B"},              //6
 {"АНАЛИЗАТОР","ANALYSER","ANALYZATOR","ANALYSER"},       //7
 {"ТЕСТЕР","TESTER","TESTER","TESTER"},                         //8
 {"ПАМЯТЬ","MEMORY","PAMET","MEMORY"},                  //9
