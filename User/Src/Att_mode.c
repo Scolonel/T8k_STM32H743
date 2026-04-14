@@ -1806,11 +1806,11 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
       NEX_Transmit((void*)Str);    //
       // можно получить строчку дат объявленной папки
       Nweek = atoi(&NameDir[PageDir*12+i][3]);
-      if(Nweek)
-      {
-      sprintf(Str, "t%d.txt=\"%s\"яяя",i+15 ,MsgWeek[Nweek-1]); // < событиe >
-      NEX_Transmit((void*)Str);    //
-      }
+//      if(Nweek)
+//      {
+//      sprintf(Str, "t%d.txt=\"%s\"яяя",i+15 ,MsgWeek[Nweek-1]); // < событиe >
+//      NEX_Transmit((void*)Str);    //
+//      }
     }
     for (int i=0; i<12; i++)
     {
@@ -1834,14 +1834,16 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
 //    {
     
     myBeep(10);
-      SetMode(ModeFileMngFiles);
+      //SetMode(ModeFileMngFiles);
+      SetMode(ModeFileMngDirD);
+
       IndexNameFiles=0;// индекс файла на который указываем
       //ModeDevice = MODEMEMR;
       //ModeMemDraw = VIEWNEXT;
       //ReturnMemView = 1; // надо вернуться сюда же по ESC
          // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
       //KeyP = 0;
-      CmdInitPage(11); // новое окно лист бокс перечня файлов в текущей дирректории
+      CmdInitPage(10); // новое окно лист бокс перечня файлов в текущей дирректории
        //CreatDelay(1000000);
 //    }
       ClrKey(BTN_OK);
@@ -1862,6 +1864,100 @@ void ModeFileMngDir(void) // режим файл менеджера директорий
     //}
   }
 }
+//--------------------------------------------------------------------------------
+// второй уровень подпапок по дате
+// папка года_месяц и папка числа введем переменную ???LevelDir - определяющую что рисовать и откуда
+
+void ModeFileMngDirD(void) // режим файл менеджера директорий
+{
+  char Str[32];
+  
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED)) 
+  {
+    myBeep(10);
+    if(IndexNameDirD>0)IndexNameDirD--;
+    g_NeedScr=1;
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    if((IndexNameDirD+1)<NumNameDirD)IndexNameDirD++;
+    g_NeedScr=1;
+  }
+  if (g_FirstScr)
+  {
+    SDMMC_SDCard_DIRD(); // прочитаем дирректории
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации
+    sprintf(Str, "t0.txt=\"0:/_T8KN/%s\"яяя",NameDir[IndexNameDir]); // < событиe >
+    NEX_Transmit((void*)Str);    //
+    sprintf(Str, "t14.txt=\"%d\"яяя", NumNameDirD); // < сколько папок нашли >
+    NEX_Transmit((void*)Str);    //
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    sprintf(Str, "t13.txt=\"%d\"яяя", IndexNameDirD+1); // < какая папка выбрана >
+    NEX_Transmit((void*)Str);    //
+    if (IndexNameDirD > NumNameDirD) IndexNameDirD = 0; 
+    // тут нужен сложный подсчет указателя на папки в индикации
+    // из выполнения условий текущий индекс папки должен быть меньше
+    // числа паПок,и индикационный тндекс должен устанавливаться в соответствии с 
+    // текущим индексом выбранной папки
+    IndexLCDNameDirD = IndexNameDirD%12; // как как у нас 12 полей
+    PageDirD = IndexNameDirD/12; // получим страницу перечня директорий котрую нужно отображать
+    // заполним поля индикатора именами директорий
+    for (int i=0; i<12; i++)
+    {
+      
+      sprintf(Str, "t%d.txt=\"%s\"яяя",i+1 ,NameDirD[PageDirD*12+i]); // < событиe >
+      NEX_Transmit((void*)Str);    //
+      
+    }
+    for (int i=0; i<12; i++)
+    {
+      // закрасим бэкграунды  и установим требуемый
+      sprintf(Str,"t%d.bco=WHITEяяя",i+1); // белый
+      NEX_Transmit((void*)Str);// 
+    }
+    sprintf(Str,"t%d.bco=GREENяяя",IndexLCDNameDirD+1); // GREEN
+    NEX_Transmit((void*)Str);    //
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+  }
+  // обработка кнопки "OK"
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==UP_SHORT_PRESSED)) // переход в режим просмотра с переключением зума
+  {
+    // вызов окна выбора файлов при просмотре памяти
+    myBeep(10);
+      SetMode(ModeFileMngFiles);
+//      ReturnMemView = 1; // надо вернуться сюда же по ESC
+         // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      //KeyP = 0;
+      ClrKey(BTN_OK);
+      CmdInitPage(11); // новое окно лист бокс перечня файлов в текущей дирректории
+       //CreatDelay(1000000);
+      HAL_Delay(100);
+  }
+
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    // здесь над витвится в зависимости от признака откуда пришли
+//    if(ReturnMemView)
+//    {
+      //DeleteTrace = 0;
+      SetMode(ModeFileMngDir);
+      //ModeDevice = MODEOTHER;
+      myBeep(10);
+      // посылка команды переключения окна на Memory (возврат)  
+      CmdInitPage(10);
+//    }
+  }
+}
+
 //--------------------------------------------------------------------------------
 // вызываем чтение SD Card для поиска файлов , составляем список
 // "правильных" файлов, устанавливаем курсоры если они не изменились,
@@ -1952,7 +2048,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (Окно 34)
     
     // здесь можно прочитать файл на котрый указываем и разобрать его
     // перепишем егов структуру что бы второй раз не читаить
-    sprintf(FilPath, "0:/_T8KN/%s/%s",NameDir[IndexNameDir],NameFiles[IndexNameFiles]); // путь к файлу
+    sprintf(FilPath, "0:/_T8KN/%s/%s/%s",NameDir[IndexNameDir],NameDirD[IndexNameDirD],NameFiles[IndexNameFiles]); // путь к файлу
     // откроем файл и прочитаем размер блока
     FR_Status = f_open(&Fil, FilPath, FA_READ);
     if(FR_Status == FR_OK)
@@ -2111,7 +2207,7 @@ for(j=0; j<18; j++)
       // здесь над витвится в зависимости от признака откуда пришли
       //if(ReturnMemView)
       //{
-      SetMode(ModeFileMngDir);
+      SetMode(ModeFileMngDirD);
       //ModeDevice = MODEMEMR;
       //ModeMemDraw = VIEWNEXT;
       //ReturnMemView = 1; // надо вернуться сюда же по ESC

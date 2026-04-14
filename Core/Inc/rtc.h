@@ -69,7 +69,7 @@ void k_GetDate  (RTC_DateTypeDef *Date);
 
 void RTCSetTime( RTCTime Time );
 
-uint32_t GetFolder (char *Str); // получение названи€ папки по текущему времени каждые 7 дней мен€етс€ папка
+void GetFolder (char *Str,int mod); // получение названи€ папки по текущему времени по году_мес€цу или ƒню
 
 RTCTime RTCGetTime(void); // получение времени в формате T7kAR из рабочих регистров
 uint32_t get_fattime_RTC (void);

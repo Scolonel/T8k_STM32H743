@@ -75,8 +75,9 @@ void MX_RTC_Init(void)
    //  1746514800 - 06 may 2025 10.00.00
    //  1751364000 - 01 july 2025 10.00.00
    //  1766473200 - 23 december 2025 10.00.00
+   //  1776150000 - 14 april 2026 10.00.00
   
-  if(CurTime < 1766473200)
+  if(CurTime < 1776150000)
   {
   /* USER CODE END Check_RTC_BKUP */
 
@@ -92,9 +93,9 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_DECEMBER;
-  sDate.Date = 23;
-  sDate.Year = 25;
+  sDate.Month = RTC_MONTH_APRIL;
+  sDate.Date = 14;
+  sDate.Year = 26;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
   {
@@ -332,17 +333,36 @@ unsigned int TotalSec( RTCTime CurrentTime) // подсчет общего времени в сек
   
 }
 
-uint32_t GetFolder (char *Str) // получение названия папки по текущему времени каждые 7 дней меняется папка
+//uint32_t GetFolder (char *Str) // получение названия папки по текущему времени каждые 7 дней меняется папка
+//{
+//    unsigned int MDays[]={0,31,59,90,120,151,181,212,243,273,304,334};
+//  RTC_DateTypeDef          Date;  
+//  uint32_t AllDay;
+//  k_GetDate(&Date);  
+//  AllDay = MDays[Date.Month-1] + Date.Date;
+//  if((!((Date.Year) % 4))&&(Date.Month>2)) AllDay++;
+//  AllDay = (AllDay-1)/7+1;
+//  sprintf(Str, "%2d_%02d",Date.Year%100, AllDay);
+//  return AllDay;
+//}
+
+void GetFolder (char *Str, int mod) // получение названия папки по текущему времени каждые 7 дней меняется папка
 {
-    unsigned int MDays[]={0,31,59,90,120,151,181,212,243,273,304,334};
+  //  unsigned int MDays[]={0,31,59,90,120,151,181,212,243,273,304,334};
   RTC_DateTypeDef          Date;  
-  uint32_t AllDay;
+  //uint32_t AllDay;
   k_GetDate(&Date);  
-  AllDay = MDays[Date.Month-1] + Date.Date;
-  if((!((Date.Year) % 4))&&(Date.Month>2)) AllDay++;
-  AllDay = (AllDay-1)/7+1;
-  sprintf(Str, "%2d_%02d",Date.Year%100, AllDay);
-  return AllDay;
+  //AllDay = MDays[Date.Month-1] + Date.Date;
+  //if((!((Date.Year) % 4))&&(Date.Month>2)) AllDay++;
+  //AllDay = AllDay/7+1;
+  //sprintf(Str, "%2d_%02d",Date.Year%100, AllDay);
+  if(mod)
+  sprintf(Str, "%2d_%02d",Date.Year%100, Date.Month);
+  else
+  sprintf(Str, "%02d",Date.Date);
+    
+  
+  
 }
 
 void Sec2Date( unsigned long TimeSec, RTCTime* CurrentTime) // перевод секунд в дату

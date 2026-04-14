@@ -26,6 +26,7 @@ void ModeKBFiberName(void); // режим отображения клавиатуры редактора FiberName
 void ModeKBComments(void); // режим отображения клавиатуры редактора Comments
 void ModeSaverFILE(void); // режим сохранения FILES
 void ModeFileMngDir(void); // режим файл менеджера директорий
+void ModeFileMngDirD(void); // режим файл менеджера директорий
 void ModeFileMngFiles(void); // режим файл менеджера файлов
 
 // окно индикации анализатора, тут будем измерять

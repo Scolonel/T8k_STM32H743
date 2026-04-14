@@ -6,14 +6,20 @@
 #include "fatfs.h"
 
 char NameDir[100][6];
-char NameFiles[512][18];
-uint32_t NumNameDir=0; // число имен директорий
-uint32_t IndexNameDir=0;// индекс дирректории на которую указываем
-uint32_t IndexLCDNameDir=0;// индекс указателя на индикаторе дирректории на которую указываем
+char NameDirD[32][6]; // список дирректорий по дате
+char NameFiles[1024][18];
+//char NameFiles[512][18];
+uint32_t NumNameDir=0; // число имен директорий год-месяц
+uint32_t IndexNameDir=0;// индекс дирректории на которую указываем год-месяц
+uint32_t IndexLCDNameDir=0;// индекс указателя на индикаторе дирректории на которую указываем год-месяц
+uint32_t NumNameDirD=0; // число имен директорий дата число
+uint32_t IndexNameDirD=0;// индекс дирректории на которую указываем дата число
+uint32_t IndexLCDNameDirD=0;// индекс указателя на индикаторе дирректории на которую указываем дата число
 uint32_t NumNameFiles=0; // число имен файлов
 uint32_t IndexNameFiles=0;// индекс файла на который указываем
 uint32_t IndexLCDNameFiles=0;// индекс указателя на индикаторе файла на который указываем
 uint32_t PageDir; 
+uint32_t PageDirD; 
 uint32_t PageFiles; // страница файлов
 
   float TmpACI;
@@ -35,6 +41,8 @@ uint32_t PageFiles; // страница файлов
   char*   fn;
   const  char PathMainDir[9]={"0:/_T8KN\0"}; // 
   char PathF[64];
+  char PathD[64];
+  char PathDirD[24]; // путь ко второму уровню директорий (дата число)
   //char   path=;
   uint32_t TotalSize, FreeSpace;
     char FileNameS[32]; // имя файла куда сохраняем
@@ -156,7 +164,7 @@ void SDMMC_SDCard_FILES(void) // прочитаем список файлов в директории
     memset(&NameFiles,0,sizeof(NameFiles));
     // почитаем список файлов в данной директории (по указателю на директорию берем путь к файлам...
           //создадим полны путь к директории  чтобы её открыть
-    sprintf(PathFileS,"%s/%s",PathMainDir,NameDir[IndexNameDir]);
+    sprintf(PathFileS,"%s/%s/%s",PathMainDir,NameDir[IndexNameDir],NameDirD[IndexNameDirD]);
    
     res = f_opendir(&dir, PathFileS);
     if(res == FR_OK)
@@ -248,45 +256,13 @@ void SDMMC_SDCard_DIR(void) // прочитаем дирректроии
     }
         HAL_Delay(2);
 
-    // создаем или проверяем наличие дирректории _OTDR
-    res = f_mkdir(PathMainDir);//"0:/_OTDR"
+    // создаем или проверяем наличие дирректории _T8KN
+    res = f_mkdir(PathMainDir);//"0:/_T8KN"
     if(res == FR_EXIST)
     {
       //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
       res = FR_OK;
     }
-//    // тестовое создание дирректории по дате, далее это на надо
-//    GetFolder(FileNameS);
-//    
-//    sprintf(PathF,"%s/%s",PathMainDir,FileNameS);
-//    res = f_mkdir(PathF);
-//    //res = f_unlink(PathF);
-//    if(res == FR_EXIST)
-//    {
-//      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
-//      res = FR_OK;
-//    }
-//        HAL_Delay(2);
-//    // почитаем директории...только что созданные 
-//    res = f_opendir(&dir, PathF);
-//        HAL_Delay(2);
-//    f_closedir(&dir);
-    
-    
-    //else
-    //  sprintf ((char*)TxBuffer,"Make MainDir Ok\r");
-    //UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
-    // проверка объема флэшки
-    //sprintf(TxBuffer, "00000\nSD Card Mounted Successfully! \r\n\n");
-    // UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
-    //------------------[ Get & Print The SD Card Size & Free Space ]--------------------
-    //f_getfree("", &FreeClusters, &FS_Ptr);
-    //TotalSize = (uint32_t)((FS_Ptr->n_fatent - 2) * FS_Ptr->csize * 0.5);
-    //FreeSpace = (uint32_t)(FreeClusters * FS_Ptr->csize * 0.5);
-    //sprintf(TxBuffer, "Total SD Card Size: %lu Bytes\r\n", TotalSize);
-    //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
-    //sprintf(TxBuffer, "Free SD Card Space: %lu Bytes\r\n\n", FreeSpace);
-    //  UARTSendExt((void*)TxBuffer,strlen(TxBuffer)); // выдаем 
     uint32_t OldIndexNameDir = IndexNameDir;
     NumNameDir=0; // число имен директорий
     IndexNameDir=0;// индекс дирректории на которую указываем
@@ -351,97 +327,84 @@ void SDMMC_SDCard_DIR(void) // прочитаем дирректроии
     f_closedir(&dir);
     
     
-    //    //------------------[ Open A Text File For Write & Write Data ]--------------------
-    //    //Open the file
-    //    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
-    //    sprintf(FileNameS,"MyFile%03d.txt",Num);
-    //    FR_Status = f_open(&Fil, FileNameS, FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
-    //    if(FR_Status != FR_OK)
-    //    {
-    //      sprintf(TxBuffer, "Error! While Creating/Opening A New Text File, Error Code: (%i)\r\n", FR_Status);
-    //      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-    //      break;
-    //    }
-    //    sprintf(TxBuffer, "Text File Created & Opened! Writing Data To The Text File..\r\n\n");
-    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),100); // выдаем 
-    //    // (1) Write Data To The Text File [ Using f_puts() Function ]
-    //    f_puts("Hello! From STM32 To SD Card Over SDMMC, Using f_puts()\n", &Fil);
-    //    // (2) Write Data To The Text File [ Using f_write() Function ]
-    //    strcpy(RW_Buffer, "Hello! From STM32 To SD Card Over SDMMC, Using f_write()\r\n");
-    //    f_write(&Fil, RW_Buffer, strlen(RW_Buffer), &WWC);
-    //    // Close The File
-    //    f_close(&Fil);
-    //    //------------------[ Open A Text File For Read & Read Its Data ]--------------------
-    //    // Open The File
-    //    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_READ);
-    //    FR_Status = f_open(&Fil, FileNameS, FA_READ);
-    //    if(FR_Status != FR_OK)
-    //    {
-    //      sprintf(TxBuffer, "Error! While Opening (MyTextFile.txt) File For Read.. \r\n");
-    //      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-    //      break;
-    //    }
-    //    // (1) Read The Text File's Data [ Using f_gets() Function ]
-    //    f_gets(RW_Buffer, sizeof(RW_Buffer), &Fil);
-    //    sprintf(TxBuffer, "Data Read From (MyTextFile.txt) Using f_gets():%s", RW_Buffer);
-    //    //sprintf(TxBuffer, "Data Read From (%s) Using f_gets():%s",FileNameS, RW_Buffer);
-    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-    //    // (2) Read The Text File's Data [ Using f_read() Function ]
-    //    f_read(&Fil, RW_Buffer, f_size(&Fil), &RWC);
-    //    sprintf(TxBuffer, "Data Read From (%s) Using f_read():%s",FileNameS, RW_Buffer);
-    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-    //    // Close The File
-    //    f_close(&Fil);
-    //    sprintf(TxBuffer, "File Closed! \r\n\n");
-    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-    //    //------------------[ Open An Existing Text File, Update Its Content, Read It Back ]--------------------
-    //    // (1) Open The Existing File For Write (Update)
-    //    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_OPEN_EXISTING | FA_WRITE);
-    //    FR_Status = f_open(&Fil, FileNameS, FA_READ); // Open The File For Read
-    //    FR_Status = f_lseek(&Fil, f_size(&Fil)); // Move The File Pointer To The EOF (End-Of-File)
-    //    if(FR_Status != FR_OK)
-    //    {
-    //      sprintf(TxBuffer, "Error! While Opening (MyTextFile.txt) File For Update.. \r\n");
-    //      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-    //      break;
-    //    }
-    //    // (2) Write New Line of Text Data To The File
-    //    FR_Status = f_puts("This New Line Was Added During File Update!\r\n", &Fil);
-    //    f_close(&Fil);
-    //    memset(RW_Buffer,'\0',sizeof(RW_Buffer)); // Clear The Buffer
-    //    // (3) Read The Contents of The Text File After The Update
-    //    //FR_Status = f_open(&Fil, "MyTextFile.txt", FA_READ); // Open The File For Read
-    //    FR_Status = f_open(&Fil, FileNameS, FA_READ); // Open The File For Read
-    //    f_read(&Fil, RW_Buffer, f_size(&Fil), &RWC);
-    //    sprintf(TxBuffer, "Data Read From (MyTextFile.txt) After Update:\r\n%s", RW_Buffer);
-    //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-    //    f_close(&Fil);
-    //    //------------------[ Delete The Text File ]--------------------
-    //    // Delete The File
-    //    /*
-    //    FR_Status = f_unlink(MyTextFile.txt);
-    //    if (FR_Status != FR_OK){
-    //        sprintf(TxBuffer, "Error! While Deleting The (MyTextFile.txt) File.. \r\n");
-    //        USC_CDC_Print(TxBuffer);
-    //    }
-    //    */
   } while(0);
   //------------------[ Test Complete! Unmount The SD Card ]--------------------
   FR_Status = f_mount(NULL, "", 0);
-  // думал не закрывать флэшку
-  //        sprintf(TxBuffer, "\r\nSD Card NO   Un-mounted Successfully! \r\n");
-  //    HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-//  if (FR_Status != FR_OK)
-//
-//  {
-//      sprintf(TxBuffer, "\r\nError! While Un-mounting SD Card, Error Code: (%i)\r\n", FR_Status);
-//      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-//  } else{
-//      sprintf(TxBuffer, "\r\nSD Card Un-mounted Successfully! \r\n");
-//      HAL_UART_Transmit(&huart3, (void*)TxBuffer,strlen(TxBuffer),50); // выдаем 
-//  }
 }
+//-----------------------------------------------
+void SDMMC_SDCard_DIRD(void) // прочитаем дирректории вторго уровня (даты)
+{
+  do
+  {
+    //------------------[ Mount The SD Card ]--------------------
+    FR_Status = f_mount(&FatFs, SDPath, 1);
+    if (FR_Status != FR_OK)
+    {
+      break;
+    }
+        HAL_Delay(2);
 
+    // создаем или проверяем наличие дирректории _OTDR
+    sprintf(PathDirD,"%s/%s",PathMainDir,NameDir[IndexNameDir]);
+
+    
+    res = f_mkdir(PathDirD);//"0:/_OTDR"
+    if(res == FR_EXIST)
+    {
+      //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+      res = FR_OK;
+    }
+    // надо добавить путь от предыдущего поиска
+    
+    uint32_t OldIndexNameDirD = IndexNameDirD;
+    NumNameDirD=0; // число имен директорий
+    IndexNameDirD=0;// индекс дирректории на которую указываем
+    IndexLCDNameDirD=0;// индекс указателя на индикаторе дирректории на которую указываем
+    //NameDir[IndexNameDir][0] = 0; // обнулим массив  
+    memset(&NameDirD,0,sizeof(NameDirD));
+    // почитаем директории...
+    res = f_opendir(&dir, PathDirD);
+    if(res == FR_OK)
+    {
+      while(1)
+      {
+        res = f_readdir(&dir, &fno);
+        
+        if(res != FR_OK || fno.fname[0] == 0) // нет дирректорий выходим
+          break;
+        
+        fn = fno.fname; 
+        
+        if((fno.fattrib & AM_DIR) == AM_DIR) // дирректории
+        {
+          // это директории - надо проверить имя и записть в список
+          if(strlen(fn) == 2) // наш размер теперь проверим содержимое
+          {
+            // проверка на состав имени директории только двузначные (даты числа)
+            if((fn[0]>='0'&&fn[0]<='3')&&(fn[1]>='0'&&fn[1]<='9'))
+            {
+              memcpy( &NameDirD[NumNameDirD],fn,2);
+              NameDirD[NumNameDirD][3]=0;
+              NumNameDirD++;
+              //            sprintf(TxBuffer, "dir/%s\r",fn);
+            }
+          }
+          else
+            TxBuffer[0] = 0;
+          
+        }
+      }
+    }
+    if(OldIndexNameDirD <= NumNameDirD)
+      IndexNameDirD = OldIndexNameDirD;
+    f_closedir(&dir);
+    
+    
+   } while(0);
+  //------------------[ Test Complete! Unmount The SD Card ]--------------------
+  FR_Status = f_mount(NULL, "", 0);
+}
+//-------------------------------------------------------------
 // структура конфигурации прибора
 
 //BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм ячейки памяти меняется в памяти до MaxMemOTDR
@@ -1360,11 +1323,11 @@ void SaveFileSD(int Mod)
     if(Mod) // сохраняем в дирректроию недели и с именем файла по времени
     {
       // подготовим путь
-      // папка для сохранения делаем папку  
-      GetFolder(FileSDir);
+      // папка для сохранения делаем папку из года и месяца  
+      GetFolder(FileSDir,1);
       
-      sprintf(PathF,"%s/%s",PathMainDir,FileSDir);
-      FR_Status = f_mkdir(PathF);
+      sprintf(PathD,"%s/%s",PathMainDir,FileSDir);
+      FR_Status = f_mkdir(PathD);
       //res = f_unlink(PathF);
       if(FR_Status == FR_EXIST)
       {
@@ -1373,10 +1336,26 @@ void SaveFileSD(int Mod)
       }
       HAL_Delay(2);
       // почитаем директории...только что созданные 
-      FR_Status = f_opendir(&dir, PathF);
+      FR_Status = f_opendir(&dir, PathD);
       HAL_Delay(2);
       FR_Status = f_closedir(&dir);
       // папка создана
+      // делаем подпапку с датой
+      GetFolder(FileSDir,0);
+      sprintf(PathF,"%s/%s",PathD,FileSDir);
+      res = f_mkdir(PathF);
+      //res = f_unlink(PathF);
+      if(res == FR_EXIST)
+      {
+        //sprintf ((char*)TxBuffer,"Make MainDir Already Is\r");
+        res = FR_OK;
+      }
+      HAL_Delay(2);
+      // почитаем директории...только что созданные 
+      res = f_opendir(&dir, PathF);
+      HAL_Delay(2);
+      f_closedir(&dir);
+      
       // имя файла
       sprintf(FileNameS,"%02d%02d%02d_%02d%02d%02d.t8k",TimeSaveOTDR.RTC_Year%100,
               TimeSaveOTDR.RTC_Mon,

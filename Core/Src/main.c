@@ -439,7 +439,8 @@ int main(void)
       //CWDMData[CntChanel+9] = BufADC[3]*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9]; 
       // здесь сложна€ ориентаци€ перезаписи, то есть перебор по местам в  Ћё„≈ от 0 до 8 по двум
       // каналам но в CWDMData совсем другие индексы CWDM , главное записать в правильную €чейку
-      int IndxCWDM[]={13,12,11,10,9,8,7,6,5,14,15,16,17,0,1,2,3,4};
+      //int IndxCWDM[]={13,12,11,10,9,8,7,6,5,14,15,16,17,0,1,2,3,4};
+      int IndxCWDM[]={14,15,16,17,0,1,2,3,4,13,12,11,10,9,8,7,6,5};
       CWDMData[IndxCWDM[CntChanel]] = AdcCodes[CntChanel].AvrgADC*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[IndxCWDM[CntChanel]];    
       CWDMData[IndxCWDM[CntChanel+9]] = AdcCodes[CntChanel+9].AvrgADC*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[IndxCWDM[CntChanel+9]];    
       // измен€ем счетчик перебора

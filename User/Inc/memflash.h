@@ -43,6 +43,7 @@ void SpliceWRITE(unsigned int Trace);
 void AlarmReWriteTrace (void);
 
 void SDMMC_SDCard_DIR(void); // прочитаем дирректроии
+void SDMMC_SDCard_DIRD(void); // прочитаем дирректроии
 void SDMMC_SDCard_FILES(void); // прочитаем files
 void SaveFileSD(int Mod); // запись 0.sor на карточку в главную дирректорию
 uint32_t StartInitSDcard (void); 
