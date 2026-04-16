@@ -75,7 +75,14 @@ const char *MsgMass[MSG_NUM][LANG_NUM] =
 {"Обновлению ПО LCD","Upgrade FW LCD","Upgrade FW LCD","Upgrade FW LCD"},//58
 {"Дата/Время изменены","Up-to-date","Zmena data a casu","Up-to-date"},//59 Aktuell
 {" !!! СОХРАНЕНО !!! ","  !!! SAVED !!!  ","  !!! ULOZ !!!  ","  !!! SAVED !!!  "},       //60
-{"Подключение USB","Connecting USB","Connecting USB","Connecting USB"} //61
+{"Подключение USB","Connecting USB","Connecting USB","Connecting USB"}, //61
+{"Переподключите","To read","To read","To read"},//62  132 переподключите
+{"кабель USB","SD Card","SD Card","SD Card"},//63  133 кабель USB
+{"для чтения","reconnect","reconnect","reconnect"},//64  134 для чтения
+{"карты памяти","cable USB","cable USB","cable USB"},//65  135 карты памяти
+{"ОТКЛЮЧЕНО","DISCONNECTED","DISCONNECTED","DISCONNECTED"},//66   136 ОТКЛЮЧЕНО
+{"ПОДКЛЮЧЕНО","CONNECTED","CONNECTED","CONNECTED"},//67  137 ПОДКЛЮЧЕНО
+{"Внутренняя","Internal","Internal","Internal"}//68  Внутренняя SD
 
 
 };

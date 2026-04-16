@@ -101,10 +101,13 @@ uint8_t g_EnaQuickReDraw=0;; // признак быстрой перерисовки экрана когда анализа
 
 //variable USB
 //uint32_t RecievUSB=0 ; // признак принятия данных по USB, число данных в буфере
-uint32_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
+uint8_t BusyUSB=0 ; // признак передачи данных по USB, с SD картой
 // при приеме передаче взводим на 10 мС , и перезаводим при следующей передаче/приеме
-uint32_t PresentUSB = 0; // признак подключенного USB
-uint32_t ModeUSB = 0; // признак работы USB для индикации
+uint16_t PresentUSB = 0; // признак подключенного USB
+uint8_t ModeUSB = 0; // признак работы USB для индикации
+uint8_t MemMsgModeUSB = 0; // признак работы USB для индикации доп строчки
+uint8_t MSC_or_CDC = 0; // признак активности MSC для инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
+uint8_t g_CardSD = 0; // признак подключенной карты для правильной индикации
  
 unsigned int CheckErrMEM; 
 BYTE CurrLang; // текущий язык
@@ -137,6 +140,7 @@ uint16_t BufADC[SizeBuf_ADC_int]; // буфер внутреннего АЦП (8), в него пишем при
 
 uint8_t g_ErrFW_LCD = 0; // не правильная прошивка индикатора
 uint8_t TimerDraw = 0; // время прорисовки ошибки , каждую секунду...
+
 
 /* USER CODE END PV */
 
@@ -403,12 +407,14 @@ int main(void)
   EEPROM_write(&LvlBatSav.BatControl[0], ADR_BatSave  , 4);
   EEPROM_write(&LvlBatSav.BatControl[CountBat], ADR_BatSave +  4*CountBat , 4);
   
+  MX_USB_DEVICE_Init();
   CmdInitPage(0);// вызов окна заставки
   
   HAL_Delay(10);
   SetMode (ModeWelcome);
   CmdInitPage(0);// посылка команды переключения окна на Welcome и установка признака первого входа
-  MX_USB_DEVICE_Init();
+  HAL_Delay(1000);
+  MSC_or_CDC = 0; // признак активности MSC для инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
   
   
   /* USER CODE END 2 */

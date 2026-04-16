@@ -21,7 +21,7 @@
 //число сообщений и €зыков
 #define LANG_NUM 4  // число столбцов в таблице €зыков
 
-#define MSG_NUM 62
+#define MSG_NUM 69
 #define CMD_NUM 35 //команды Nextion
 
 #define TIMERE 500 //врем€ цикла красного глаза по 500 м—
@@ -148,6 +148,7 @@ extern uint32_t PageDirD;
 extern uint32_t PageFiles; 
 
 
+
 // check Speed Uart2
 int CheckSpeedUart2 (void);
 // for T5K 
@@ -231,9 +232,13 @@ extern volatile int NeedReturn; // необходимость вернутьс€ в окно сохранени€
 
 //extern BYTE MemTable[MaxMemOTDR+1]; // таблица рефлектограмм €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDR
 //extern BYTE MemTableExt[MaxMemOTDRExt+1]; // таблица рефлектограмм расширенной €чейки пам€ти мен€етс€ в пам€ти до MaxMemOTDRExt
-extern uint32_t BusyUSB ; // признак передачи данных по USB, с SD картой
-extern uint32_t PresentUSB ; // признак подключенного USB
-extern uint32_t ModeUSB ; // признак подключенного USB
+extern uint8_t BusyUSB ; // признак передачи данных по USB, с SD картой
+extern uint16_t PresentUSB ; // признак подключенного USB
+extern uint8_t ModeUSB ; // признак подключенного USB
+extern uint8_t MemMsgModeUSB ; // признак работы USB дл€ индикации доп строчки
+extern uint8_t MSC_or_CDC; // признак активности MSC по умолчанию запрещно
+extern uint8_t g_CardSD; // признак подключенной карты дл€ правильной индикации
+
 
 extern uint8_t g_ErrFW_LCD; // не правильна€ прошивка индикатора
 extern uint8_t TimerDraw; // врем€ прорисовки ошибки , каждую секунду...

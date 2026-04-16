@@ -25,6 +25,8 @@ void ModeKBCableID(void); // режим отображения клавиатуры редактора CableID
 void ModeKBFiberName(void); // режим отображения клавиатуры редактора FiberName
 void ModeKBComments(void); // режим отображения клавиатуры редактора Comments
 void ModeSaverFILE(void); // режим сохранения FILES
+void ModeSelectMEM(void); // режим выбора работы с памятью CHECK_OFF (окно 14)
+void ModeReadUSB(void); // режим чтения по USB памяти флэшки установка признака (окно 15)
 void ModeFileMngDir(void); // режим файл менеджера директорий
 void ModeFileMngDirD(void); // режим файл менеджера директорий
 void ModeFileMngFiles(void); // режим файл менеджера файлов

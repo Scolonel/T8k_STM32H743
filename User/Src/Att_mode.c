@@ -431,8 +431,10 @@ void ModeMain(void)// режим основной
 //    }
 //    else
 //    {
-      SetMode(ModeFileMngDir);
-      CmdInitPage(10);// посылка команды переключения окна на MemoryMenu
+//      SetMode(ModeFileMngDir);
+//      CmdInitPage(10);// посылка команды переключения окна на MemoryMenu
+      SetMode(ModeSelectMEM);
+      CmdInitPage(14);// посылка команды переключения окна на SelectMemoryMenu
 //    } 
       break;
     case 3: // УСТАНОВКИ
@@ -1750,6 +1752,206 @@ void ModeKBComments(void) // режим отображения клавиатуры редактора Comments
     
     
   }
+//----------------------------------------------------------------------------------
+void ModeSelectMEM(void) // режим выбора работы с памятью CHECK_OFF (окно 14)
+{
+  static volatile BYTE FrSelectMEM = 1; // указатель на курсор
+  char Str[32];
+  //BYTE CurrLang=GetLang(CURRENT);
+  //DWORD KeyP = SetBtnStates( KEYS_REG, 1 );
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // Need reDraw Screen
+    FrSelectMEM = ChangeFrSet (FrSelectMEM, 2, 1, MINUS);// установка курсора в рамках заданных параметров
+    //ClrKey (BTN_UP);
+  }
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // Need reDraw Screen
+    FrSelectMEM = ChangeFrSet (FrSelectMEM, 2, 1, PLUS);// установка курсора в рамках заданных параметров
+    //ClrKey (BTN_DOWN);
+  }
+  
+  
+  if (g_FirstScr)
+  {
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации
+    // Здесь практичски все поля 
+    sprintf(Str, "t0.txt=\"%s :\"яяя", MsgMass[9][CurrLang]);
+    NEX_Transmit((void*)Str);    // Память
+    
+    //sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[43][CurrLang]);
+    //NEX_Transmit((void*)Str);    // свободно
+    
+    sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[68][CurrLang]);
+    NEX_Transmit((void*)Str);    // внутренняя (SD Card)
+    
+    //sprintf(Str, "t3.txt=\"%4d\"яяя", MAXMEMALL-GetNumTraceSaved(0));
+    //NEX_Transmit((void*)Str);    // сколько свободно
+      sprintf(Str, "t2.txt=\"USB\"яяя");
+      NEX_Transmit((void*)Str);    // USB 
+    
+    
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+  if (g_NeedScr)
+  {
+    // здесь заполняем данными поля нового индикатора
+    // по результатам изменений вызваныйх обработчиком клавиатуры
+    
+    // раскрашивание поля выбора 
+    // закрасим бэкграунды  и установим требуемый
+    sprintf(Str, "t1.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);//
+    HAL_Delay(5);
+    sprintf(Str, "t2.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
+    sprintf(Str, "t%d.bco=GREENяяя", FrSelectMEM); // зеленый
+    NEX_Transmit((void*)Str);// 
+    HAL_Delay(5);
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+  }
+  
+  if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+  {
+    switch (FrSelectMEM) // выбор по кнопке "ОК"
+    {
+    case 1: // переход в память SD Card
+      myBeep(10);
+      
+      //SetMode(ModeMemoryOTDR);
+      SetMode(ModeFileMngDir);
+      // посылка команды переключения окна на Mem_OTDR_garaph (вызов)  
+      ClrKey(BTN_OK);
+      CmdInitPage(10); // новое окно лист бокс перечня директорий
+      //CreatDelay(1000000);
+      HAL_Delay(100);
+      
+      
+      break;
+    case 2: // переход в режим работы с памятью по USB
+        myBeep(10);
+        SetMode(ModeReadUSB);
+        //FrClearMEM = 2 + PowerMeter;
+        // посылка команды переключения окна на Select_MEM_Clr(вызов)  
+        MSC_or_CDC = 1; // признак активности MSC для инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
+        MemMsgModeUSB = 2; // так как первый вход, карточка не подключена
+        ClrKey(BTN_OK);
+        CmdInitPage(15);
+        //NeedReturn = 4; // что бы вернутся сюда же
+      break;
+    }
+    
+  }
+  if ((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))
+  {
+    myBeep(10);
+    SetMode(ModeMain);
+    //ModeDevice = MODEMENU;
+    // посылка команды переключения окна на MainMenu (возврат)  
+    CmdInitPage(1);
+    
+  }
+}
+//---------------------------------------------------------------------------------------
+void ModeReadUSB(void) // режим чтения по USB памяти флэшки установка признака (окно 15)
+{
+  char Str[32];
+  
+  if (g_FirstScr)
+  {
+    // здесь заполняем данными поля нового индикатора
+    // не требущие изменения при первичной инициализации   
+    // сообщение о том что надо переподключить провод USB
+    sprintf(Str, "t0.txt=\"%s\"яяя", MsgMass[62][CurrLang]); 
+    NEX_Transmit((void*)Str);    // Переподключите
+    
+    sprintf(Str, "t1.txt=\"%s\"яяя", MsgMass[63][CurrLang]);
+    NEX_Transmit((void*)Str);    // кабель USB
+    
+    sprintf(Str, "t2.txt=\"%s\"яяя", MsgMass[64][CurrLang]);
+    NEX_Transmit((void*)Str);    // для чтения     
+    
+    sprintf(Str, "t3.txt=\"%s\"яяя", MsgMass[65][CurrLang]); 
+    NEX_Transmit((void*)Str);    // карты памяти
+
+    if(g_CardSD) // признак подключенной карты для правильной индикации
+    MemMsgModeUSB = 1; // так как карточка подключена, но идет перерисовка то нужно зеленое
+ 
+    //MemMsgModeUSB = 2; // так как первый вход, карточка не подключена
+    g_FirstScr = 0;
+    g_NeedScr = 1;
+  }
+
+  // когда переподключили кабель и прочитали флэшку
+  if(MemMsgModeUSB)
+  {
+// признак работы USB для индикации доп строчки
+    // изменить цвет и надпись однократно
+    if(MemMsgModeUSB == 1) // зеленый
+    {
+    sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[67][CurrLang]); 
+    NEX_Transmit((void*)Str);    // отключено
+    sprintf(Str, "t4.bco=GREENяяя"); // зеленый
+    NEX_Transmit((void*)Str);// 
+    g_CardSD = 1; // признак подключенной карты для правильной индикации
+    }
+    else
+    {
+    sprintf(Str, "t4.txt=\"%s\"яяя", MsgMass[66][CurrLang]); 
+    NEX_Transmit((void*)Str);    // отключено
+    sprintf(Str, "t4.bco=64800яяя"); // оранжевый
+    NEX_Transmit((void*)Str);// 
+    g_CardSD = 0; // признак подключенной карты для правильной индикации
+    }
+    MemMsgModeUSB = 0;
+  }
+  
+  if (g_NeedScr)
+  {
+    // здесь заполняем данными поля нового индикатора
+    // по результатам изменений вызваныйх обработчиком клавиатуры
+    
+    // раскрашивание поля выбора 
+    // закрасим бэкграунды  и установим требуемый
+    sprintf(Str, "t1.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str, "t2.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);// 
+    sprintf(Str, "t3.bco=WHITEяяя"); // белый
+    NEX_Transmit((void*)Str);//
+    
+    // код подсветки требуемой строки если есть есть маркер строки
+    g_NeedScr = 0;
+    MSC_or_CDC = 1;
+  }
+  
+  if (((PRESS(BTN_MENU))&&(getStateButtons(BTN_MENU)==SHORT_PRESSED))||(NeedReturn))
+  {
+    myBeep(10);
+    g_NeedScr = 1; // Need reDraw Screen
+    if(!NeedReturn)
+    {
+    SetMode(ModeSelectMEM);
+      NeedReturn = 14;
+    }
+    //MX_USB_DEVICE_Init();
+
+    // посылка команды переключения окна на Memory (возврат)  
+    CmdInitPage(NeedReturn);
+    NeedReturn = 0;
+    MSC_or_CDC = 0;
+    g_CardSD = 0; // сбросим признак подключенной карты для правильной индикации
+
+    //ModeDevice = MODEMENU;
+  }
+}
 
 //----------------------------------------------------------------------------------
 // вызываем чтение SD Card для поиска директорий, составляем список
