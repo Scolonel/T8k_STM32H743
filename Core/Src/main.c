@@ -83,6 +83,12 @@ uint16_t KeyP; // клавиши нажатые
   // контроль идентификатора платы
  uint8_t CheckErrID_Plate=0; 
 
+      // здесь сложна€ ориентаци€ перезаписи, то есть перебор по местам в  Ћё„≈ от 0 до 8 по двум
+      // каналам но в CWDMData совсем другие индексы CWDM , главное записать в правильную €чейку
+int IndxCWDM[]={14,15,16,17,0,1,2,3,4,13,12,11,10,9,8,7,6,5};
+      // обратный индекс
+int ReIxCWDM[]={4,5,6,7,8,17,16,15,14,13,12,11,10,9,0,1,2,3};
+ 
      float CWDMData[18]; // данные 
      float CWDMDataMem[18]; // данные из пам€ти
      BYTE g_IndexMeas = 0; // счетчик индекс циклов
@@ -108,7 +114,9 @@ uint8_t ModeUSB = 0; // признак работы USB дл€ индикации
 uint8_t MemMsgModeUSB = 0; // признак работы USB дл€ индикации доп строчки
 uint8_t MSC_or_CDC = 0; // признак активности MSC дл€ инициализации разрешим, и как только сразу запретимпо умолчанию запрещно
 uint8_t g_CardSD = 0; // признак подключенной карты дл€ правильной индикации
- 
+
+uint8_t Tik_045 = 0; // тик дл€ медленной индикации, взводитс€ каждые 450 м— , в основном цикле...
+
 unsigned int CheckErrMEM; 
 BYTE CurrLang; // текущий €зык
 
@@ -446,7 +454,7 @@ int main(void)
       // здесь сложна€ ориентаци€ перезаписи, то есть перебор по местам в  Ћё„≈ от 0 до 8 по двум
       // каналам но в CWDMData совсем другие индексы CWDM , главное записать в правильную €чейку
       //int IndxCWDM[]={13,12,11,10,9,8,7,6,5,14,15,16,17,0,1,2,3,4};
-      int IndxCWDM[]={14,15,16,17,0,1,2,3,4,13,12,11,10,9,8,7,6,5};
+      //int IndxCWDM[]={14,15,16,17,0,1,2,3,4,13,12,11,10,9,8,7,6,5};
       CWDMData[IndxCWDM[CntChanel]] = AdcCodes[CntChanel].AvrgADC*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[IndxCWDM[CntChanel]];    
       CWDMData[IndxCWDM[CntChanel+9]] = AdcCodes[CntChanel+9].AvrgADC*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[IndxCWDM[CntChanel+9]];    
       // измен€ем счетчик перебора
@@ -474,6 +482,8 @@ int main(void)
       if(CountTimerPA>33)
       {
         TimerDraw = 1;
+        Tik_045 = 1; 
+
          // каждую секунду, посчитаем батарейку
         // (BufADC[0]*(2.5/4096))
         // хорошо зар€женные 5.3-5.4 -
@@ -608,60 +618,52 @@ int main(void)
       {
         // сбрасываем нажатые кнопки
         ClrKeyAll();
-        switch (ModeUSB)
+        if(Tik_045) //  каждые .45 сек
         {
-        case 3:
-          //sprintf(Stri,"xstr 80,85,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[61][CurrLang]); // зеленый ?
-          //NEX_Transmit((void*)Stri);//
-         //HAL_Delay(2);
-         //sprintf(Stri,"xstr 80,145,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[27][CurrLang]); // зеленый ?
-         //NEX_Transmit((void*)Stri);//
-         // HAL_Delay(50);
-                    sprintf((void*)Str,"pic 144,94,%d€€€",(g_IndexMeas%3)+53);
-                    //sprintf((void*)Str,"pic 144,94,53€€€");
-                    NEX_Transmit((void*)Str);//
- 
-//                    sprintf((void*)Str,"fill 0,0,480,4,RED€€€");
-//                    NEX_Transmit((void*)Str);//
-//                    sprintf((void*)Str,"fill 0,0,4,320,RED€€€");
-//                    NEX_Transmit((void*)Str);//
-//                    sprintf((void*)Str,"fill 476,4,4,320,RED€€€");
-//                    NEX_Transmit((void*)Str);//
-//                    sprintf((void*)Str,"fill 0,316,4480,4,RED€€€");
-//                    NEX_Transmit((void*)Str);//
-          ModeUSB=2;
-          break;
-        case 2:
-          //sprintf(Stri,"xstr 80,85,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[61][CurrLang]); // зеленый ?
-          //NEX_Transmit((void*)Stri);//
-          HAL_Delay(20);
-          //sprintf(Stri,"xstr 80,145,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[27][CurrLang]); // зеленый ?
-          //NEX_Transmit((void*)Stri);//
-          //HAL_Delay(50);
+          switch (ModeUSB)
+          {
+          case 3:
+            // вывод картинки о том что зан€то USB
+            sprintf((void*)Str,"pic 144,94,%d€€€",(g_IndexMeas%3)+53);
+            //sprintf((void*)Str,"pic 144,94,53€€€");
+            NEX_Transmit((void*)Str);//
+            MemMsgModeUSB = 1; // признак работы USB дл€ индикации доп строчки
+            ModeUSB=2;
+            break;
+          case 2:
+            //sprintf(Stri,"xstr 80,85,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[61][CurrLang]); // зеленый ?
+            //NEX_Transmit((void*)Stri);//
+            HAL_Delay(20);
+            //sprintf(Stri,"xstr 80,145,350,60,2,BLACK,2016,1,1,1,\"%s\"€€€",MsgMass[27][CurrLang]); // зеленый ?
+            //NEX_Transmit((void*)Stri);//
+            //HAL_Delay(50);
+            
+            //          sprintf((void*)Str,"fill 0,0,480,4,RED€€€");
+            //          NEX_Transmit((void*)Str);//
+            //          sprintf((void*)Str,"fill 0,0,4,320,RED€€€");
+            //          NEX_Transmit((void*)Str);//
+            //          sprintf((void*)Str,"fill 476,4,4,320,RED€€€");
+            //          NEX_Transmit((void*)Str);//
+            //          sprintf((void*)Str,"fill 0,316,4480,4,RED€€€");
+            //          NEX_Transmit((void*)Str);//
+            break;
+          default:
+            
+            //                    sprintf((void*)Str,"fill 0,0,480,4,WHITE€€€");
+            //                    NEX_Transmit((void*)Str);//
+            //                    sprintf((void*)Str,"fill 0,0,4,320,WHITE€€€");
+            //                    NEX_Transmit((void*)Str);//
+            //                    sprintf((void*)Str,"fill 476,4,4,320,WHITE€€€");
+            //                    NEX_Transmit((void*)Str);//
+            //                    sprintf((void*)Str,"fill 0,316,4480,4,WHITE€€€");
+            //                    NEX_Transmit((void*)Str);//
+            ModeUSB = 0;
+            CmdInitPage(NumCurrPage);
+            
+            break;
+          }
+          Tik_045 =0;
           
-          //          sprintf((void*)Str,"fill 0,0,480,4,RED€€€");
-          //          NEX_Transmit((void*)Str);//
-          //          sprintf((void*)Str,"fill 0,0,4,320,RED€€€");
-          //          NEX_Transmit((void*)Str);//
-          //          sprintf((void*)Str,"fill 476,4,4,320,RED€€€");
-          //          NEX_Transmit((void*)Str);//
-          //          sprintf((void*)Str,"fill 0,316,4480,4,RED€€€");
-          //          NEX_Transmit((void*)Str);//
-          break;
-        default:
-          
-//                    sprintf((void*)Str,"fill 0,0,480,4,WHITE€€€");
-//                    NEX_Transmit((void*)Str);//
-//                    sprintf((void*)Str,"fill 0,0,4,320,WHITE€€€");
-//                    NEX_Transmit((void*)Str);//
-//                    sprintf((void*)Str,"fill 476,4,4,320,WHITE€€€");
-//                    NEX_Transmit((void*)Str);//
-//                    sprintf((void*)Str,"fill 0,316,4480,4,WHITE€€€");
-//                    NEX_Transmit((void*)Str);//
-          ModeUSB = 0;
-          CmdInitPage(NumCurrPage);
-          
-          break;
         }
       }
       else

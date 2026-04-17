@@ -120,6 +120,8 @@ void DecodeCommandRS (void)
     {
       if ((RX_Buf[i] >=0x61) && (RX_Buf[i]<=0x7A))RX_Buf[i] = RX_Buf[i] - 0x20;
     }
+    // если в режиме чтения Flash USB то надо сбросить признак разрешения
+    MSC_or_CDC = 0;
     switch (RX_Buf[0])
     {
     case '*':
@@ -469,7 +471,7 @@ void DecodeCommandRS (void)
           {
             for(int i=0;i<18;i++)
             {
-              sprintf(BufString,"%4d,%d\n",1270+i*20,AdcCodes[i].AvrgADC);//c
+              sprintf(BufString,"%4d,%d\n",1270+i*20,AdcCodes[ReIxCWDM[i]].AvrgADC);//c
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
             }
           }
@@ -480,6 +482,25 @@ void DecodeCommandRS (void)
               sprintf(BufString,"%4d,%2.1f\n",1270+i*20,CWDMData[i]);//c
               UARTSendExt ((BYTE*)BufString, strlen (BufString));
             }
+          }
+          sprintf(BufString,"\r");//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+        }      
+        // ;SET:ALL? запрос данных, 
+        // ;
+        if (!memcmp ((void*)RX_Buf, ";SET:ALL?",9)) //
+        {
+          NeedTransmit = 1;
+          
+          sprintf(BufString,"A,%.6f\n",CoeffLW.SlopeChADC[0]);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          sprintf(BufString,"B,%.6f\n",CoeffLW.SlopeChADC[1]);//c
+          UARTSendExt ((BYTE*)BufString, strlen (BufString));
+          
+          for(int i=0;i<18;i++)
+          {
+            sprintf(BufString,"%4d,%.6f\n",1270+i*20,CoeffLW.OffsetLW[i]);//c
+            UARTSendExt ((BYTE*)BufString, strlen (BufString));
           }
           sprintf(BufString,"\r");//c
           UARTSendExt ((BYTE*)BufString, strlen (BufString));

@@ -117,6 +117,12 @@ static int  NUM_VER =
 #include "lasti.h"
 ;
 
+      // здесь сложна€ ориентаци€ перезаписи, то есть перебор по местам в  Ћё„≈ от 0 до 8 по двум
+      // каналам но в CWDMData совсем другие индексы CWDM , главное записать в правильную €чейку
+extern int IndxCWDM[];
+      // обратный индекс
+extern int ReIxCWDM[];
+
 extern const uint16_t ColorsPCO[18];
 extern const char* DeviceIDN[2];
 
