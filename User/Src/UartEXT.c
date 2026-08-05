@@ -438,6 +438,19 @@ void DecodeCommandRS (void)
         {
           
           Data = (WORD)atoi((char*)&RX_Buf[8]); // получим номер канала он двухзначный
+          switch (Data)
+          {
+          case 1: // 1-5,15-18  каналы
+            Data = 0;
+            break;
+          case 6: //6-14 каналы
+            Data = 1;
+            break;
+          default:
+            Data = 2;
+            break;
+            
+          }
           if(Data<2)
           {
             if(RX_Buf[10] == '?') // надо послать соотв коэффициент
@@ -511,7 +524,7 @@ void DecodeCommandRS (void)
         {
           
           Data = (WORD)atoi((char*)&RX_Buf[8]); // получим номер канала он двухзначный
-          if(Data<18)
+          if((Data>0)&&(Data<19))
           {
             if(RX_Buf[10] == '?') // надо послать соотв коэффициент
             {
@@ -522,7 +535,7 @@ void DecodeCommandRS (void)
             if(RX_Buf[10] == ' ') // надо записать соотв коэффициент
             {
               fParam = (float)atof((char*)&RX_Buf[11]); // получим значение коефф.
-              CoeffLW.OffsetLW[Data] = fParam;
+              CoeffLW.OffsetLW[Data-1] = fParam;
               // нужно сохранить
               NeedSaveParam |= 0x04;
               NeedTransmit = 1;
@@ -531,7 +544,7 @@ void DecodeCommandRS (void)
           //New
           if(NeedTransmit)
           {
-            sprintf(BufString,"%.6f\r",CoeffLW.OffsetLW[Data]);//c
+            sprintf(BufString,"%.6f\r",CoeffLW.OffsetLW[Data-1]);//c
             UARTSendExt ((BYTE*)BufString, strlen (BufString));
           }
         }        

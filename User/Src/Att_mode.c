@@ -453,7 +453,7 @@ void ModeMain(void)// режим основной
 }
 //-------------------------------------------------------------------------------------------------------
 // окно индикации анализатора, тут будем измерять
-void ModeDrawMeasure(void) // режим отображения рефлектограммы
+void ModeDrawMeasure(void) // режим отображения графического
 {
   //char Str[32];
   
@@ -496,7 +496,44 @@ void ModeDrawMeasure(void) // режим отображения рефлектограммы
     if(g_IndexLW<17)g_IndexLW++;
     else g_IndexLW = 0;
     g_NeedScr = 1; // Need reDraw Screen
-  }  
+  }
+// поиск минимального по кнопке вниз и установка курсора
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))//
+  {
+    float Min_F = 100.;
+    if(UserSet.ChnMod) // Graph
+    {
+    myBeep(10);
+      for(int i=0;i<18;i++)
+      {
+        if(CWDMData[i]<=Min_F)
+        {
+          Min_F = CWDMData[i];
+          g_IndexLW = i;
+        }
+      }
+    g_NeedScr = 1; // Need reDraw Screen
+    }
+  }
+// поиск максимального по кнопке вверх и установка курсора
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))//
+  {
+    float Max_F = -100.;
+    if(UserSet.ChnMod) // Graph
+    {
+    myBeep(10);
+      for(int i=0;i<18;i++)
+      {
+        if(CWDMData[i]>=Max_F)
+        {
+          Max_F = CWDMData[i];
+          g_IndexLW = i;
+        }
+      }
+    g_NeedScr = 1; // Need reDraw Screen
+    }
+  }
+  
   if(g_NeedScr)
   {
     // рисуем
