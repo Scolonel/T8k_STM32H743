@@ -76,8 +76,9 @@ void MX_RTC_Init(void)
    //  1751364000 - 01 july 2025 10.00.00
    //  1766473200 - 23 december 2025 10.00.00
    //  1776150000 - 14 april 2026 10.00.00
+   //  1785924000 - 05 august 2026 10.00.00
   
-  if(CurTime < 1776150000)
+  if(CurTime < 1785924000)
   {
   /* USER CODE END Check_RTC_BKUP */
 
@@ -93,8 +94,8 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_APRIL;
-  sDate.Date = 14;
+  sDate.Month = RTC_MONTH_AUGUST;
+  sDate.Date = 05;
   sDate.Year = 26;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)

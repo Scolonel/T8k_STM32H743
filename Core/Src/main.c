@@ -116,6 +116,9 @@ uint8_t MSC_or_CDC = 0; // признак активности MSC для инициализации разрешим, и 
 uint8_t g_CardSD = 0; // признак подключенной карты для правильной индикации
 
 uint8_t Tik_045 = 0; // тик для медленной индикации, взводится каждые 450 мС , в основном цикле...
+uint8_t Key_Read = 0; // тик для медленносчитывания клавиатуры , в основном цикле...
+uint8_t Ena_ADC_Read = 0; //признак запуска измерения ADC
+
 
 unsigned int CheckErrMEM; 
 BYTE CurrLang; // текущий язык
@@ -431,32 +434,44 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+//    if((Ena_ADC_Read)&&(GetSysTick(0)>8))
+//    {
+//      Ena_ADC_Read = 0;
+//      // здесь можно запустить Измерение АЦП
+//      if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,8) != HAL_OK)
+//      {
+//        myBeep(100);
+//        Error_Handler();
+//      }
+//    }
     // проверка кнопок каждые 30 мС, и тут переключаем и измеряем каналы
     // взводим признак необходимости выполнения функции
     if((GetSysTick(0)>30)&&(!ProgFW_LCD))// каждые 30 мС или больше...и не в программировании
+    //if((GetSysTick(0)>10)&&(!ProgFW_LCD))// каждые 30 мС или больше...и не в программировании
     {
-      // расчет данных по полученным данным из АЦП, каждый момент имеем два значения АЦП
-      uint32_t SumAdcOne=0;
-      uint32_t SumAdcTwo=0;
-      for(int i=NUMAVRG-1;i>0;i--)
-      {
-        SumAdcOne +=AdcCodes[CntChanel].dADC[i] = AdcCodes[CntChanel].dADC[i-1];
-        SumAdcTwo +=AdcCodes[CntChanel+9].dADC[i] = AdcCodes[CntChanel+9].dADC[i-1];
-      }
-      SumAdcOne +=AdcCodes[CntChanel].dADC[0] = BufADC[2];
-      SumAdcTwo +=AdcCodes[CntChanel+9].dADC[0] = BufADC[3];
-      // записываем текущее значение усредненного уровня по текущему индексу (поКЛЮЧУ)
-      AdcCodes[CntChanel].AvrgADC = SumAdcOne/NUMAVRG;
-      AdcCodes[CntChanel+9].AvrgADC = SumAdcTwo/NUMAVRG;
-      // которое прописываем в соотв ячейку
-      //CWDMData[CntChanel] = BufADC[2]*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[CntChanel];    
-      //CWDMData[CntChanel+9] = BufADC[3]*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9]; 
-      // здесь сложная ориентация перезаписи, то есть перебор по местам в КЛЮЧЕ от 0 до 8 по двум
-      // каналам но в CWDMData совсем другие индексы CWDM , главное записать в правильную ячейку
-      //int IndxCWDM[]={13,12,11,10,9,8,7,6,5,14,15,16,17,0,1,2,3,4};
-      //int IndxCWDM[]={14,15,16,17,0,1,2,3,4,13,12,11,10,9,8,7,6,5};
-      CWDMData[IndxCWDM[CntChanel]] = AdcCodes[CntChanel].AvrgADC*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[IndxCWDM[CntChanel]];    
-      CWDMData[IndxCWDM[CntChanel+9]] = AdcCodes[CntChanel+9].AvrgADC*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[IndxCWDM[CntChanel+9]];    
+      //Ena_ADC_Read = 1;
+//      // расчет данных по полученным данным из АЦП, каждый момент имеем два значения АЦП
+//      uint32_t SumAdcOne=0;
+//      uint32_t SumAdcTwo=0;
+//      for(int i=NUMAVRG-1;i>0;i--)
+//      {
+//        SumAdcOne +=AdcCodes[CntChanel].dADC[i] = AdcCodes[CntChanel].dADC[i-1];
+//        SumAdcTwo +=AdcCodes[CntChanel+9].dADC[i] = AdcCodes[CntChanel+9].dADC[i-1];
+//      }
+//      SumAdcOne +=AdcCodes[CntChanel].dADC[0] = BufADC[2];
+//      SumAdcTwo +=AdcCodes[CntChanel+9].dADC[0] = BufADC[3];
+//      // записываем текущее значение усредненного уровня по текущему индексу (поКЛЮЧУ)
+//      AdcCodes[CntChanel].AvrgADC = (uint32_t)(SumAdcOne/NUMAVRG + 0.5);
+//      AdcCodes[CntChanel+9].AvrgADC = (uint32_t)(SumAdcTwo/NUMAVRG + 0.5);
+//      // которое прописываем в соотв ячейку
+//      //CWDMData[CntChanel] = BufADC[2]*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[CntChanel];    
+//      //CWDMData[CntChanel+9] = BufADC[3]*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9]; 
+//      // здесь сложная ориентация перезаписи, то есть перебор по местам в КЛЮЧЕ от 0 до 8 по двум
+//      // каналам но в CWDMData совсем другие индексы CWDM , главное записать в правильную ячейку
+//      //int IndxCWDM[]={13,12,11,10,9,8,7,6,5,14,15,16,17,0,1,2,3,4};
+//      //int IndxCWDM[]={14,15,16,17,0,1,2,3,4,13,12,11,10,9,8,7,6,5};
+//      CWDMData[IndxCWDM[CntChanel]] = AdcCodes[CntChanel].AvrgADC*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[IndxCWDM[CntChanel]];    
+//      CWDMData[IndxCWDM[CntChanel+9]] = AdcCodes[CntChanel+9].AvrgADC*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[IndxCWDM[CntChanel+9]];    
       // изменяем счетчик перебора
       if(CntChanel<8)CntChanel++;
       else CntChanel=0;
@@ -469,17 +484,25 @@ int main(void)
       // управление сигналом записи (CTRL - ANLG_WR)
       CtrlExpand(0,0x2);
       CtrlExpand(2,0x2);
+      //if(Key_Read++>3)
+      //{
       KeyP = SetBtnStates( GetExpand (), 1 ); // опрос клавиатуры
+      //Key_Read = 0;
+      //}
+      
+      
       GetSysTick(1);// сброс системного ожидания
       // управление красным лазером
       // поконтролить батарейку
       // инекремент таймаре PA
-      HAL_Delay(1);
+      HAL_Delay(8); // ожидание после переключения каналов
       if(CurrLevelDAC<7)CurrLevelDAC++;
       else CurrLevelDAC=0;
       
       CountTimerPA++;
-      if(CountTimerPA>33)
+      //if(CountTimerPA>15) // еже секундное прохождение
+      if(CntChanel == 0) // еже секундное прохождение
+      //if(CountTimerPA>100)
       {
         TimerDraw = 1;
         Tik_045 = 1; 
@@ -533,6 +556,7 @@ int main(void)
         //LvlBatInd = (char)(Ubat*10. - 40.)+1;
         //if(Ubat<4.0) LvlBatInd = 0;
         //if((Ubat>4.9)||(LvlBatInd>8)) LvlBatInd = 8;
+        // рисуем батарейку
         //        sprintf((void*)Str,"p0.pic=%dяяя",LvlBatInd);
         //        NEX_Transmit((void*)Str);//
         // получим текущее время и оработаем его
@@ -558,14 +582,43 @@ int main(void)
       }
       //if(g_EnaQuickReDraw)g_NeedScr=1;
       //LvlBatInd++;
+      // цикл измерения менее 1 мС, поэтому можно измерить 8 раз и накопить буффер
+      // попробуем цикл
+      // расчет данных по полученным данным из АЦП, каждый момент имеем два значения АЦП
+      uint32_t SumAdcOne=0;
+      uint32_t SumAdcTwo=0;
+      for (int j=0; j<8; j++)
+      {
+      LED_START(1); // здесь можно начать измерения после переключения
       // здесь можно запустить Измерение АЦП
       if (HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&BufADC,8) != HAL_OK)
       {
         myBeep(100);
         Error_Handler();
+        
       }
+      HAL_Delay(1);
+      SumAdcOne +=AdcCodes[CntChanel].dADC[j] = BufADC[2];
+      SumAdcTwo +=AdcCodes[CntChanel+9].dADC[j] = BufADC[3];
+      
+      }
+      // записываем текущее значение усредненного уровня по текущему индексу (поКЛЮЧУ)
+      AdcCodes[CntChanel].AvrgADC = (uint32_t)(SumAdcOne/NUMAVRG + 0.5);
+      AdcCodes[CntChanel+9].AvrgADC = (uint32_t)(SumAdcTwo/NUMAVRG + 0.5);
+      // которое прописываем в соотв ячейку
+      //CWDMData[CntChanel] = BufADC[2]*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[CntChanel];    
+      //CWDMData[CntChanel+9] = BufADC[3]*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[CntChanel+9]; 
+      // здесь сложная ориентация перезаписи, то есть перебор по местам в КЛЮЧЕ от 0 до 8 по двум
+      // каналам но в CWDMData совсем другие индексы CWDM , главное записать в правильную ячейку
+      //int IndxCWDM[]={13,12,11,10,9,8,7,6,5,14,15,16,17,0,1,2,3,4};
+      //int IndxCWDM[]={14,15,16,17,0,1,2,3,4,13,12,11,10,9,8,7,6,5};
+      CWDMData[IndxCWDM[CntChanel]] = AdcCodes[CntChanel].AvrgADC*CoeffLW.SlopeChADC[0]+CoeffLW.OffsetLW[IndxCWDM[CntChanel]];    
+      CWDMData[IndxCWDM[CntChanel+9]] = AdcCodes[CntChanel+9].AvrgADC*CoeffLW.SlopeChADC[1]+CoeffLW.OffsetLW[IndxCWDM[CntChanel+9]];    
       //LED_START(1);
       NeedRunFunc = 1;
+      //LED_START(0);
+
+      //HAL_Delay(10);
     }// конец 30 мС обработки
     // проверка приема по UART EXT
     if (RSDecYes) // вызов программы обработки комманды принятой по UART
@@ -672,7 +725,7 @@ int main(void)
         ModeFuncTmp();
       }
 
-      LED_START(0);
+      //LED_START(0);
       
     }
     // проверка окончания записи индикатора

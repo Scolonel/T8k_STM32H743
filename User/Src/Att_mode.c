@@ -535,7 +535,31 @@ void ModeDrawMeasure(void) // режим отображени€ графического
   }
   
   if(g_NeedScr)
+    
   {
+    /*
+Ёто в таймере
+//line 0,300,340,300,YELLOW
+//draw 0,270,340,270,GREEN
+//draw 0,240,340,240,YELLOW
+//draw 0,210,340,210,GREEN
+//draw 0,180,340,180,YELLOW
+//draw 0,150,340,150,GREEN
+//draw 0,120,340,120,YELLOW
+draw 0,90,340,90,GREEN
+draw 0,60,340,60,WHITE
+draw 0,30,340,30,GREEN
+draw 0,0,340,0,YELLOW
+xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
+xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
+xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
+xstr 345,110,35,20,3,BLUE,WHITE,0,1,1,"-10"
+xstr 345,50,35,20,3,BLUE,WHITE,0,1,1,"0"
+xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
+
+*/
+    
+    
     // рисуем
     //    line 0,300,340,300,YELLOW
     //draw 0,270,340,270,GREEN
@@ -557,6 +581,9 @@ void ModeDrawMeasure(void) // режим отображени€ графического
     //   xstr 380,90,100,55,2,BLACK,WHITE,0,1,1,"-40.2
     if(UserSet.ChnMod) // Graph
     {
+      //sprintf(Str,"fill 0,0,341,300,10857€€€"); // fill
+      //  NEX_Transmit((void*)Str);//
+
       for(int i=0;i<18;i++)
       {
         Res=0;
@@ -564,10 +591,34 @@ void ModeDrawMeasure(void) // режим отображени€ графического
         {
           Res=(int)((CWDMData[i]+40.0)*2);
           if(Res>100) Res=100;
+          // если выше -40, то рисуем столбик
         }
-        sprintf(Str,"j%d.val=%d€€€",i,Res);
+        // рассчет Y
+        int Y_H = 300 - 3*Res;
+        sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,10857); // fill
         NEX_Transmit((void*)Str);//
+        
+        sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,Y_H,18,3*Res,ColorsPCO[i]); // fill
+        //sprintf(Str,"j%d.val=%d€€€",i,Res); // progress bar
+        //sprintf(Str,"h%d.val=%d€€€",i,Res); // slider
+        NEX_Transmit((void*)Str);//
+        //HAL_Delay(25);
+        //sprintf(Str,"draw %d,270,%d,270,GREEN€€€",i*19, (i+1)*19); //
+        //NEX_Transmit((void*)Str);//
+        
       }
+      // попробуем тут сразу сетку нарисовать
+//      sprintf(Str,"draw 0,0,340,0,YELLOW€€€"); //
+//      NEX_Transmit((void*)Str);//
+//      sprintf(Str,"draw 0,60,340,60,WHITE€€€"); //
+//      NEX_Transmit((void*)Str);//
+//      sprintf(Str,"draw 0,150,340,150,GREEN€€€"); //
+//      NEX_Transmit((void*)Str);//
+//      sprintf(Str,"draw 0,180,340,180,YELLOW€€€"); //
+//      NEX_Transmit((void*)Str);//
+//      sprintf(Str,"line 0,300,340,300,YELLOW€€€"); //
+//      NEX_Transmit((void*)Str);//
+
       //      sprintf(Str,"tm0.en=1€€€");
       //      NEX_Transmit((void*)Str);//
       sprintf(Str,"t0.txt=\"%d%s\"€€€",1270+g_IndexLW*20,MsgMass[38][CurrLang]);// LW_nm
@@ -590,10 +641,14 @@ void ModeDrawMeasure(void) // режим отображени€ графического
       }
       //sprintf(Str,"h0.val=%d€€€",g_IndexLW);
       //NEX_Transmit((void*)Str);//
-      sprintf(Str,"p1.pic=%d€€€",g_IndexLW+17);
+      sprintf(Str,"p1.pic=%d€€€",g_IndexLW+17); //курсор
       NEX_Transmit((void*)Str);//
       //      sprintf(Str,"tm0.en=0€€€");
       //      NEX_Transmit((void*)Str);//
+      //sprintf(Str,"line 0,300,340,300,YELLOW€€€"); //курсор
+      //NEX_Transmit((void*)Str);//
+
+      
     }
     else // Table
     {
