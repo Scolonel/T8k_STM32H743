@@ -2590,21 +2590,21 @@ void ModeViewMemory(void) // режим отображения из файла (памяти)
   // обработка клавиатуры кнопки Влево Вправо
   if ((PRESS(BTN_LEFT))&&((getStateButtons(BTN_LEFT)==SHORT_PRESSED)||(getStateButtons(BTN_LEFT)==INF_PRESSED)))//
   {
-    if(UserSet.ChnMod) // Graph
+    if(ViewMod) // Graph
     {
     myBeep(10);
-    if(g_IndexLW>0)g_IndexLW--;
-    else g_IndexLW = 17;
+    if(IndxViewLW>0)IndxViewLW--;
+    else IndxViewLW = 17;
     g_NeedScr = 1; // Need reDraw Screen
     }
   }  
   if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED)))//
   {
-    if(UserSet.ChnMod) // Graph
+    if(ViewMod) // Graph
     {
     myBeep(10);
-    if(g_IndexLW<17)g_IndexLW++;
-    else g_IndexLW = 0;
+    if(IndxViewLW<17)IndxViewLW++;
+    else IndxViewLW = 0;
     g_NeedScr = 1; // Need reDraw Screen
     }
   }
@@ -2612,7 +2612,7 @@ void ModeViewMemory(void) // режим отображения из файла (памяти)
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))//
   {
     float Min_F = 100.;
-    if(UserSet.ChnMod) // Graph
+    if(ViewMod) // Graph
     {
     myBeep(10);
       for(int i=0;i<18;i++)
@@ -2620,7 +2620,7 @@ void ModeViewMemory(void) // режим отображения из файла (памяти)
         if(MemD.CWDMDataMem[i]<=Min_F)
         {
           Min_F = MemD.CWDMDataMem[i];
-          g_IndexLW = i;
+          IndxViewLW = i;
         }
       }
     g_NeedScr = 1; // Need reDraw Screen
@@ -2630,7 +2630,7 @@ void ModeViewMemory(void) // режим отображения из файла (памяти)
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))//
   {
     float Max_F = -100.;
-    if(UserSet.ChnMod) // Graph
+    if(ViewMod) // Graph
     {
     myBeep(10);
       for(int i=0;i<18;i++)
@@ -2638,7 +2638,7 @@ void ModeViewMemory(void) // режим отображения из файла (памяти)
         if(MemD.CWDMDataMem[i]>=Max_F)
         {
           Max_F = MemD.CWDMDataMem[i];
-          g_IndexLW = i;
+          IndxViewLW = i;
         }
       }
     g_NeedScr = 1; // Need reDraw Screen
