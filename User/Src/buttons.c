@@ -115,6 +115,7 @@ uint16_t SetBtnStates( unsigned int states, unsigned int timeStep )
         if( cb->Time == SHORT_TIME )
         {
           //Sound(3);
+          LED_START(1);
           cb->State = SHORT_PRESSED;
           KeyPressed |= (uint16_t)(cb->Bind);// // нажали кнопку
         }
@@ -143,6 +144,7 @@ uint16_t SetBtnStates( unsigned int states, unsigned int timeStep )
         cb->State = UP_SHORT_PRESSED;
         cb->Time = 0;
         KeyPressed |= cb->Bind;// // нажали кнопку
+        LED_START(0);
           break;
         case LONG_PRESSED: // отпустили долго нажатую кнопку
         cb->State = UP_LONG_PRESSED;

@@ -139,7 +139,7 @@ void DecodeCommandRS (void)
             sprintf (Str, "v4.%02d%c(%03d)", NUM_VER/26, (0x61+(NUM_VER%26)),NUM_VER); // версия должна быть не ниже 2.01 (28.06.2022)
 
           // GetDeviceName( BufString ); // запрос сторки идентификатора
-          sprintf(BufString,"%s-%d,%s,SN%04d\r",DeviceIDN[ConfigDevice.ID_Device],Mdl,Str,ConfigDevice.NumDevice);
+          sprintf(BufString,"%s,%s,SN%04d\r",DeviceIDN[ConfigDevice.ID_Device],Str,ConfigDevice.NumDevice);
 
           NeedTransmit = 1;
           UARTSendExt ((BYTE*)BufString, strlen (BufString));
@@ -350,66 +350,66 @@ void DecodeCommandRS (void)
         //NeedTransmit = 0;
         
         // ;set:DAC  - работа с кодами ЦАП на прямую
-        if (!memcmp ((void*)RX_Buf, ";SET:DAC",8)) //
-        {
-          
-          if(RX_Buf[8] == ' ') // надо установить значение
-          {
-            Data = (WORD)atoi((char*)&RX_Buf[9]);
-            if(Data>4095) Data = 1000;
-            CurrLevelDAC = Data;  
-            NeedTransmit = 1;
-          }
-          if(RX_Buf[8] == 'D') // надо установить значение увеличение
-          {
-            if(CurrLevelDAC>1) CurrLevelDAC--;
-            else CurrLevelDAC = 4095;  
-            NeedTransmit = 1;
-          }
-          if(RX_Buf[8] == 'U') // надо установить значение увеличение
-          {
-            if(CurrLevelDAC<4095) CurrLevelDAC++;
-            else CurrLevelDAC = 1000;  
-            NeedTransmit = 1;
-          }
-          if(RX_Buf[8] == '?') // надо send время
-          {
-            NeedTransmit = 1;
-          }
-          //New
-          if(NeedTransmit)
-          {
-            if(ModeWork)// если в настройке надо обновить экран
-              g_NeedScr = 1;
-            sprintf(BufString,"%04d\r",CurrLevelDAC);//c
-            UARTSendExt ((BYTE*)BufString, strlen (BufString));
-            
-          }
-        }        
-        // ;set:MOD  - режим прибора
-        if (!memcmp ((void*)RX_Buf, ";SET:MOD",8)) //
-        {
-          
-          if(RX_Buf[8] == ' ') // надо установить режим
-          {
-            Data = (WORD)atoi((char*)&RX_Buf[9]);
-            if(Data) ModeWork = 1;
-            else
-              ModeWork = 0;  
-            g_NeedScr = 1;
-            NeedTransmit = 1;
-          }
-          if(RX_Buf[8] == '?') // надо send время
-          {
-            NeedTransmit = 1;
-          }
-          //New
-          if(NeedTransmit)
-          {
-            sprintf(BufString,"%d\r",ModeWork);//c
-            UARTSendExt ((BYTE*)BufString, strlen (BufString));
-          }
-        }        
+//        if (!memcmp ((void*)RX_Buf, ";SET:DAC",8)) //
+//        {
+//          
+//          if(RX_Buf[8] == ' ') // надо установить значение
+//          {
+//            Data = (WORD)atoi((char*)&RX_Buf[9]);
+//            if(Data>4095) Data = 1000;
+//            CurrLevelDAC = Data;  
+//            NeedTransmit = 1;
+//          }
+//          if(RX_Buf[8] == 'D') // надо установить значение увеличение
+//          {
+//            if(CurrLevelDAC>1) CurrLevelDAC--;
+//            else CurrLevelDAC = 4095;  
+//            NeedTransmit = 1;
+//          }
+//          if(RX_Buf[8] == 'U') // надо установить значение увеличение
+//          {
+//            if(CurrLevelDAC<4095) CurrLevelDAC++;
+//            else CurrLevelDAC = 1000;  
+//            NeedTransmit = 1;
+//          }
+//          if(RX_Buf[8] == '?') // надо send время
+//          {
+//            NeedTransmit = 1;
+//          }
+//          //New
+//          if(NeedTransmit)
+//          {
+//            if(ModeWork)// если в настройке надо обновить экран
+//              g_NeedScr = 1;
+//            sprintf(BufString,"%04d\r",CurrLevelDAC);//c
+//            UARTSendExt ((BYTE*)BufString, strlen (BufString));
+//            
+//          }
+//        }        
+//        // ;set:MOD  - режим прибора
+//        if (!memcmp ((void*)RX_Buf, ";SET:MOD",8)) //
+//        {
+//          
+//          if(RX_Buf[8] == ' ') // надо установить режим
+//          {
+//            Data = (WORD)atoi((char*)&RX_Buf[9]);
+//            if(Data) ModeWork = 1;
+//            else
+//              ModeWork = 0;  
+//            g_NeedScr = 1;
+//            NeedTransmit = 1;
+//          }
+//          if(RX_Buf[8] == '?') // надо send время
+//          {
+//            NeedTransmit = 1;
+//          }
+//          //New
+//          if(NeedTransmit)
+//          {
+//            sprintf(BufString,"%d\r",ModeWork);//c
+//            UARTSendExt ((BYTE*)BufString, strlen (BufString));
+//          }
+//        }        
         // ;set:num  - НОМЕР ПРИБОРА
         if (!memcmp ((void*)RX_Buf, ";SET:SN",7)) //
         {

@@ -27,7 +27,7 @@
 #define UP_LONG_PRESSED 8
 #define UP_INF_PRESSED 9
 
-#define SHORT_TIME 3
+#define SHORT_TIME 2
 #define LONG_TIME 25
 #define INF_TIME 30
 

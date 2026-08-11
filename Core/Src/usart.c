@@ -437,10 +437,13 @@ void UARTSendExt(BYTE *BufferPtr, DWORD Length )  // буфер и размер
 // функция передачи в индикатор NEXTION
 void NEX_Transmit(uint8_t *Str)
 {
+      //LED_START(1);
   uint16_t Size = strlen((void*)Str);
   HAL_UART_Transmit_DMA(&huart7, (void*)Str,Size); // выдаем 
   
   //HAL_UART_Transmit(&huart7,(void*)Str, Size,(uint32_t)(Size/8));
   HAL_Delay((int)((Size/10)+0.5));
+       // LED_START(0);
+
 }
 /* USER CODE END 1 */

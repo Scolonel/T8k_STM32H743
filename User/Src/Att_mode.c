@@ -344,7 +344,7 @@ void ModeMain(void)// режим основной
     NEX_Transmit((void*)Str);//
     
     
-    ModeReDrawLCD = 1;
+    ModeReDrawLCD = 0;
     
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -392,6 +392,7 @@ void ModeMain(void)// режим основной
     }
     NEX_Transmit((void*)Str);// 
     OnlyBat=0;
+    //g_NeedScr = 1;
   }
   
   if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
@@ -456,7 +457,8 @@ void ModeMain(void)// режим основной
 void ModeDrawMeasure(void) // режим отображени€ графического
 {
   //char Str[32];
-  
+  //LED_START(1);
+
   static volatile BYTE FrSetIndex = 0; // указатель на курсор
   int Res;
   // получение данных от измерител€
@@ -483,19 +485,25 @@ void ModeDrawMeasure(void) // режим отображени€ графического
     g_NeedScr = 1;
   }
   // обработка клавиатуры кнопки ¬лево ¬право
-  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))//
+  if ((PRESS(BTN_LEFT))&&((getStateButtons(BTN_LEFT)==SHORT_PRESSED)||(getStateButtons(BTN_LEFT)==INF_PRESSED)))//
   {
+    if(UserSet.ChnMod) // Graph
+    {
     myBeep(10);
     if(g_IndexLW>0)g_IndexLW--;
     else g_IndexLW = 17;
     g_NeedScr = 1; // Need reDraw Screen
+    }
   }  
-  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))//
+  if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED)))//
   {
+    if(UserSet.ChnMod) // Graph
+    {
     myBeep(10);
     if(g_IndexLW<17)g_IndexLW++;
     else g_IndexLW = 0;
     g_NeedScr = 1; // Need reDraw Screen
+    }
   }
 // поиск минимального по кнопке вниз и установка курсора
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))//
@@ -561,17 +569,17 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
     
     
     // рисуем
-    //    line 0,300,340,300,YELLOW
-    //draw 0,270,340,270,GREEN
-    //draw 0,240,340,240,YELLOW
-    //draw 0,210,340,210,GREEN
-    //draw 0,180,340,180,YELLOW
-    //draw 0,150,340,150,GREEN
-    //draw 0,120,340,120,YELLOW
-    //draw 0,90,340,90,GREEN
-    //draw 0,60,340,60,WHITE
-    //draw 0,30,340,30,GREEN
-    //draw 0,0,340,0,YELLOW
+//        line 0,300,340,300,YELLOW
+//    draw 0,270,340,270,GREEN
+//    draw 0,240,340,240,YELLOW
+//    draw 0,210,340,210,GREEN
+//    draw 0,180,340,180,YELLOW
+//    draw 0,150,340,150,GREEN
+//    draw 0,120,340,120,YELLOW
+//    draw 0,90,340,90,GREEN
+//    draw 0,60,340,60,WHITE
+//    draw 0,30,340,30,GREEN
+//    draw 0,0,340,0,YELLOW
     //xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
     //xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
     //xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
@@ -589,22 +597,45 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
         Res=0;
         if(CWDMData[i]>-40.0)
         {
-          Res=(int)((CWDMData[i]+40.0)*2);
-          if(Res>100) Res=100;
+          Res=(int)((CWDMData[i]+40.0)*6);
+          if(Res>300) Res=300;
           // если выше -40, то рисуем столбик
         }
         // рассчет Y
-        int Y_H = 300 - 3*Res;
-        sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,10857); // fill
+        int Y_H = 300 - Res;
+        //sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,6371); // fill темный фон
+        sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,19,Y_H,45901); // fill темный фон
+        //sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,10857); // fill темный фон
+        //sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,59292); // fill светлый фон
         NEX_Transmit((void*)Str);//
         
-        sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,Y_H,18,3*Res,ColorsPCO[i]); // fill
+        sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,Y_H,19,Res,ColorsPCO[i]); // fill
         //sprintf(Str,"j%d.val=%d€€€",i,Res); // progress bar
         //sprintf(Str,"h%d.val=%d€€€",i,Res); // slider
         NEX_Transmit((void*)Str);//
         //HAL_Delay(25);
-        //sprintf(Str,"draw %d,270,%d,270,GREEN€€€",i*19, (i+1)*19); //
-        //NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,270,%d,270,GREEN€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,210,%d,210,GREEN€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,150,%d,150,GREEN€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,90,%d,90,GREEN€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,30,%d,30,GREEN€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,60,%d,60,WHITE€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,0,%d,0,YELLOW€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,120,%d,120,YELLOW€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,180,%d,180,YELLOW€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,240,%d,240,YELLOW€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
+//        sprintf(Str,"draw %d,300,%d,300,YELLOW€€€",i*19, (i+1)*19); //
+//        NEX_Transmit((void*)Str);//
         
       }
       // попробуем тут сразу сетку нарисовать
@@ -654,9 +685,15 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
     {
       for(int i=0;i<18;i++)
       {
-        sprintf(Str,"t%d.txt=\"%.2fdBm\"€€€",i+40,CWDMData[i]); // зеленый
+        //sprintf(Str,"t%d.bco=65535€€€",i+40);// цвет фона
+        //NEX_Transmit((void*)Str);//
+        
+        sprintf(Str,"t%d.txt=\"%.2fdBm\"€€€",i+40,CWDMData[i]); // 
         NEX_Transmit((void*)Str);// 
       }
+        //sprintf(Str,"t%d.bco=59292€€€",g_IndexLW+40);// цвет фона на который указывает курсор
+        //NEX_Transmit((void*)Str);//
+      
     }
     g_NeedScr = 0;
   }
@@ -702,7 +739,8 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
     rawPressKeyS=0;
   }
   //    HAL_Delay(500);
-  
+  //LED_START(0);
+
   
 }
 //------------------------------------------------------------------------------------------------------------
@@ -770,14 +808,14 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
   {
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSetting = ChangeFrSet (FrSetting, (3), 0, MINUS);// установка курсора в рамках заданных параметров
+    FrSetting = ChangeFrSet (FrSetting, (2), 0, MINUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_UP);
   }
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
   {
     myBeep(10);
     g_NeedScr = 1; // Need reDraw Screen
-    FrSetting = ChangeFrSet (FrSetting, (3), 0, PLUS);// установка курсора в рамках заданных параметров
+    FrSetting = ChangeFrSet (FrSetting, (2), 0, PLUS);// установка курсора в рамках заданных параметров
     //ClrKey (BTN_DOWN);
   }
   switch (FrSetting) // сделаем перестановку полей
@@ -841,54 +879,54 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
       ClrKey (BTN_OK);
     }
     break;// ‘айл
-  case 3: //пам€ть (4)
-    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
-    {
-      myBeep(10);
-      g_NeedScr = 1; // Need reDraw Screen
-      //xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
-      //ClrKey (BTN_RIGHT);
-    }
-    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
-    {
-      myBeep(10);
-      g_NeedScr = 1; // Need reDraw Screen
-      //xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
-      //ClrKey (BTN_LEFT);
-    }
-    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
-    {
-      myBeep(10);
-      g_NeedScr = 1; // Need reDraw Screen
-      //xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
-      //ClrKey (BTN_RIGHT);
-    }
-    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
-    {
-      myBeep(10);
-      g_NeedScr = 1; // Need reDraw Screen
-      //xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
-      //ClrKey (BTN_LEFT);
-    }
-    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==66))
-    //  {
-    //    myBeep(10);
-    //    SetMode(TetrisGame);
-    //    InitTetris();
-    //  }
-    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==67))
-    //  {
-    //    myBeep(10);
-    //    SetMode(ArcanoidGame);
-    //    InitArcanoid();
-    //  }
-    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==68))
-    //  {
-    //    myBeep(10);
-    //    SetMode(KeyTestGame);
-    //    
-    //  }
-    break;// Contrast
+//  case 3: //пам€ть (4)
+//    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+//    {
+//      myBeep(10);
+//      g_NeedScr = 1; // Need reDraw Screen
+//      //xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
+//      //ClrKey (BTN_RIGHT);
+//    }
+//    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+//    {
+//      myBeep(10);
+//      g_NeedScr = 1; // Need reDraw Screen
+//      //xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
+//      //ClrKey (BTN_LEFT);
+//    }
+//    if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
+//    {
+//      myBeep(10);
+//      g_NeedScr = 1; // Need reDraw Screen
+//      //xxx    ChangeUserContr (1); // изменеие пользовательской контрастности
+//      //ClrKey (BTN_RIGHT);
+//    }
+//    if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
+//    {
+//      myBeep(10);
+//      g_NeedScr = 1; // Need reDraw Screen
+//      //xxx    ChangeUserContr (-1); // изменеие пользовательской контрастности
+//      //ClrKey (BTN_LEFT);
+//    }
+//    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==66))
+//    //  {
+//    //    myBeep(10);
+//    //    SetMode(TetrisGame);
+//    //    InitTetris();
+//    //  }
+//    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==67))
+//    //  {
+//    //    myBeep(10);
+//    //    SetMode(ArcanoidGame);
+//    //    InitArcanoid();
+//    //  }
+//    //  if (((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))&&(ChangeUserContr (0)==68))
+//    //  {
+//    //    myBeep(10);
+//    //    SetMode(KeyTestGame);
+//    //    
+//    //  }
+//    break;// Contrast
   }
 
   
@@ -908,7 +946,8 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
     sprintf(Stro, "t2.txt=\"%s\"€€€", MsgMass[29][CurrLang]); //!
     NEX_Transmit((void*)Stro);    // ‘айл
   
-    sprintf(Stro, "t3.txt=\"%s\"€€€", MsgMass[9][CurrLang]); //!
+    //sprintf(Stro, "t3.txt=\"%s\"€€€", MsgMass[9][CurrLang]); //!
+    sprintf(Stro, "t3.txt=\"\"€€€"); //!
     NEX_Transmit((void*)Stro);    // ѕам€ть
   
     g_FirstScr = 0;
@@ -2422,7 +2461,7 @@ for(j=0; j<18; j++)
 {
         f_gets(StrR, 64,&Fil); // read 8..25 string (ƒанные сохраненные)
         fDt = atof(&StrR[5]);
-        if((fDt<-70.)&&(fDt>25.)) fDt = -100.;
+        if((fDt<-70.)&&(fDt>25.)) fDt = -70.;
         MemD.CWDMDataMem[j]= fDt;
        // заполним картинку
         Res=0;
@@ -2549,20 +2588,62 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
     g_NeedScr = 1;
   }
   // обработка клавиатуры кнопки ¬лево ¬право
-  if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))//
+  if ((PRESS(BTN_LEFT))&&((getStateButtons(BTN_LEFT)==SHORT_PRESSED)||(getStateButtons(BTN_LEFT)==INF_PRESSED)))//
   {
+    if(UserSet.ChnMod) // Graph
+    {
     myBeep(10);
-    if(IndxViewLW>0)IndxViewLW--;
-    else IndxViewLW = 17;
+    if(g_IndexLW>0)g_IndexLW--;
+    else g_IndexLW = 17;
     g_NeedScr = 1; // Need reDraw Screen
+    }
   }  
-  if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))//
+  if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED)))//
   {
+    if(UserSet.ChnMod) // Graph
+    {
     myBeep(10);
-    if(IndxViewLW<17)IndxViewLW++;
-    else IndxViewLW = 0;
+    if(g_IndexLW<17)g_IndexLW++;
+    else g_IndexLW = 0;
     g_NeedScr = 1; // Need reDraw Screen
-  }  
+    }
+  }
+// поиск минимального по кнопке вниз и установка курсора
+  if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))//
+  {
+    float Min_F = 100.;
+    if(UserSet.ChnMod) // Graph
+    {
+    myBeep(10);
+      for(int i=0;i<18;i++)
+      {
+        if(MemD.CWDMDataMem[i]<=Min_F)
+        {
+          Min_F = MemD.CWDMDataMem[i];
+          g_IndexLW = i;
+        }
+      }
+    g_NeedScr = 1; // Need reDraw Screen
+    }
+  }
+// поиск максимального по кнопке вверх и установка курсора
+  if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))//
+  {
+    float Max_F = -100.;
+    if(UserSet.ChnMod) // Graph
+    {
+    myBeep(10);
+      for(int i=0;i<18;i++)
+      {
+        if(MemD.CWDMDataMem[i]>=Max_F)
+        {
+          Max_F = MemD.CWDMDataMem[i];
+          g_IndexLW = i;
+        }
+      }
+    g_NeedScr = 1; // Need reDraw Screen
+    }
+  }
   if(g_NeedScr)
   {
     // рисуем
@@ -2589,13 +2670,27 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
       for(int i=0;i<18;i++)
       {
         Res=0;
-        if(CWDMData[i]>-40.0)
+        //MemD.CWDMDataMem
+        if(MemD.CWDMDataMem[i]>-40.0)
         {
-          Res=(int)((CWDMData[i]+40.0)*2);
-          if(Res>100) Res=100;
+          Res=(int)((MemD.CWDMDataMem[i]+40.0)*6);
+          if(Res>300) Res=300;
         }
-        sprintf(Str,"j%d.val=%d€€€",i,Res);
+        //sprintf(Str,"j%d.val=%d€€€",i,Res);
+        //NEX_Transmit((void*)Str);//
+                // рассчет Y
+        int Y_H = 300 - Res;
+        //sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,6371); // fill темный фон
+        sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,19,Y_H,45901); // fill темный фон
+        //sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,10857); // fill темный фон
+        //sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,59292); // fill светлый фон
         NEX_Transmit((void*)Str);//
+        
+        sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,Y_H,19,Res,ColorsPCO[i]); // fill
+        //sprintf(Str,"j%d.val=%d€€€",i,Res); // progress bar
+        //sprintf(Str,"h%d.val=%d€€€",i,Res); // slider
+        NEX_Transmit((void*)Str);//
+
       }
       //      sprintf(Str,"tm0.en=1€€€");
       //      NEX_Transmit((void*)Str);//
@@ -2603,7 +2698,7 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
       NEX_Transmit((void*)Str);//
       sprintf(Str,"t0.bco=%d€€€",ColorsPCO[IndxViewLW]);// LW_nm
       NEX_Transmit((void*)Str);//
-      sprintf(Str,"t1.txt=\"%.1f\"€€€",CWDMData[IndxViewLW]);// значение
+      sprintf(Str,"t1.txt=\"%.1f\"€€€",MemD.CWDMDataMem[IndxViewLW]);// значение
       NEX_Transmit((void*)Str);//
       sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[18][CurrLang]);// дЅм
       NEX_Transmit((void*)Str);//
@@ -2628,7 +2723,7 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
     {
       for(int i=0;i<18;i++)
       {
-        sprintf(Str,"t%d.txt=\"%.2fdBm\"€€€",i+40,CWDMData[i]); // зеленый
+        sprintf(Str,"t%d.txt=\"%.2fdBm\"€€€",i+40,MemD.CWDMDataMem[i]); // зеленый
         NEX_Transmit((void*)Str);// 
       }
     }
