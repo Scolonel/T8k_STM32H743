@@ -426,17 +426,17 @@ void ModeMain(void)// режим основной
       break;
     case 2: // ѕјћя“№
       
-//    if(ModeUSB) // запрещаем работу с пам€тью, так как зан€та 
-//    {
-//    myBeep(500);
-//    }
-//    else
-//    {
-//      SetMode(ModeFileMngDir);
-//      CmdInitPage(10);// посылка команды переключени€ окна на MemoryMenu
+      //    if(ModeUSB) // запрещаем работу с пам€тью, так как зан€та 
+      //    {
+      //    myBeep(500);
+      //    }
+      //    else
+      //    {
+      //      SetMode(ModeFileMngDir);
+      //      CmdInitPage(10);// посылка команды переключени€ окна на MemoryMenu
       SetMode(ModeSelectMEM);
       CmdInitPage(14);// посылка команды переключени€ окна на SelectMemoryMenu
-//    } 
+      //    } 
       break;
     case 3: // ”—“јЌќ¬ »
       SetMode(ModeSetting);
@@ -448,7 +448,7 @@ void ModeMain(void)// режим основной
     }
     ClrKey (BTN_OK);
     //KeyP &=~BTN_OK;
-
+    
   }  // кнопка "ќ " дл€ данного меню означает переход в другое окно, поэтому ее можно перенести сюда!
   //  
 }
@@ -458,7 +458,7 @@ void ModeDrawMeasure(void) // режим отображени€ графического
 {
   //char Str[32];
   //LED_START(1);
-
+  
   static volatile BYTE FrSetIndex = 0; // указатель на курсор
   int Res;
   // получение данных от измерител€
@@ -477,9 +477,9 @@ void ModeDrawMeasure(void) // режим отображени€ графического
     //    NEX_Transmit((void*)Str);//
     //    // установки
     
-        g_EnaQuickReDraw =1;
+    g_EnaQuickReDraw =1;
     ModeReDrawLCD = 1;
-
+    
     rawPressKeyS=0;// если вдруг кто нажимал это до этого
     g_FirstScr = 0;
     g_NeedScr = 1;
@@ -489,29 +489,29 @@ void ModeDrawMeasure(void) // режим отображени€ графического
   {
     if(UserSet.ChnMod) // Graph
     {
-    myBeep(10);
-    if(g_IndexLW>0)g_IndexLW--;
-    else g_IndexLW = 17;
-    g_NeedScr = 1; // Need reDraw Screen
+      myBeep(10);
+      if(g_IndexLW>0)g_IndexLW--;
+      else g_IndexLW = 17;
+      g_NeedScr = 1; // Need reDraw Screen
     }
   }  
   if ((PRESS(BTN_RIGHT))&&((getStateButtons(BTN_RIGHT)==SHORT_PRESSED)||(getStateButtons(BTN_RIGHT)==INF_PRESSED)))//
   {
     if(UserSet.ChnMod) // Graph
     {
-    myBeep(10);
-    if(g_IndexLW<17)g_IndexLW++;
-    else g_IndexLW = 0;
-    g_NeedScr = 1; // Need reDraw Screen
+      myBeep(10);
+      if(g_IndexLW<17)g_IndexLW++;
+      else g_IndexLW = 0;
+      g_NeedScr = 1; // Need reDraw Screen
     }
   }
-// поиск минимального по кнопке вниз и установка курсора
+  // поиск минимального по кнопке вниз и установка курсора
   if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))//
   {
     float Min_F = 100.;
     if(UserSet.ChnMod) // Graph
     {
-    myBeep(10);
+      myBeep(10);
       for(int i=0;i<18;i++)
       {
         if(CWDMData[i]<=Min_F)
@@ -520,16 +520,16 @@ void ModeDrawMeasure(void) // режим отображени€ графического
           g_IndexLW = i;
         }
       }
-    g_NeedScr = 1; // Need reDraw Screen
+      g_NeedScr = 1; // Need reDraw Screen
     }
   }
-// поиск максимального по кнопке вверх и установка курсора
+  // поиск максимального по кнопке вверх и установка курсора
   if ((PRESS(BTN_UP))&&(getStateButtons(BTN_UP)==SHORT_PRESSED))//
   {
     float Max_F = -100.;
     if(UserSet.ChnMod) // Graph
     {
-    myBeep(10);
+      myBeep(10);
       for(int i=0;i<18;i++)
       {
         if(CWDMData[i]>=Max_F)
@@ -538,7 +538,7 @@ void ModeDrawMeasure(void) // режим отображени€ графического
           g_IndexLW = i;
         }
       }
-    g_NeedScr = 1; // Need reDraw Screen
+      g_NeedScr = 1; // Need reDraw Screen
     }
   }
   
@@ -546,40 +546,40 @@ void ModeDrawMeasure(void) // режим отображени€ графического
     
   {
     /*
-Ёто в таймере
-//line 0,300,340,300,YELLOW
-//draw 0,270,340,270,GREEN
-//draw 0,240,340,240,YELLOW
-//draw 0,210,340,210,GREEN
-//draw 0,180,340,180,YELLOW
-//draw 0,150,340,150,GREEN
-//draw 0,120,340,120,YELLOW
-draw 0,90,340,90,GREEN
-draw 0,60,340,60,WHITE
-draw 0,30,340,30,GREEN
-draw 0,0,340,0,YELLOW
-xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
-xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
-xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
-xstr 345,110,35,20,3,BLUE,WHITE,0,1,1,"-10"
-xstr 345,50,35,20,3,BLUE,WHITE,0,1,1,"0"
-xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
-
-*/
+    Ёто в таймере
+    //line 0,300,340,300,YELLOW
+    //draw 0,270,340,270,GREEN
+    //draw 0,240,340,240,YELLOW
+    //draw 0,210,340,210,GREEN
+    //draw 0,180,340,180,YELLOW
+    //draw 0,150,340,150,GREEN
+    //draw 0,120,340,120,YELLOW
+    draw 0,90,340,90,GREEN
+    draw 0,60,340,60,WHITE
+    draw 0,30,340,30,GREEN
+    draw 0,0,340,0,YELLOW
+    xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
+    xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
+    xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
+    xstr 345,110,35,20,3,BLUE,WHITE,0,1,1,"-10"
+    xstr 345,50,35,20,3,BLUE,WHITE,0,1,1,"0"
+    xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
+    
+    */
     
     
     // рисуем
-//        line 0,300,340,300,YELLOW
-//    draw 0,270,340,270,GREEN
-//    draw 0,240,340,240,YELLOW
-//    draw 0,210,340,210,GREEN
-//    draw 0,180,340,180,YELLOW
-//    draw 0,150,340,150,GREEN
-//    draw 0,120,340,120,YELLOW
-//    draw 0,90,340,90,GREEN
-//    draw 0,60,340,60,WHITE
-//    draw 0,30,340,30,GREEN
-//    draw 0,0,340,0,YELLOW
+    //        line 0,300,340,300,YELLOW
+    //    draw 0,270,340,270,GREEN
+    //    draw 0,240,340,240,YELLOW
+    //    draw 0,210,340,210,GREEN
+    //    draw 0,180,340,180,YELLOW
+    //    draw 0,150,340,150,GREEN
+    //    draw 0,120,340,120,YELLOW
+    //    draw 0,90,340,90,GREEN
+    //    draw 0,60,340,60,WHITE
+    //    draw 0,30,340,30,GREEN
+    //    draw 0,0,340,0,YELLOW
     //xstr 345,290,35,20,3,BLUE,WHITE,0,1,1,"-40"
     //xstr 345,230,35,20,3,BLUE,WHITE,0,1,1,"-30"
     //xstr 345,170,35,20,3,BLUE,WHITE,0,1,1,"-20"
@@ -591,7 +591,7 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
     {
       //sprintf(Str,"fill 0,0,341,300,10857€€€"); // fill
       //  NEX_Transmit((void*)Str);//
-
+      
       for(int i=0;i<18;i++)
       {
         Res=0;
@@ -614,42 +614,42 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
         //sprintf(Str,"h%d.val=%d€€€",i,Res); // slider
         NEX_Transmit((void*)Str);//
         //HAL_Delay(25);
-//        sprintf(Str,"draw %d,270,%d,270,GREEN€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,210,%d,210,GREEN€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,150,%d,150,GREEN€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,90,%d,90,GREEN€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,30,%d,30,GREEN€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,60,%d,60,WHITE€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,0,%d,0,YELLOW€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,120,%d,120,YELLOW€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,180,%d,180,YELLOW€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,240,%d,240,YELLOW€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
-//        sprintf(Str,"draw %d,300,%d,300,YELLOW€€€",i*19, (i+1)*19); //
-//        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,270,%d,270,GREEN€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,210,%d,210,GREEN€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,150,%d,150,GREEN€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,90,%d,90,GREEN€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,30,%d,30,GREEN€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,60,%d,60,WHITE€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,0,%d,0,YELLOW€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,120,%d,120,YELLOW€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,180,%d,180,YELLOW€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,240,%d,240,YELLOW€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
+        //        sprintf(Str,"draw %d,300,%d,300,YELLOW€€€",i*19, (i+1)*19); //
+        //        NEX_Transmit((void*)Str);//
         
       }
       // попробуем тут сразу сетку нарисовать
-//      sprintf(Str,"draw 0,0,340,0,YELLOW€€€"); //
-//      NEX_Transmit((void*)Str);//
-//      sprintf(Str,"draw 0,60,340,60,WHITE€€€"); //
-//      NEX_Transmit((void*)Str);//
-//      sprintf(Str,"draw 0,150,340,150,GREEN€€€"); //
-//      NEX_Transmit((void*)Str);//
-//      sprintf(Str,"draw 0,180,340,180,YELLOW€€€"); //
-//      NEX_Transmit((void*)Str);//
-//      sprintf(Str,"line 0,300,340,300,YELLOW€€€"); //
-//      NEX_Transmit((void*)Str);//
-
+      //      sprintf(Str,"draw 0,0,340,0,YELLOW€€€"); //
+      //      NEX_Transmit((void*)Str);//
+      //      sprintf(Str,"draw 0,60,340,60,WHITE€€€"); //
+      //      NEX_Transmit((void*)Str);//
+      //      sprintf(Str,"draw 0,150,340,150,GREEN€€€"); //
+      //      NEX_Transmit((void*)Str);//
+      //      sprintf(Str,"draw 0,180,340,180,YELLOW€€€"); //
+      //      NEX_Transmit((void*)Str);//
+      //      sprintf(Str,"line 0,300,340,300,YELLOW€€€"); //
+      //      NEX_Transmit((void*)Str);//
+      
       //      sprintf(Str,"tm0.en=1€€€");
       //      NEX_Transmit((void*)Str);//
       sprintf(Str,"t0.txt=\"%d%s\"€€€",1270+g_IndexLW*20,MsgMass[38][CurrLang]);// LW_nm
@@ -662,13 +662,13 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
       NEX_Transmit((void*)Str);//
       if((g_IndexLW==8)||(g_IndexLW==12))
       {
-      sprintf(Str,"t0.pco=65535€€€");// LW_nm
-      NEX_Transmit((void*)Str);//
+        sprintf(Str,"t0.pco=65535€€€");// LW_nm
+        NEX_Transmit((void*)Str);//
       }
       else
       {
-      sprintf(Str,"t0.pco=0€€€");// LW_nm
-      NEX_Transmit((void*)Str);//
+        sprintf(Str,"t0.pco=0€€€");// LW_nm
+        NEX_Transmit((void*)Str);//
       }
       //sprintf(Str,"h0.val=%d€€€",g_IndexLW);
       //NEX_Transmit((void*)Str);//
@@ -678,7 +678,10 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
       //      NEX_Transmit((void*)Str);//
       //sprintf(Str,"line 0,300,340,300,YELLOW€€€"); //курсор
       //NEX_Transmit((void*)Str);//
-
+      // рисуем батарейку
+      sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
+      NEX_Transmit((void*)Str);//
+      
       
     }
     else // Table
@@ -691,8 +694,8 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
         sprintf(Str,"t%d.txt=\"%.2fdBm\"€€€",i+40,CWDMData[i]); // 
         NEX_Transmit((void*)Str);// 
       }
-        //sprintf(Str,"t%d.bco=59292€€€",g_IndexLW+40);// цвет фона на который указывает курсор
-        //NEX_Transmit((void*)Str);//
+      //sprintf(Str,"t%d.bco=59292€€€",g_IndexLW+40);// цвет фона на который указывает курсор
+      //NEX_Transmit((void*)Str);//
       
     }
     g_NeedScr = 0;
@@ -722,12 +725,12 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
   // вызов сохранени€ файла (его меню)
   if (rawPressKeyS) // 
   { 
-//    if(ModeUSB) // запрещаем запись так как 
-//    {
-//    myBeep(500);
-//    }
-//    else
-//    {
+    //    if(ModeUSB) // запрещаем запись так как 
+    //    {
+    //    myBeep(500);
+    //    }
+    //    else
+    //    {
     myBeep(10);
     //  SaveFileSD(0);
     SetMode(ModeSaverFILE);
@@ -735,12 +738,12 @@ xstr 345,20,35,20,3,BLUE,WHITE,0,1,1,"5"
     HAL_Delay(3);
     CmdInitPage(7);// посылка команды переключени€ окна на ћеню —охранени€
     g_EnaQuickReDraw =0;
-//    }
+    //    }
     rawPressKeyS=0;
   }
   //    HAL_Delay(500);
   //LED_START(0);
-
+  
   
 }
 //------------------------------------------------------------------------------------------------------------
@@ -2678,7 +2681,7 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
         }
         //sprintf(Str,"j%d.val=%d€€€",i,Res);
         //NEX_Transmit((void*)Str);//
-                // рассчет Y
+        // рассчет Y
         int Y_H = 300 - Res;
         //sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,18,Y_H,6371); // fill темный фон
         sprintf(Str,"fill %d,%d,%d,%d,%d€€€",i*19,0,19,Y_H,45901); // fill темный фон
@@ -2690,7 +2693,7 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
         //sprintf(Str,"j%d.val=%d€€€",i,Res); // progress bar
         //sprintf(Str,"h%d.val=%d€€€",i,Res); // slider
         NEX_Transmit((void*)Str);//
-
+        
       }
       //      sprintf(Str,"tm0.en=1€€€");
       //      NEX_Transmit((void*)Str);//
@@ -2704,13 +2707,13 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
       NEX_Transmit((void*)Str);//
       if((IndxViewLW==8)||(IndxViewLW==12))
       {
-      sprintf(Str,"t0.pco=65535€€€");// LW_nm
-      NEX_Transmit((void*)Str);//
+        sprintf(Str,"t0.pco=65535€€€");// LW_nm
+        NEX_Transmit((void*)Str);//
       }
       else
       {
-      sprintf(Str,"t0.pco=0€€€");// LW_nm
-      NEX_Transmit((void*)Str);//
+        sprintf(Str,"t0.pco=0€€€");// LW_nm
+        NEX_Transmit((void*)Str);//
       }
       //sprintf(Str,"h0.val=%d€€€",g_IndexLW);
       //NEX_Transmit((void*)Str);//
@@ -2718,6 +2721,9 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
       NEX_Transmit((void*)Str);//
       //      sprintf(Str,"tm0.en=0€€€");
       //      NEX_Transmit((void*)Str);//
+      // рисуем батарейку
+      sprintf((void*)Str,"p0.pic=%d€€€",LvlBatInd);
+      NEX_Transmit((void*)Str);//
     }
     else // Table
     {
