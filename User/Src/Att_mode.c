@@ -476,7 +476,11 @@ void ModeDrawMeasure(void) // режим отображени€ графического
     //    sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[9][CurrLang]);
     //    NEX_Transmit((void*)Str);//
     //    // установки
-    
+    if(UserSet.ChnMod == 0)
+    {
+      sprintf(Str,"t34.pco=65535€€€");// LW_nm = 1610
+      NEX_Transmit((void*)Str);//
+    }
     g_EnaQuickReDraw =1;
     ModeReDrawLCD = 1;
     
@@ -660,7 +664,8 @@ void ModeDrawMeasure(void) // режим отображени€ графического
       NEX_Transmit((void*)Str);//
       sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[18][CurrLang]);// дЅм
       NEX_Transmit((void*)Str);//
-      if((g_IndexLW==8)||(g_IndexLW==12))
+      //if((g_IndexLW==8)||(g_IndexLW==12))
+      if((g_IndexLW==8)||(g_IndexLW==12)||(g_IndexLW==17)) //1410, 1510, 1610
       {
         sprintf(Str,"t0.pco=65535€€€");// LW_nm
         NEX_Transmit((void*)Str);//
@@ -706,7 +711,10 @@ void ModeDrawMeasure(void) // режим отображени€ графического
     if(UserSet.ChnMod) // Graph
     {
       UserSet.ChnMod = 0;
-      CmdInitPage(3);// посылка команды переключени€ окна на јнализатор
+      CmdInitPage(3);// посылка команды переключени€ окна на table
+              sprintf(Str,"t34.pco=65535€€€");// LW_nm = 1610
+        NEX_Transmit((void*)Str);//
+
     }
     else
     {
@@ -2585,6 +2593,12 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
     
     //    g_EnaQuickReDraw =1;
     //ModeReDrawLCD = 1;
+        if(UserSet.ChnMod == 0)
+    {
+      sprintf(Str,"t34.pco=65535€€€");// LW_nm = 1610
+      NEX_Transmit((void*)Str);//
+    }
+
 
     rawPressKeyS=0;// если вдруг кто нажимал это до этого
     g_FirstScr = 0;
@@ -2705,7 +2719,8 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
       NEX_Transmit((void*)Str);//
       sprintf(Str,"t2.txt=\"%s\"€€€",MsgMass[18][CurrLang]);// дЅм
       NEX_Transmit((void*)Str);//
-      if((IndxViewLW==8)||(IndxViewLW==12))
+      //if((IndxViewLW==8)||(IndxViewLW==12))
+      if((IndxViewLW==8)||(IndxViewLW==12)||(IndxViewLW==17)) // 1410, 1510,1610
       {
         sprintf(Str,"t0.pco=65535€€€");// LW_nm
         NEX_Transmit((void*)Str);//
@@ -2741,7 +2756,10 @@ void ModeViewMemory(void) // режим отображени€ из файла (пам€ти)
     if(ViewMod) // Graph
     {
       ViewMod = 0;
-      CmdInitPage(3);// посылка команды переключени€ окна на јнализатор
+      CmdInitPage(3);// посылка команды переключени€ окна на table
+      sprintf(Str,"t34.pco=65535€€€");// LW_nm = 1610
+      NEX_Transmit((void*)Str);//
+
     }
     else
     {
