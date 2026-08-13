@@ -887,7 +887,7 @@ void ModeSetting(void)// режим установок прибора CHECK_IN
       SetNewWinIfOut = 6; // устнанавливаем признак перхода в другое окно если надо выйти
       //CmdInitPage(6);
       //  StartSettingBegShift (); // старт измерения мертвых зон
-      ClrKey (BTN_OK);
+      //ClrKey (BTN_OK);
     }
     break;// Файл
 //  case 3: //память (4)
