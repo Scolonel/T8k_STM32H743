@@ -178,22 +178,22 @@ int main(void)
   /* USER CODE BEGIN 1 */
   
   /* USER CODE END 1 */
-  
+
   /* MCU Configuration--------------------------------------------------------*/
-  
+
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-  
+
   /* USER CODE BEGIN Init */
   
   /* USER CODE END Init */
-  
+
   /* Configure the system clock */
   SystemClock_Config();
-  
-  /* Configure the peripherals common clocks */
+
+/* Configure the peripherals common clocks */
   PeriphCommonClock_Config();
-  
+
   /* USER CODE BEGIN SysInit */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -293,7 +293,7 @@ int main(void)
   NEX_Transmit((void*)Str);    // 
   
   /* USER CODE END SysInit */
-  
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
@@ -431,7 +431,7 @@ int main(void)
   
   
   /* USER CODE END 2 */
-  
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -767,7 +767,7 @@ int main(void)
     if(ProgFW_LCD==2) ProgFW_LCD=0;
     
     /* USER CODE END WHILE */
-    
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
