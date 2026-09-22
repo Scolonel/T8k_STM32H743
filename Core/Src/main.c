@@ -575,7 +575,7 @@ int main(void)
           { // переключаемся в режим индикации плохой батаейки
             BadLevelBat = 1;
             SetMode (BadBattery);
-            CmdInitPage(5);
+            CmdInitPage(9);
           }
           
         }

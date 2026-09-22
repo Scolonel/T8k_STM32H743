@@ -785,7 +785,7 @@ void BadBattery(void) // плоха€ баттарейка CHECK_OFF
   {
     BadLevelBat = 0;
     SetMode(ModeMain);
-    CmdInitPage(3);// посылка команды переключени€ окна на MainMenu и установка признака первого входа
+    CmdInitPage(1);// посылка команды переключени€ окна на MainMenu и установка признака первого входа
     myBeep(100);
     
   }
@@ -1312,6 +1312,7 @@ if(g_NeedScr)
       if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
       {
         myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
         if (UserSet.FiberID>1) UserSet.FiberID--;
         else UserSet.FiberID=999;
         NeedReSave = 1;
@@ -1683,14 +1684,14 @@ void ModeKBComments(void) // режим отображени€ клавиатуры редактора Comments
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      FrSetSaverFile = ChangeFrSet (FrSetSaverFile, 3, 1, MINUS);// установка курсора в рамках заданных параметров
+      FrSetSaverFile = ChangeFrSet (FrSetSaverFile, 4, 1, MINUS);// установка курсора в рамках заданных параметров
       //ClrKey (BTN_UP);
     }
     if ((PRESS(BTN_DOWN))&&(getStateButtons(BTN_DOWN)==SHORT_PRESSED))
     {
       myBeep(10);
       g_NeedScr = 1; // Need reDraw Screen
-      FrSetSaverFile = ChangeFrSet (FrSetSaverFile, 3, 1, PLUS);// установка курсора в рамках заданных параметров
+      FrSetSaverFile = ChangeFrSet (FrSetSaverFile, 4, 1, PLUS);// установка курсора в рамках заданных параметров
       //ClrKey (BTN_DOWN);
     }
     switch (FrSetSaverFile) // обработка выбраных полей установок
@@ -1737,7 +1738,15 @@ void ModeKBComments(void) // режим отображени€ клавиатуры редактора Comments
         //ClrKey (BTN_OK);
       }
       break; //»м€ волокна
-    case 3: // омментарий
+    case 3: //є волокна
+      // кнопка ќ  переключаемс€ в редактор!
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      {
+        g_NeedScr = 1; // Need reDraw Screen
+        //ClrKey (BTN_OK);
+      }
+      break; //»м€ волокна
+    case 4: // омментарий
       // кнопка ќ  переключаемс€ в редактор!
       if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
       {
@@ -1776,7 +1785,9 @@ void ModeKBComments(void) // режим отображени€ клавиатуры редактора Comments
       NEX_Transmit((void*)Str);// 
       sprintf(Str,"t4.txt=\"%s\"€€€", MsgMass[36][CurrLang]); //¬олокно
       NEX_Transmit((void*)Str);// 
-      sprintf(Str,"t6.txt=\"%s\"€€€", MsgMass[37][CurrLang]); //счет волокон
+      sprintf(Str,"t6.txt=\"%s\"€€€", MsgMass[32][CurrLang]); // є ¬олокна
+      NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t8.txt=\"%s\"€€€", MsgMass[37][CurrLang]); // омментарий
       NEX_Transmit((void*)Str);// 
       //      sprintf(Str,"t8.txt=\"%s\"€€€", MsgMass[34][CurrLang]); //ќ 
       //      NEX_Transmit((void*)Str);// 
@@ -1808,11 +1819,13 @@ void ModeKBComments(void) // режим отображени€ клавиатуры редактора Comments
       sprintf(Str,"t5.txt=\"%s\"€€€", UserSet.FiberName);
       NEX_Transmit((void*)Str);// 
       
-      // четверта€ сторка - Comments
-      sprintf(Str,"t7.txt=\"%s\"€€€", UserSet.Comments );//
+      // четверта€ сторка - номер волокна
+      //sprintf(Str,"t7.txt=\"%s\"€€€", UserSet.Comments );//
+      //NEX_Transmit((void*)Str);// 
+      sprintf(Str,"t7.txt=\"%d\"€€€", UserSet.FiberID );//
       NEX_Transmit((void*)Str);// 
       // п€та€ строка Comments
-      sprintf(Str,"t8.txt=\"%s\"€€€", (UserSet.Comments));//
+      sprintf(Str,"t10.txt=\"%s\"€€€", (UserSet.Comments));//
       NEX_Transmit((void*)Str);// 
       //  строка - индекс измерени€ или префикс при авто
       //      sprintf(Str,"t9.txt=\"“≈—“\"€€€");// надо убрать
@@ -2433,7 +2446,7 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
         if(StrR[i]==';') break;
       }
       i++;
-      i++;
+      i++;// «ачемто съедаем пробел поставленнй в файле перед именем  абел€
       StrR[len-2]=0;
       sprintf(MemD.CableID, "%s", &StrR[i]); // < им€ кабел€ >
       sprintf(Str, "t16.txt=\"%s\"€€€", &StrR[i]); // < им€ кабел€ >
@@ -2444,10 +2457,10 @@ void ModeFileMngFiles(void) // режим файл менеджера файлов (ќкно 34)
       len = strlen(StrR);
       for(i=0;i<len;i++)
       {
-        if(StrR[i]==';') break;
+        if(StrR[i]==';') break;// нашли в стоке ; - выходим
       }
       i++;
-      i++;
+      //i++; // убивали первый символ!
       StrR[len-2]=0;
       sprintf(MemD.FiberName, "%s", &StrR[i]); // < им€ волокна >
        sprintf(Str, "t17.txt=\"%s\"€€€", &StrR[i]); // < им€ волокна >
