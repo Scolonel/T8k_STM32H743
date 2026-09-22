@@ -171,18 +171,26 @@ void ModeFuncTmp(void)
 {
   char StrL[64];
   ModeFunc();
-    // если ошибка индикатора напишем сообщение
-  if(g_ErrFW_LCD && TimerDraw)
+  // если ошибка индикатора напишем сообщение
+  if((g_ErrFW_LCD || g_OldFW_LCD) && TimerDraw)
   {
-    sprintf( StrL,"xstr 10,120,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","ќЎ»Ѕ ј! ѕќ LCD "); //  сообщение об ошибке FW LCD
-    NEX_Transmit((void*)StrL);//
-    sprintf( StrL,"xstr 10,160,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","от другого прибора"); //  сообщение об ошибке FW LCD
-    NEX_Transmit((void*)StrL);//
+    if(g_ErrFW_LCD)
+    {
+      sprintf( StrL,"xstr 10,120,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","ќЎ»Ѕ ј! ѕќ LCD "); //  сообщение об ошибке FW LCD
+      NEX_Transmit((void*)StrL);//
+      sprintf( StrL,"xstr 10,160,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","от другого прибора"); //  сообщение об ошибке FW LCD
+      NEX_Transmit((void*)StrL);//
+    }
+    if(g_OldFW_LCD)
+    {
+      sprintf( StrL,"xstr 10,80,460,40,2,RED,WHITE,1,1,1,\"%s\"€€€","ќЅЌќ¬»“≈ ѕќ LCD "); //  сообщение об ошибке FW LCD
+      NEX_Transmit((void*)StrL);//
+    }
     TimerDraw = 0;
   }
-    if(KeyP)
+  if(KeyP)
     KeyP = 0;
-
+  
 }
 
 void SetMode( void(f)(void) )
@@ -1319,7 +1327,7 @@ if(g_NeedScr)
         
         //ClrKey (BTN_LEFT);
       }
-      if (((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==UP_INF_PRESSED))||((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED)))
+      if (((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==UP_INF_PRESSED))||((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==UP_INF_PRESSED)))
       {
         NeedReSave = 1;
       }
@@ -1739,11 +1747,52 @@ void ModeKBComments(void) // режим отображени€ клавиатуры редактора Comments
       }
       break; //»м€ волокна
     case 3: //є волокна
-      // кнопка ќ  переключаемс€ в редактор!
-      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==SHORT_PRESSED))
+      //  долго кнопка ќ  сбрасываем счетчик волокон
+      if ((PRESS(BTN_OK))&&(getStateButtons(BTN_OK)==LONG_PRESSED))
       {
         g_NeedScr = 1; // Need reDraw Screen
-        //ClrKey (BTN_OK);
+        myBeep(10);
+        UserSet.FiberID = 0;       //ClrKey (BTN_OK);
+        NeedReSave = 1;
+      }
+      if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==SHORT_PRESSED))
+      {
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (UserSet.FiberID<999) UserSet.FiberID++;
+        else UserSet.FiberID=1;
+        NeedReSave = 1;
+        //ClrKey (BTN_RIGHT);
+      }
+      if ((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==INF_PRESSED))
+      {
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (UserSet.FiberID<989) UserSet.FiberID=UserSet.FiberID+10;
+        else UserSet.FiberID=1;
+        //ClrKey (BTN_RIGHT);
+      }
+      if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==INF_PRESSED))
+      {
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (UserSet.FiberID>10) UserSet.FiberID=UserSet.FiberID-10;
+        else UserSet.FiberID=990;
+        //ClrKey (BTN_LEFT);
+      }
+      if ((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==SHORT_PRESSED))
+      {
+        myBeep(10);
+        g_NeedScr = 1; // Need reDraw Screen
+        if (UserSet.FiberID>1) UserSet.FiberID--;
+        else UserSet.FiberID=999;
+        NeedReSave = 1;
+        
+        //ClrKey (BTN_LEFT);
+      }
+      if (((PRESS(BTN_LEFT))&&(getStateButtons(BTN_LEFT)==UP_INF_PRESSED))||((PRESS(BTN_RIGHT))&&(getStateButtons(BTN_RIGHT)==UP_INF_PRESSED)))
+      {
+        NeedReSave = 1;
       }
       break; //»м€ волокна
     case 4: // омментарий

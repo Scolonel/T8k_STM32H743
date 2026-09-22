@@ -247,6 +247,7 @@ extern uint8_t g_CardSD; // признак подключенной карты для правильной индикации
 
 
 extern uint8_t g_ErrFW_LCD; // не правильная прошивка индикатора
+extern uint8_t g_OldFW_LCD; // старая прошивка индикатора
 extern uint8_t TimerDraw; // время прорисовки ошибки , каждую секунду...
 
 

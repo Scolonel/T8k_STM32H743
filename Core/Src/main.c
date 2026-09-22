@@ -152,6 +152,7 @@ float Ubat=4.6; // начальное напряжение батареи
 uint16_t BufADC[SizeBuf_ADC_int]; // буфер внутреннего АЦП (8), в него пишем при съеме DMA, размер до 8
 
 uint8_t g_ErrFW_LCD = 0; // не правильная прошивка индикатора
+uint8_t g_OldFW_LCD = 0; // старая прошивка индикатора
 uint8_t TimerDraw = 0; // время прорисовки ошибки , каждую секунду...
 
 
@@ -286,6 +287,12 @@ int main(void)
     
     if(VerFW_LCD[6]!='8')
       g_ErrFW_LCD = 1;;
+      // проверим версию индикатора 
+      g_OldFW_LCD = 0;;
+    uint32_t  NumVerLCD = atoi(&VerFW_LCD[19]);
+    if(NumVerLCD<16) 
+      g_OldFW_LCD = 1;
+
       
   }
   // пошлем сообщение о включении ...
